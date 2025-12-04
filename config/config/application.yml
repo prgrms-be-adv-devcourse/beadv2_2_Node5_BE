@@ -1,0 +1,16 @@
+token:
+  secret: bqE8cz8S6bV4GzD2A1g7o1I2N7q9p+vTWlM3lBaEo+3gF5h4qXvBRvUj2bS7wQ0RzF1YkPb3pH8xq9kJz4ySXQ==
+
+eureka:
+  instance:
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}} # random port 사용시 eureka server에 인스턴스가 각각 표시되지 않는다
+    preferIpAddress: true # 서비스간 통신 시 hostname 보다 ip 를 우선
+  client:
+    register-with-eureka: true # eureka 서버에 등록
+    fetch-registry: true # 외부 검색 가능
+    service-url:
+      defaultZone: http://admin:admin@${eureka.instance.hostname:localhost}:8761/eureka
+
+apigateway:
+#  host: http://${apigateway.hostname:localhost}:${server.port}
+  host: http://localhost:8000
