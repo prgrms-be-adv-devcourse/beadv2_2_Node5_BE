@@ -4,6 +4,8 @@ server:
 spring:
   application:
     name: apigateway
+  config:
+    import: optional:configserver:http://localhost:8888
   cloud:
     gateway:
       server:
@@ -21,12 +23,6 @@ spring:
             #            - Path=/member-service/**
             #          filters:
             #            - RewritePath=/member-service/(?<segment>.*), /$\{segment}
-            - id: openapi
-              uri: http://localhost:${server.port}
-              predicates:
-                - Path=/v3/api-docs/**
-              filters:
-                - RewritePath=/v3/api-docs/(?<segment>.*), /$\{segment}/v3/api-docs
           default-filters:
             - name: GlobalFilter
               args:

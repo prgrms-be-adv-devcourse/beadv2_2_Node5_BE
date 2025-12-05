@@ -1,39 +1,46 @@
 package com.node5.apigateway.config;
 
-import org.springdoc.core.models.GroupedOpenApi;
-import org.springdoc.core.properties.SwaggerUiConfigParameters;
+import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
+import org.springdoc.core.properties.AbstractSwaggerUiConfigProperties.SwaggerUrl;
+import org.springdoc.core.properties.SwaggerUiConfigProperties;
 import org.springframework.cloud.gateway.route.RouteDefinition;
 import org.springframework.cloud.gateway.route.RouteDefinitionLocator;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Lazy;
 
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Stream;
+import java.util.Set;
 
 @Configuration
+@RequiredArgsConstructor
 public class OpenApiDocConfig {
 
-	@Bean
-	@Lazy(false)
-	public List<GroupedOpenApi> apis(SwaggerUiConfigParameters swaggerUiConfigParameters, RouteDefinitionLocator locator) {
-		List<GroupedOpenApi> groups = new ArrayList<>();
+    private final SwaggerUiConfigProperties swaggerUiConfigProperties;
+    private final RouteDefinitionLocator locator;
 
-		List<RouteDefinition> definitions = locator.getRouteDefinitions().log("OpenApiDocConfig").collectList().block();
+    @PostConstruct
+    public void init() {
+        List<RouteDefinition> definitions = locator.getRouteDefinitions().collectList().block();
 
-		Optional.ofNullable(definitions)
-			.map(Collection::stream)
-			.orElseGet(Stream::empty)
-			.filter(routeDefinition -> routeDefinition.getId().matches(".*-service"))
-			.forEach(routeDefinition -> {
-				String name = routeDefinition.getId();
-				swaggerUiConfigParameters.addGroup(name);
-//				swaggerUiConfigParameters.addGroup(name, "/v3/api-docs/" + name);
-				GroupedOpenApi.builder().pathsToMatch("/" + name + "/**").group(name).build();
-			});
-		return groups;
-	}
+        Set<SwaggerUrl> urls = new HashSet<>();
+
+        if (definitions != null) {
+            definitions.stream()
+                    .filter(routeDefinition -> routeDefinition.getId().matches(".*-service"))
+                    .forEach(routeDefinition -> {
+                        String name = routeDefinition.getId();
+                        SwaggerUrl swaggerUrl = new SwaggerUrl(name, "/" + name + "/v3/api-docs", name);
+                        urls.add(swaggerUrl);
+                    });
+
+            if (swaggerUiConfigProperties.getUrls() != null) {
+                swaggerUiConfigProperties.getUrls().addAll(urls);
+            } else {
+                swaggerUiConfigProperties.setUrls(urls);
+            }
+        }
+    }
+
 }
+
