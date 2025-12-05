@@ -17,12 +17,12 @@ spring:
             #            - Path=/shop-service/**
             #          filters:
             #            - RewritePath=/shop-service/(?<segment>.*), /$\{segment}
-            #        - id: member-service
-            #          uri: lb://MEMBER-SERVICE
-            #          predicates:
-            #            - Path=/member-service/**
-            #          filters:
-            #            - RewritePath=/member-service/(?<segment>.*), /$\{segment}
+            - id: member-service
+              uri: lb://MEMBER-SERVICE
+              predicates:
+                - Path=/member-service/**
+              filters:
+                - RewritePath=/member-service/(?<segment>.*), /$\{segment}
           default-filters:
             - name: GlobalFilter
               args:
