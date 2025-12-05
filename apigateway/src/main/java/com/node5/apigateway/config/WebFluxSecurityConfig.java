@@ -18,6 +18,7 @@ public class WebFluxSecurityConfig {
 
     private final static String[] PERMITALL_ANTPATTERNS = {
             ReactiveAuthorization.AUTHORIZATION_URI, "/", "/csrf",
+            "/?*-service/api/v1/**",
             "/?*-service/swagger-ui/**",
             "/?*-service/actuator/?*", "/actuator/?*",
             "/v3/api-docs/**", "/?*-service/v3/api-docs", "/swagger*/**", "/webjars/**"
