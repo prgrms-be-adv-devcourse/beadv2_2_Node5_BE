@@ -21,3 +21,6 @@ management:
     web:
       exposure:
         include: refresh, health, beans, info, prometheus
+
+apigateway:
+  host: http://localhost:8000
