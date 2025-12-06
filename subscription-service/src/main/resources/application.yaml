@@ -1,3 +1,13 @@
 spring:
   application:
     name: subscription-service
+  cloud:
+    config:
+      uri: http://localhost:8888
+      profile: default
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
