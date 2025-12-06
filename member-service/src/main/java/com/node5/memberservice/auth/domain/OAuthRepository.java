@@ -1,4 +1,4 @@
-package com.node5.memberservice.oauth.domain;
+package com.node5.memberservice.auth.domain;
 
 import java.util.Optional;
 

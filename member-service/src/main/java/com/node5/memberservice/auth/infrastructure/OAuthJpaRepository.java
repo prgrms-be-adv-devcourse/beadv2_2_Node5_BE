@@ -1,6 +1,6 @@
-package com.node5.memberservice.oauth.infrastructure;
+package com.node5.memberservice.auth.infrastructure;
 
-import com.node5.memberservice.oauth.domain.OAuth;
+import com.node5.memberservice.auth.domain.OAuth;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

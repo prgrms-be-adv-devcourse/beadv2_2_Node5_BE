@@ -1,7 +1,7 @@
-package com.node5.memberservice.oauth.infrastructure;
+package com.node5.memberservice.auth.infrastructure;
 
-import com.node5.memberservice.oauth.domain.OAuth;
-import com.node5.memberservice.oauth.domain.OAuthRepository;
+import com.node5.memberservice.auth.domain.OAuth;
+import com.node5.memberservice.auth.domain.OAuthRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
