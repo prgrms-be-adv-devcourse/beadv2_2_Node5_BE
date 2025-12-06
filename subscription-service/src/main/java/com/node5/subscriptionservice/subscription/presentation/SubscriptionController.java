@@ -37,31 +37,31 @@ public class SubscriptionController {
         return subscriptionService.findAllByMemberId(memberId, pageable);
     }
 
-    @Operation(summary = "구독 생성", description = "")
+    @Operation(summary = "구독 생성", description = "새로운 구독을 생성합니다")
     @PostMapping
     public ResponseEntity<ApiResponseDto<SubscriptionInfo>> create(@RequestBody SubscriptionCreateRequest request) {
         return subscriptionService.create(request.toCommand());
     }
 
-    @Operation(summary = "구독 수정", description = "")
+    @Operation(summary = "구독 수정", description = "구독 정보를 수정합니다.")
     @PutMapping("{id}")
     public ResponseEntity<ApiResponseDto<SubscriptionInfo>> update(@RequestBody SubscriptionUpdateRequest request, @PathVariable UUID id) {
         return subscriptionService.update(request.toCommand(), id);
     }
 
-    @Operation(summary = "구독 일시정지", description = "")
+    @Operation(summary = "구독 일시정지", description = "구독을 일시정지합니다.")
     @PatchMapping("{id}/pause")
     public ResponseEntity<ApiResponseDto<SubscriptionInfo>> pause(@PathVariable UUID id) {
         return subscriptionService.pause(id);
     }
 
-    @Operation(summary = "구독 재개", description = "")
+    @Operation(summary = "구독 재개", description = "일시정지한 구독을 재개합니다.")
     @PutMapping("{id}/resume")
     public ResponseEntity<ApiResponseDto<SubscriptionInfo>> resume(@PathVariable UUID id) {
         return subscriptionService.resume(id);
     }
 
-    @Operation(summary = "구독 삭제", description = "")
+    @Operation(summary = "구독 해지", description = "구독을 해지합니다.")
     @DeleteMapping("{id}")
     public ResponseEntity<ApiResponseDto<SubscriptionInfo>> delete(@PathVariable UUID id) {
         return subscriptionService.delete(id);
