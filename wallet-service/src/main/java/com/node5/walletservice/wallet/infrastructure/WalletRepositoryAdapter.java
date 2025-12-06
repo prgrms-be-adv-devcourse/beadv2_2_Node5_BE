@@ -20,6 +20,11 @@ public class WalletRepositoryAdapter implements WalletRepository {
     }
 
     @Override
+    public Optional<Wallet> findByMemberIdForUpdate(UUID memberId) {
+        return walletJpaRepository.findByMemberIdForUpdate(memberId);
+    }
+
+    @Override
     public Wallet save(Wallet wallet) {
         return walletJpaRepository.save(wallet);
     }

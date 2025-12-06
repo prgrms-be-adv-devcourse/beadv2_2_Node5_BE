@@ -66,7 +66,7 @@ public class WalletService {
     // 예치금 충전 (내부 api로 수정 예정)
     @Transactional
     public ApiResponseDto<WalletInfo> chargeWallet(UUID memberId, WalletChargeCommand command) {
-        Wallet wallet = walletRepository.findByMemberId(memberId)
+        Wallet wallet = walletRepository.findByMemberIdForUpdate(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("Wallet not found for memberId: " + memberId));
         wallet.deposit(command.amount());
 
@@ -82,7 +82,7 @@ public class WalletService {
     // 예치금 정산 (내부 api로 수정 예정)
     @Transactional
     public ApiResponseDto<WalletInfo> settleWallet(UUID memberId, WalletSettleCommand command) {
-        Wallet wallet = walletRepository.findByMemberId(memberId)
+        Wallet wallet = walletRepository.findByMemberIdForUpdate(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("Wallet not found for memberId: " + memberId));
 
         wallet.deposit(command.amount());
@@ -98,7 +98,7 @@ public class WalletService {
     //예치금 사용 (내부 api로 수정 예정)
     @Transactional
     public ApiResponseDto<WalletInfo> withdrawWallet(UUID memberId, WalletWithdrawCommand command) {
-        Wallet wallet = walletRepository.findByMemberId(memberId)
+        Wallet wallet = walletRepository.findByMemberIdForUpdate(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("Wallet not found for memberId: " + memberId));
 
         if (wallet.getBalance() < command.amount()) {
@@ -118,7 +118,7 @@ public class WalletService {
     // 예치금 환불 요청 (내부 api로 수정 예정)
     @Transactional
     public ApiResponseDto<WalletInfo> requestRefundWallet(UUID memberId, WalletRefundCommand command) {
-        Wallet wallet = walletRepository.findByMemberId(memberId)
+        Wallet wallet = walletRepository.findByMemberIdForUpdate(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("Wallet not found for memberId: " + memberId));
 
         WalletDepositLog walletDepositLog = walletDepositLogRepository.findById(command.walletDepositLogId())
@@ -144,7 +144,7 @@ public class WalletService {
     // 예치금 환불 성공 (내부 api로 수정 예정)
     @Transactional
     public ApiResponseDto<WalletInfo> confirmRefundWallet(UUID memberId, WalletRefundCommand command) {
-        Wallet wallet = walletRepository.findByMemberId(memberId)
+        Wallet wallet = walletRepository.findByMemberIdForUpdate(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("Wallet not found for memberId: " + memberId));
 
         WalletDepositLog walletDepositLog = walletDepositLogRepository.findById(command.walletDepositLogId())
@@ -165,7 +165,7 @@ public class WalletService {
     // 예치금 환불 실패 (내부 api로 수정 예정)
     @Transactional
     public ApiResponseDto<WalletInfo> failRefundWallet(UUID memberId, WalletRefundCommand command) {
-        Wallet wallet = walletRepository.findByMemberId(memberId)
+        Wallet wallet = walletRepository.findByMemberIdForUpdate(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("Wallet not found for memberId: " + memberId));
 
         WalletDepositLog walletDepositLog = walletDepositLogRepository.findById(command.walletDepositLogId())

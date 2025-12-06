@@ -7,5 +7,7 @@ public interface WalletRepository {
 
     Optional<Wallet> findByMemberId(UUID memberId);
 
+    Optional<Wallet> findByMemberIdForUpdate(UUID memberId);
+
     Wallet save(Wallet wallet);
 }
