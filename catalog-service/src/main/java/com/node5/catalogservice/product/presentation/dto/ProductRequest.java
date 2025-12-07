@@ -11,8 +11,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "상품 등록/수정 요청")
 public record ProductRequest(
-	@Schema(description = "판매자 ID (UUID 문자열)", example = "b1a0e5c4-1234-4c56-9abc-0def12345678")
-	String sellerId,
+	@Schema(description = "상점 ID (UUID 문자열)", example = "b1a0e5c4-1234-4c56-9abc-0def12345678")
+	String shopId,
 	@Schema(description = "상품명", example = "노이즈 캔슬링 헤드폰")
 	String name,
 	@Schema(description = "상품 설명", example = "프리미엄 사운드와 액티브 노이즈 캔슬링 기능 제공")
@@ -31,19 +31,19 @@ public record ProductRequest(
 
 	public ProductCommand toCreateCommand() {
 
-		if (sellerId == null || sellerId.isBlank()) {
-			throw new IllegalArgumentException("Seller id cannot be null or blank");
+		if (shopId == null || shopId.isBlank()) {
+			throw new IllegalArgumentException("Shop id cannot be null or blank");
 		}
 
-		UUID seller;
+		UUID shop;
 		try {
-			seller = UUID.fromString(sellerId);
+			shop = UUID.fromString(shopId);
 		} catch (IllegalArgumentException e) {
-			throw new IllegalArgumentException("Seller id is not a valid UUID");
+			throw new IllegalArgumentException("Shop id is not a valid UUID");
 		}
 
 		return new ProductCommand(
-			seller,
+			shop,
 			name,
 			description,
 			price,

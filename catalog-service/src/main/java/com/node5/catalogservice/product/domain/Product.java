@@ -22,8 +22,8 @@ public class Product extends BaseEntity {
 	@Id
 	private UUID id;
 
-	@Column(name = "seller_id", nullable = false)
-	private UUID sellerId;
+	@Column(name = "shop_id", nullable = false)
+	private UUID shopId;
 
 	@Column(nullable = false, length = 100)
 	private String name;
@@ -52,7 +52,7 @@ public class Product extends BaseEntity {
 
 	private Product(
 		UUID id,
-		UUID sellerId,
+		UUID shopId,
 		String name,
 		String description,
 		BigDecimal price,
@@ -62,7 +62,7 @@ public class Product extends BaseEntity {
 		String thumbnailUrl
 	) {
 		this.id = id;
-		this.sellerId = sellerId;
+		this.shopId = shopId;
 		this.name = name;
 		this.description = description;
 		this.price = price;
@@ -73,7 +73,7 @@ public class Product extends BaseEntity {
 	}
 
 	public static Product create(
-		UUID sellerId,
+		UUID shopId,
 		String name,
 		String description,
 		BigDecimal price,
@@ -85,7 +85,7 @@ public class Product extends BaseEntity {
 
 		return new Product(
 			null,
-			sellerId,
+			shopId,
 			name,
 			description,
 			price,

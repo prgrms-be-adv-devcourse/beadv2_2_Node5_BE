@@ -40,7 +40,7 @@ public class ProductService {
 
 	public ProductInfo createProduct(ProductCommand command) {
 		Product product = Product.create(
-			command.sellerId(),
+			command.shopId(),
 			command.name(),
 			command.description(),
 			command.price(),

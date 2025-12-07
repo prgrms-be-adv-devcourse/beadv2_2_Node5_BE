@@ -6,7 +6,7 @@ import java.util.UUID;
 import com.node5.catalogservice.product.domain.ProductStatus;
 
 public record ProductCommand(
-	UUID sellerId,
+	UUID shopId,
 	String name,
 	String description,
 	BigDecimal price,

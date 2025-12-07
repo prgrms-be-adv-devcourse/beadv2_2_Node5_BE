@@ -9,7 +9,7 @@ import com.node5.catalogservice.product.domain.ProductStatus;
 
 public record ProductInfo(
 	UUID id,
-	UUID sellerId,
+	UUID shopId,
 	String name,
 	String description,
 	BigDecimal price,
@@ -24,7 +24,7 @@ public record ProductInfo(
 	public static ProductInfo from(Product product) {
 		return new ProductInfo(
 			product.getId(),
-			product.getSellerId(),
+			product.getShopId(),
 			product.getName(),
 			product.getDescription(),
 			product.getPrice(),
