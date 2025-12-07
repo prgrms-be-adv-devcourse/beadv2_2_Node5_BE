@@ -136,6 +136,7 @@ public class WalletService {
     }
 
     // 예치금 환불 요청 (내부 api로 수정 예정)
+    // 예치금 환불은 PAID 상태인 입금 내역에 대해서만 요청 가능
     @Transactional
     public ResponseEntity<ApiResponseDto<WalletInfo>> requestRefundWallet(UUID memberId, WalletRefundCommand command) {
         Wallet wallet = walletRepository.findByMemberIdForUpdate(memberId)
