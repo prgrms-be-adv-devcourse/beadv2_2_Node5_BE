@@ -1,8 +1,9 @@
 package com.node5.catalogservice.product.domain;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.UUID;
+
+import com.node5.common.domain.BaseEntity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -10,14 +11,13 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.Getter;
 
 @Getter
 @Entity
 @Table(name = "product")
-public class Product {
+public class Product extends BaseEntity {
 
 	@Id
 	private UUID id;
@@ -46,12 +46,6 @@ public class Product {
 
 	@Column(name = "thumbnail_url")
 	private String thumbnailUrl;
-
-	@Column(name = "created_at", nullable = false)
-	private LocalDateTime createdAt;
-
-	@Column(name = "modified_at", nullable = false)
-	private LocalDateTime modifiedAt;
 
 	protected Product() {
 	}
@@ -105,15 +99,8 @@ public class Product {
 	@PrePersist
 	private void onCreate() {
 		if (id == null) id = UUID.randomUUID();
-		if (createdAt == null) createdAt = LocalDateTime.now();
-		if (modifiedAt == null) modifiedAt = createdAt;
 		if (status == null) status = ProductStatus.ON_SALE;
 		if (stock == null) stock = 0;
-	}
-
-	@PreUpdate
-	private void onUpdate() {
-		this.modifiedAt = LocalDateTime.now();
 	}
 
 	public void applyPatch(
