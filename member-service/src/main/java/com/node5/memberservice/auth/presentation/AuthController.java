@@ -4,6 +4,7 @@ import com.node5.common.domain.ApiResponseDto;
 import com.node5.memberservice.auth.application.AuthService;
 import com.node5.memberservice.auth.application.dto.LoginInfo;
 import com.node5.memberservice.auth.presentation.dto.OAuthLoginRequest;
+import com.node5.memberservice.auth.presentation.dto.OAuthRegisterRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,7 +22,7 @@ public class AuthController {
 
     @PostMapping("/oauth/login")
     public ResponseEntity<ApiResponseDto<LoginInfo>> oAuthLogin(@RequestBody OAuthLoginRequest request) {
-        return authService.login(request);
+        return authService.login(request.toCommand());
     }
 
 }

@@ -3,10 +3,12 @@ package com.node5.memberservice.auth.application;
 import com.node5.common.domain.ApiResponseDto;
 import com.node5.memberservice.auth.application.dto.JwtMemberInfo;
 import com.node5.memberservice.auth.application.dto.LoginInfo;
-import com.node5.memberservice.auth.application.dto.OAuthUserInfo;
+import com.node5.memberservice.auth.application.dto.OAuthLoginCommand;
+import com.node5.memberservice.auth.oauth.dto.OAuthUserInfo;
 import com.node5.memberservice.auth.domain.OAuth;
 import com.node5.memberservice.auth.domain.OAuthRepository;
-import com.node5.memberservice.auth.presentation.dto.OAuthLoginRequest;
+import com.node5.memberservice.auth.oauth.OAuthProviderService;
+import com.node5.memberservice.auth.presentation.dto.OAuthRegisterRequest;
 import com.node5.memberservice.auth.util.JwtProvider;
 import com.node5.memberservice.member.domain.Member;
 import org.springframework.http.HttpStatus;
@@ -35,21 +37,21 @@ public class AuthService {
         this.jwtProvider = jwtProvider;
     }
 
-    public ResponseEntity<ApiResponseDto<LoginInfo>> login(OAuthLoginRequest request) {
+    public ResponseEntity<ApiResponseDto<LoginInfo>> login(OAuthLoginCommand command) {
 
-        OAuthProviderService providerService = providerMap.get(request.provider());
+        OAuthProviderService providerService = providerMap.get(command.provider());
 
         if (providerService == null) {
-            throw new IllegalArgumentException("Invalid provider: " + request.provider());
+            throw new IllegalArgumentException("Invalid provider: " + command.provider());
         }
 
-        OAuthUserInfo oAuthUserInfo = providerService.getUserInfo(request.providerCode());
+        OAuthUserInfo oAuthUserInfo = providerService.getUserInfo(command.providerCode());
 
         Optional<OAuth> oAuth = oAuthRepository.findByProviderAndProviderId(oAuthUserInfo.provider(), oAuthUserInfo.providerId());
 
         if (oAuth.isPresent()) {
             Member member = oAuth.get().getMember();
-            JwtMemberInfo jwtMemberInfo = JwtMemberInfo.from(member.getId(), member.getRole(), member.getStatus());
+            JwtMemberInfo jwtMemberInfo = JwtMemberInfo.from(member);
             String accessToken = jwtProvider.generateAccessToken(jwtMemberInfo);
             String refreshToken = jwtProvider.generateRefreshToken(jwtMemberInfo);
             LoginInfo loginInfo = LoginInfo.success(member, accessToken, refreshToken);
