@@ -37,6 +37,7 @@ public class WalletService {
     }
 
     // memberId로 예치금 생성
+    @Transactional
     public ResponseEntity<ApiResponseDto<WalletInfo>> createWallet(UUID memberId) {
         Wallet wallet = Wallet.builder()
                 .memberId(memberId)
