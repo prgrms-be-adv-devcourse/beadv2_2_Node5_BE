@@ -14,7 +14,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class WalletDepositLogRepositoryAdapter implements WalletDepositLogRepository {
 
-    private  final WalletDepositLogJpaRepository walletDepositLogJpaRepository;
+    private final WalletDepositLogJpaRepository walletDepositLogJpaRepository;
 
     @Override
     public Optional<WalletDepositLog> findById(UUID walletDepositLogid) {
