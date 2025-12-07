@@ -22,6 +22,9 @@ spring:
         format_sql: true
         jdbc:
           time_zone: Asia/Seoul
+  sql:
+    init:
+      mode: always #SQL 초기화 파일(schema.sql) 항상 실행
 
 api:
   v1: /api/v1

@@ -1,7 +1,9 @@
 package com.node5.orderservice.domain;
 
 import com.node5.common.domain.BaseEntity;
+import com.node5.orderservice.application.dto.OrderCommand;
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 
 import java.util.UUID;
@@ -21,7 +23,7 @@ public class Order extends BaseEntity {
     @Column(nullable = false, length = 30)
     private OrderStatus status;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 20)
     private String orderNum;
 
     @Enumerated(EnumType.STRING)
@@ -29,13 +31,58 @@ public class Order extends BaseEntity {
     private OrderType orderType;
 
     @Column
-    private int totalAmount;
+    private UUID subscriptionId;
 
-    @Column(nullable = false)
+    @Column
+    private int totalAmount; //총 주문 금액
+
+    @Column(nullable = false, length = 50)
     private String recipientName;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 255)
     private String recipientAddress;
 
     protected Order() { }
+
+    @Builder
+    private Order(
+            UUID id,
+            UUID memberId,
+            OrderStatus status,
+            String orderNum,
+            OrderType orderType,
+            UUID subscriptionId,
+            int totalAmount,
+            String recipientName,
+            String recipientAddress
+    ) {
+        this.id = id;
+        this.memberId = memberId;
+        this.status =  status;
+        this.orderNum = orderNum;
+        this.orderType = orderType;
+        this.subscriptionId = subscriptionId;
+        this.totalAmount = totalAmount;
+        this.recipientName = recipientName;
+        this.recipientAddress = recipientAddress;
+    }
+
+    public static Order create(
+            OrderCommand command,
+            String orderNum,
+            int totalAmount
+    ) {
+        return Order.builder()
+                .id(UUID.randomUUID())
+                .status(OrderStatus.CREATED)
+                .memberId(command.memberId())
+                .orderNum(orderNum)
+                .orderType(command.orderType())
+                .subscriptionId(command.subscriptionId())
+                .totalAmount(totalAmount)
+                .recipientName(command.recipientName())
+                .recipientAddress(command.recipientAddress())
+                .build();
+    }
+
 }
