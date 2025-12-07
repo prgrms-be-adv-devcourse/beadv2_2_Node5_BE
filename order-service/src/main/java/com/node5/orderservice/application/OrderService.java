@@ -9,6 +9,7 @@ import com.node5.orderservice.domain.OrderItem;
 import com.node5.orderservice.domain.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -23,7 +24,7 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final OrderItemService orderItemService;
 
-    public ApiResponseDto create(OrderCommand command){
+    public ResponseEntity<ApiResponseDto<OrderCreateInfo>> create(OrderCommand command){
         // Order 생성
         String orderNum = generateNewOrderNum();
         int totalAmount = command.items().stream()
@@ -45,7 +46,8 @@ public class OrderService {
         // - 결제 성공 시: (재고 차감) -> 주문 상태 PAID로 변경
         // - 결제 실패 시: 주문 상태 PAYMENT_FAILED로 변경 후 실패 응답
 
-        return new ApiResponseDto(HttpStatus.CREATED.value(), "주문 생성 성공", OrderCreateInfo.from(order));
+        ApiResponseDto<OrderCreateInfo> responseDto = new ApiResponseDto<>(HttpStatus.CREATED.value(), "주문 생성 성공", OrderCreateInfo.from(saved));
+        return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
     }
 
     public String generateNewOrderNum() {
