@@ -74,7 +74,7 @@ public class WalletService {
     // 예치금 충전 (내부 api로 수정 예정)
     @Transactional
     public ResponseEntity<ApiResponseDto<WalletInfo>> chargeWallet(UUID memberId, WalletChargeCommand command) {
-        if (command.amount() <= 0) {
+        if (command.amount() < 0) {
             throw new IllegalArgumentException("Amount to charge must be greater than zero.");
         }
         Wallet wallet = walletRepository.findByMemberIdForUpdate(memberId)
@@ -94,7 +94,7 @@ public class WalletService {
     // 예치금 정산 (내부 api로 수정 예정)
     @Transactional
     public ResponseEntity<ApiResponseDto<WalletInfo>> settleWallet(UUID memberId, WalletSettleCommand command) {
-        if (command.amount() <= 0) {
+        if (command.amount() < 0) {
             throw new IllegalArgumentException("Amount to charge must be greater than zero.");
         }
         Wallet wallet = walletRepository.findByMemberIdForUpdate(memberId)
@@ -114,7 +114,7 @@ public class WalletService {
     //예치금 사용 (내부 api로 수정 예정)
     @Transactional
     public ResponseEntity<ApiResponseDto<WalletInfo>> withdrawWallet(UUID memberId, WalletWithdrawCommand command) {
-        if (command.amount() <= 0) {
+        if (command.amount() < 0) {
             throw new IllegalArgumentException("Amount to charge must be greater than zero.");
         }
         Wallet wallet = walletRepository.findByMemberIdForUpdate(memberId)
