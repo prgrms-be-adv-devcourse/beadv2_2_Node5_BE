@@ -148,6 +148,10 @@ public class WalletService {
             throw new IllegalArgumentException("환불 가능한 상태가 아닙니다.");
         }
 
+        if (walletDepositLog.getPaymentKey() == null) {
+            throw new IllegalArgumentException("결제 키가 존재하지 않습니다.");
+        }
+
         if (!walletDepositLog.getPaymentKey().equals(command.paymentKey())) {
             throw new IllegalArgumentException("결제 키가 일치하지 않습니다.");
         }
@@ -199,6 +203,10 @@ public class WalletService {
 
         if (walletDepositLog.getState() != CANCEL_WAITING) {
             throw new IllegalArgumentException("환불 가능한 상태가 아닙니다.");
+        }
+
+        if (walletDepositLog.getPaymentKey() == null) {
+            throw new IllegalArgumentException("결제 키가 존재하지 않습니다.");
         }
 
         if (!walletDepositLog.getPaymentKey().equals(command.paymentKey())) {
