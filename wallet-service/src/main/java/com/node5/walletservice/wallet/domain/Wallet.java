@@ -31,6 +31,9 @@ public class Wallet extends BaseEntity {
     }
 
     public void withdraw(Long amount) {
+        if (amount > this.balance) {
+            throw new IllegalArgumentException("Insufficient balance for withdrawal.");
+        }
         this.balance -= amount;
     }
 
