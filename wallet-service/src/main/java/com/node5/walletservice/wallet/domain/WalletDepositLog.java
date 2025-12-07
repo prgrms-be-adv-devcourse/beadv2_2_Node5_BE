@@ -54,14 +54,4 @@ public class WalletDepositLog extends BaseEntity{
     public void changeState(WalletDepositLogState state) {
         this.state = state;
     }
-
-    public WalletDepositLog requestCancel() {
-        this.state = WalletDepositLogState.CANCEL_WAITING;
-        return this;
-    }
-
-    public WalletDepositLog confirmCancel() {
-        this.state = WalletDepositLogState.CANCELED;
-        return this;
-    }
 }
