@@ -1,7 +1,7 @@
-package com.node5.memberservice.auth.application;
+package com.node5.memberservice.auth.oauth;
 
-import com.node5.memberservice.auth.application.dto.KakaoTokenResponse;
-import com.node5.memberservice.auth.application.dto.OAuthUserInfo;
+import com.node5.memberservice.auth.oauth.dto.KakaoTokenResponse;
+import com.node5.memberservice.auth.oauth.dto.OAuthUserInfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;

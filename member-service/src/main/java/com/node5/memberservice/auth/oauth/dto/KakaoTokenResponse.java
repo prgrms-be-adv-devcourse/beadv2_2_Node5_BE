@@ -1,4 +1,4 @@
-package com.node5.memberservice.auth.application.dto;
+package com.node5.memberservice.auth.oauth.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

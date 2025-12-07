@@ -1,9 +1,6 @@
 package com.node5.memberservice.auth.application.dto;
 
-import com.node5.memberservice.member.domain.MemberRole;
-import com.node5.memberservice.member.domain.MemberStatus;
-
-import java.util.UUID;
+import com.node5.memberservice.member.domain.Member;
 
 public record JwtMemberInfo(
         String memberId,
@@ -11,10 +8,9 @@ public record JwtMemberInfo(
         String memberStatus
 ) {
     public static JwtMemberInfo from(
-            UUID memberId,
-            MemberRole memberRole,
-            MemberStatus memberStatus
+            Member member
+
     ) {
-        return new JwtMemberInfo(memberId.toString(), memberRole.name(), memberStatus.name());
+        return new JwtMemberInfo(member.getId().toString(), member.getRole().name(), member.getStatus().name());
     }
 }

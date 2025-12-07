@@ -1,8 +1,7 @@
 package com.node5.memberservice.auth.application.dto;
 
-
-public record OAuthUserInfo(
+public record OAuthLoginCommand(
         String provider,
-        String providerId
+        String providerCode
 ) {
 }

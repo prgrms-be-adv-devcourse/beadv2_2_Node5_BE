@@ -1,7 +1,7 @@
 package com.node5.memberservice.auth.util;
 
 import com.node5.memberservice.auth.application.dto.JwtMemberInfo;
-import com.node5.memberservice.auth.application.dto.OAuthUserInfo;
+import com.node5.memberservice.auth.oauth.dto.OAuthUserInfo;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
