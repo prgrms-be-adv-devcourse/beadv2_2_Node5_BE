@@ -1,5 +1,6 @@
 package com.node5.walletservice.wallet.domain;
 
+import com.node5.common.domain.BaseEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -17,7 +18,7 @@ import java.util.UUID;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class WalletWithdrawLog {
+public class WalletWithdrawLog extends BaseEntity {
 
     @Id
     private UUID id;
