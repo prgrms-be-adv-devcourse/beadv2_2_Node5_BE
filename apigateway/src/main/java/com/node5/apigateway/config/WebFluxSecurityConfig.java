@@ -21,13 +21,13 @@ import java.util.List;
 public class WebFluxSecurityConfig {
 
     private final static String[] PERMITALL_ANTPATTERNS = {
-            ReactiveAuthorization.AUTHORIZATION_URI, "/", "/csrf",
+            "/", "/csrf",
             "/?*-service/api/v1/**",
             "/?*-service/swagger-ui/**",
             "/?*-service/actuator/?*", "/actuator/?*",
             "/v3/api-docs/**", "/?*-service/v3/api-docs", "/swagger*/**", "/webjars/**"
     };
-    private final static String USER_JOIN_ANTPATTERNS = "/member-service/api/v1/members";
+    private final static String USER_JOIN_ANTPATTERNS = "/member-service/api/v1/auth/oauth/register";
 
 
     @Bean
