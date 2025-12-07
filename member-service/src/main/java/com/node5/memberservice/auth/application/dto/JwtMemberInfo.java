@@ -7,10 +7,7 @@ public record JwtMemberInfo(
         String memberRole,
         String memberStatus
 ) {
-    public static JwtMemberInfo from(
-            Member member
-
-    ) {
+    public static JwtMemberInfo from(Member member) {
         return new JwtMemberInfo(member.getId().toString(), member.getRole().name(), member.getStatus().name());
     }
 }

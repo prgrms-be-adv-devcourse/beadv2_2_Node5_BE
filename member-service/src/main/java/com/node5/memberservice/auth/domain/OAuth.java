@@ -1,6 +1,7 @@
 package com.node5.memberservice.auth.domain;
 
 import com.node5.common.domain.BaseEntity;
+import com.node5.memberservice.auth.oauth.dto.OAuthUserInfo;
 import com.node5.memberservice.member.domain.Member;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -27,4 +28,15 @@ public class OAuth extends BaseEntity {
 
     @Column(name = "provider_id", length = 100, nullable = false)
     private String providerId;
+
+    private OAuth(Member member, String provider, String providerId) {
+        this.id = UUID.randomUUID();
+        this.member = member;
+        this.provider = provider;
+        this.providerId = providerId;
+    }
+
+    public static OAuth create(Member member, OAuthUserInfo oAuthUserInfo) {
+        return new OAuth(member, oAuthUserInfo.provider(), oAuthUserInfo.providerId());
+    }
 }

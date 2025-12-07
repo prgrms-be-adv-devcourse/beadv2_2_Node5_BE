@@ -38,7 +38,7 @@ public class JwtProvider {
                 .subject(memberInfo.memberId())
                 .claim("role", memberInfo.memberRole())
                 .claim("memberStatus", memberInfo.memberStatus())
-                .claim("type", "access")
+                .claim("type", TokenType.ACCESS.name())
                 .issuedAt(now)
                 .expiration(expirationDate)
                 .signWith(secretKey)
@@ -50,7 +50,7 @@ public class JwtProvider {
         Date expirationDate = new Date(now.getTime() + refreshTokenExpiration);
         return Jwts.builder()
                 .subject(memberInfo.memberId())
-                .claim("type", "refresh")
+                .claim("type", TokenType.REFRESH.name())
                 .issuedAt(now)
                 .expiration(expirationDate)
                 .signWith(secretKey)
@@ -66,19 +66,21 @@ public class JwtProvider {
         return Jwts.builder()
                 .claim("provider", oAuthUserInfo.provider())
                 .claim("providerId", oAuthUserInfo.providerId())
-                .claim("type", "temporary")
+                .claim("type", TokenType.TEMPORARY.name())
                 .issuedAt(now)
                 .expiration(expirationDate)
                 .signWith(secretKey)
                 .compact();
     }
 
-    public boolean validateToken(String token) {
+    private Claims parseClaims(String token) {
         try {
-            getClaims(token);
-            return true;
-        } catch (
-                ExpiredJwtException expiredJwtException) {
+            return Jwts.parser()
+                    .verifyWith(secretKey)
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+        } catch (ExpiredJwtException expiredJwtException) {
             throw new JwtException("JWT expired");
         } catch (JwtException jwtException) {
             throw new JwtException("JWT error");
@@ -87,11 +89,17 @@ public class JwtProvider {
         }
     }
 
-    private Claims getClaims(String token) {
-        return Jwts.parser()
-                .verifyWith(secretKey)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
+    public OAuthUserInfo getOAuthUserInfo(String token) {
+        Claims claims = parseClaims(token);
+
+        String type = claims.get("type", String.class);
+        if (!TokenType.TEMPORARY.name().equals(type)) {
+            throw new JwtException("임시 토큰이 아닙니다.");
+        }
+
+        return new OAuthUserInfo(
+                claims.get("provider", String.class),
+                claims.get("providerId", String.class)
+        );
     }
 }

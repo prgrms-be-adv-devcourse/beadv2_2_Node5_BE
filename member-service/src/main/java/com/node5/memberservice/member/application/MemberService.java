@@ -26,13 +26,6 @@ public class MemberService {
         return ResponseEntity.ok(responseDto);
     }
 
-    public ResponseEntity<ApiResponseDto<MemberInfo>> create(String email) {
-        Member member = Member.createWithEmailOnly(email);
-        Member saved = memberRepository.save(member);
-        ApiResponseDto<MemberInfo> responseDto = new ApiResponseDto<>(HttpStatus.CREATED.value(), "회원 생성 성공", MemberInfo.from(saved));
-        return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
-    }
-
     @Transactional
     public ResponseEntity<ApiResponseDto<MemberInfo>> registerRequiredInfo(UUID memberId, MemberRegisterRequest request) {
         Member member = memberRepository.findById(memberId).orElseThrow(() -> new EntityNotFoundException("Member not found: " + memberId));

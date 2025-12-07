@@ -7,10 +7,7 @@ import com.node5.memberservice.auth.presentation.dto.OAuthLoginRequest;
 import com.node5.memberservice.auth.presentation.dto.OAuthRegisterRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -25,4 +22,8 @@ public class AuthController {
         return authService.login(request.toCommand());
     }
 
+    @PostMapping("/oauth/register")
+    public ResponseEntity<ApiResponseDto<LoginInfo>> register(@RequestBody OAuthRegisterRequest request) {
+        return authService.register(request.toCommand());
+    }
 }
