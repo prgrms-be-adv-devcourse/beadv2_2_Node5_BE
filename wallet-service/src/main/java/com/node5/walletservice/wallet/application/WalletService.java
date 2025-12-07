@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,44 +29,53 @@ public class WalletService {
 
     // memberId에 대한 예치금 조회
     @Transactional(readOnly = true)
-    public ApiResponseDto<WalletInfo> getWallet(UUID memberId) {
+    public ResponseEntity<ApiResponseDto<WalletInfo>> getWallet(UUID memberId) {
         Wallet wallet = walletRepository.findByMemberId(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("Wallet not found for memberId: " + memberId));
-        return new ApiResponseDto<>(HttpStatus.OK.value(), HttpStatus.OK.name(), WalletInfo.from(wallet));
+                .orElseThrow(() -> new NotFoundException("Wallet not found for memberId: " + memberId));
+        ApiResponseDto<WalletInfo> responseDto = new ApiResponseDto<>(HttpStatus.OK.value(), "회원 예치금 조회 성공", WalletInfo.from(wallet));
+        return ResponseEntity.ok(responseDto);
     }
 
     // memberId로 예치금 생성
-    public ApiResponseDto<WalletInfo> createWallet(UUID memberId) {
+    public ResponseEntity<ApiResponseDto<WalletInfo>> createWallet(UUID memberId) {
         Wallet wallet = Wallet.builder()
                 .memberId(memberId)
                 .build();
         Wallet savedWallet = walletRepository.save(wallet);
-        return new ApiResponseDto<>(HttpStatus.CREATED.value(), HttpStatus.CREATED.name(), WalletInfo.from(savedWallet));
+        ApiResponseDto<WalletInfo> responseDto = new ApiResponseDto<>(HttpStatus.CREATED.value(), "회원 예치금 생성 성공", WalletInfo.from(savedWallet));
+        return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
     }
 
     // memberId에 대한 예치금 입금 내역 조회
-    public PagedResponseDto<WalletDepositInfo> getDeposits(UUID memberId, Pageable pageable) {
+    public ResponseEntity<ApiResponseDto<PagedResponseDto<WalletDepositInfo>>> getDeposits(UUID memberId, Pageable pageable) {
         Page<WalletDepositLog> page = walletDepositLogRepository.findAllByMemberId(memberId, pageable);
         List<WalletDepositInfo> walletDepositLogs = page.stream()
                 .map(WalletDepositInfo::from)
                 .toList();
         PageInfoDto pageInfo = new PageInfoDto(page.getNumber(), page.getSize(), page.getTotalElements(), page.getTotalPages());
-        return new PagedResponseDto<>(walletDepositLogs, pageInfo);
+        PagedResponseDto<WalletDepositInfo> pagedResponseDto = new PagedResponseDto<>(walletDepositLogs, pageInfo);
+        ApiResponseDto<PagedResponseDto<WalletDepositInfo>> responseDto = new ApiResponseDto<>(HttpStatus.OK.value(), "회원 예치금 입금 내역 조회 성공", pagedResponseDto);
+        return ResponseEntity.ok(responseDto);
     }
 
     // memberId에 대한 예치금 출금 내역 조회
-    public PagedResponseDto<WalletWithdrawInfo> getWithdraws(UUID memberId, Pageable pageable) {
+    public ResponseEntity<ApiResponseDto<PagedResponseDto<WalletWithdrawInfo>>> getWithdraws(UUID memberId, Pageable pageable) {
         Page<WalletWithdrawLog> page = walletWithdrawLogRepository.findAllByMemberId(memberId, pageable);
         List<WalletWithdrawInfo> walletDepositLogs = page.stream()
                 .map(WalletWithdrawInfo::from)
                 .toList();
         PageInfoDto pageInfo = new PageInfoDto(page.getNumber(), page.getSize(), page.getTotalElements(), page.getTotalPages());
-        return new PagedResponseDto<>(walletDepositLogs, pageInfo);
+        PagedResponseDto<WalletWithdrawInfo> pagedResponseDto = new PagedResponseDto<>(walletDepositLogs, pageInfo);
+        ApiResponseDto<PagedResponseDto<WalletWithdrawInfo>> responseDto = new ApiResponseDto<>(HttpStatus.OK.value(), "회원 예치금 출금 내역 조회 성공", pagedResponseDto);
+        return ResponseEntity.ok(responseDto);
     }
 
     // 예치금 충전 (내부 api로 수정 예정)
     @Transactional
-    public ApiResponseDto<WalletInfo> chargeWallet(UUID memberId, WalletChargeCommand command) {
+    public ResponseEntity<ApiResponseDto<WalletInfo>> chargeWallet(UUID memberId, WalletChargeCommand command) {
+        if (command.amount() <= 0) {
+            throw new IllegalArgumentException("Amount to charge must be greater than zero.");
+        }
         Wallet wallet = walletRepository.findByMemberIdForUpdate(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("Wallet not found for memberId: " + memberId));
         wallet.deposit(command.amount());
@@ -76,12 +86,16 @@ public class WalletService {
                 .amount(command.amount())
                 .build();
         walletDepositLogRepository.save(walletDepositLog);
-        return new ApiResponseDto<>(HttpStatus.OK.value(), HttpStatus.OK.name(), WalletInfo.from(wallet));
+        ApiResponseDto<WalletInfo> responseDto = new ApiResponseDto<>(HttpStatus.OK.value(), "예치금 충전 성공", WalletInfo.from(wallet));
+        return ResponseEntity.ok(responseDto);
     }
 
     // 예치금 정산 (내부 api로 수정 예정)
     @Transactional
-    public ApiResponseDto<WalletInfo> settleWallet(UUID memberId, WalletSettleCommand command) {
+    public ResponseEntity<ApiResponseDto<WalletInfo>> settleWallet(UUID memberId, WalletSettleCommand command) {
+        if (command.amount() <= 0) {
+            throw new IllegalArgumentException("Amount to charge must be greater than zero.");
+        }
         Wallet wallet = walletRepository.findByMemberIdForUpdate(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("Wallet not found for memberId: " + memberId));
 
@@ -92,12 +106,16 @@ public class WalletService {
                 .amount(command.amount())
                 .build();
         walletDepositLogRepository.save(walletDepositLog);
-        return new ApiResponseDto<>(HttpStatus.OK.value(), HttpStatus.OK.name(), WalletInfo.from(wallet));
+        ApiResponseDto<WalletInfo> responseDto = new ApiResponseDto<>(HttpStatus.OK.value(), "예치금 정산 성공", WalletInfo.from(wallet));
+        return ResponseEntity.ok(responseDto);
     }
 
     //예치금 사용 (내부 api로 수정 예정)
     @Transactional
-    public ApiResponseDto<WalletInfo> withdrawWallet(UUID memberId, WalletWithdrawCommand command) {
+    public ResponseEntity<ApiResponseDto<WalletInfo>> withdrawWallet(UUID memberId, WalletWithdrawCommand command) {
+        if (command.amount() <= 0) {
+            throw new IllegalArgumentException("Amount to charge must be greater than zero.");
+        }
         Wallet wallet = walletRepository.findByMemberIdForUpdate(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("Wallet not found for memberId: " + memberId));
 
@@ -112,12 +130,13 @@ public class WalletService {
                 .amount(command.amount())
                 .build();
         walletWithdrawLogRepository.save(walletWithdrawLog);
-        return new ApiResponseDto<>(HttpStatus.OK.value(), HttpStatus.OK.name(), WalletInfo.from(wallet));
+        ApiResponseDto<WalletInfo> responseDto = new ApiResponseDto<>(HttpStatus.OK.value(), "예치금 사용 성공", WalletInfo.from(wallet));
+        return ResponseEntity.ok(responseDto);
     }
 
     // 예치금 환불 요청 (내부 api로 수정 예정)
     @Transactional
-    public ApiResponseDto<WalletInfo> requestRefundWallet(UUID memberId, WalletRefundCommand command) {
+    public ResponseEntity<ApiResponseDto<WalletInfo>> requestRefundWallet(UUID memberId, WalletRefundCommand command) {
         Wallet wallet = walletRepository.findByMemberIdForUpdate(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("Wallet not found for memberId: " + memberId));
 
@@ -133,17 +152,18 @@ public class WalletService {
         }
 
         if (wallet.getBalance() < walletDepositLog.getAmount()) {
-            throw new IllegalArgumentException("요청한 가격보다 예치금이 부족합니다.");
+            throw new IllegalArgumentException("환불할 예치금이 부족합니다.");
         }
 
         wallet.withdraw(walletDepositLog.getAmount());
         walletDepositLog.changeState(CANCEL_WAITING);
-        return new ApiResponseDto<>(HttpStatus.OK.value(), HttpStatus.OK.name(), WalletInfo.from(wallet));
+        ApiResponseDto<WalletInfo> responseDto = new ApiResponseDto<>(HttpStatus.OK.value(), "예치금 환불 요청 성공", WalletInfo.from(wallet));
+        return ResponseEntity.ok(responseDto);
     }
 
     // 예치금 환불 성공 (내부 api로 수정 예정)
     @Transactional
-    public ApiResponseDto<WalletInfo> confirmRefundWallet(UUID memberId, WalletRefundCommand command) {
+    public ResponseEntity<ApiResponseDto<WalletInfo>> confirmRefundWallet(UUID memberId, WalletRefundCommand command) {
         Wallet wallet = walletRepository.findByMemberIdForUpdate(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("Wallet not found for memberId: " + memberId));
 
@@ -159,12 +179,13 @@ public class WalletService {
         }
 
         walletDepositLog.changeState(CANCELED);
-        return new ApiResponseDto<>(HttpStatus.OK.value(), HttpStatus.OK.name(), WalletInfo.from(wallet));
+        ApiResponseDto<WalletInfo> responseDto = new ApiResponseDto<>(HttpStatus.OK.value(), "예치금 환불 성공", WalletInfo.from(wallet));
+        return ResponseEntity.ok(responseDto);
     }
 
     // 예치금 환불 실패 (내부 api로 수정 예정)
     @Transactional
-    public ApiResponseDto<WalletInfo> failRefundWallet(UUID memberId, WalletRefundCommand command) {
+    public ResponseEntity<ApiResponseDto<WalletInfo>> failRefundWallet(UUID memberId, WalletRefundCommand command) {
         Wallet wallet = walletRepository.findByMemberIdForUpdate(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("Wallet not found for memberId: " + memberId));
 
@@ -181,6 +202,7 @@ public class WalletService {
 
         wallet.deposit(walletDepositLog.getAmount());
         walletDepositLog.changeState(PAID);
-        return new ApiResponseDto<>(HttpStatus.OK.value(), HttpStatus.OK.name(), WalletInfo.from(wallet));
+        ApiResponseDto<WalletInfo> responseDto = new ApiResponseDto<>(HttpStatus.OK.value(), "예치금 환불 실패 처리 성공", WalletInfo.from(wallet));
+        return ResponseEntity.ok(responseDto);
     }
 }
