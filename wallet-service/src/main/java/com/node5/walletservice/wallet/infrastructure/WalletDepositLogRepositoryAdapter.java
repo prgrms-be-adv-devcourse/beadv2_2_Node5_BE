@@ -17,8 +17,8 @@ public class WalletDepositLogRepositoryAdapter implements WalletDepositLogReposi
     private final WalletDepositLogJpaRepository walletDepositLogJpaRepository;
 
     @Override
-    public Optional<WalletDepositLog> findById(UUID walletDepositLogid) {
-        return walletDepositLogJpaRepository.findById(walletDepositLogid);
+    public Optional<WalletDepositLog> findById(UUID walletDepositLogId) {
+        return walletDepositLogJpaRepository.findById(walletDepositLogId);
     }
 
     @Override
