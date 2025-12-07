@@ -90,7 +90,8 @@ public class Product {
 	) {
 
 		return new Product(
-			null, sellerId,
+			null,
+			sellerId,
 			name,
 			description,
 			price,

@@ -39,7 +39,7 @@ public class OpenApiConfig {
 			.in(SecurityScheme.In.HEADER);
 
 		return new OpenAPI()
-			.info(new Info().title("Shop Service API").version("v1"))
+			.info(new Info().title("Catalog Service API").version("v1"))
 			.servers(serverList)
 			.components(new Components().addSecuritySchemes(SECURITY_SCHEME_NAME, bearerScheme))
 			.addSecurityItem(new SecurityRequirement().addList(SECURITY_SCHEME_NAME));
