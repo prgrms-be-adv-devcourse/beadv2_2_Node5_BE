@@ -21,6 +21,9 @@ import com.node5.catalogservice.product.application.dto.ProductInfo;
 import com.node5.catalogservice.product.domain.ProductStatus;
 import com.node5.catalogservice.product.presentation.dto.ProductRequest;
 import com.node5.catalogservice.product.presentation.dto.StatusRequest;
+import com.node5.common.domain.ApiResponseDto;
+import com.node5.common.domain.PageInfoDto;
+import com.node5.common.domain.PagedResponseDto;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -42,9 +45,25 @@ public class ProductController {
 	@ApiResponses({
 		@ApiResponse(responseCode = "200", description = "판매 중인 상품 목록 조회 성공")
 	})
-	public ResponseEntity<Page<ProductInfo>> list(@ParameterObject Pageable pageable) {
-		Page<ProductInfo> result = productService.getOnSaleProducts(pageable);
-		return ResponseEntity.ok(result);
+	public ResponseEntity<ApiResponseDto<PagedResponseDto<ProductInfo>>> getProducts(
+		@ParameterObject Pageable pageable
+	) {
+		Page<ProductInfo> page = productService.getOnSaleProducts(pageable);
+
+		PagedResponseDto<ProductInfo> paged = new PagedResponseDto<>(
+			page.getContent(),
+			new PageInfoDto(
+				page.getNumber(),
+				page.getSize(),
+				page.getTotalElements(),
+				page.getTotalPages()
+			)
+		);
+
+		ApiResponseDto<PagedResponseDto<ProductInfo>> response =
+			new ApiResponseDto<>(HttpStatus.OK.value(), "판매 중인 상품 목록 조회 성공", paged);
+
+		return ResponseEntity.ok(response);
 	}
 
 	@GetMapping("/{id}")
@@ -53,9 +72,15 @@ public class ProductController {
 		@ApiResponse(responseCode = "200", description = "판매 중 상품 조회 성공"),
 		@ApiResponse(responseCode = "404", description = "해당 ID의 판매 중인 상품이 없습니다.")
 	})
-	public ResponseEntity<ProductInfo> get(@Parameter(description = "상품 ID") @PathVariable UUID id) {
+	public ResponseEntity<ApiResponseDto<ProductInfo>> getProduct(
+		@Parameter(description = "상품 ID") @PathVariable UUID id
+	) {
 		ProductInfo result = productService.getOnSaleProduct(id);
-		return ResponseEntity.ok(result);
+
+		ApiResponseDto<ProductInfo> response =
+			new ApiResponseDto<>(HttpStatus.OK.value(), "판매 중 상품 조회 성공", result);
+
+		return ResponseEntity.ok(response);
 	}
 
 	@GetMapping("/all")
@@ -63,9 +88,25 @@ public class ProductController {
 	@ApiResponses({
 		@ApiResponse(responseCode = "200", description = "전체 상품 목록 조회 성공")
 	})
-	public ResponseEntity<Page<ProductInfo>> listAll(@ParameterObject Pageable pageable) {
-		Page<ProductInfo> result = productService.getProducts(pageable);
-		return ResponseEntity.ok(result);
+	public ResponseEntity<ApiResponseDto<PagedResponseDto<ProductInfo>>> getAllProducts(
+		@ParameterObject Pageable pageable
+	) {
+		Page<ProductInfo> page = productService.getProducts(pageable);
+
+		PagedResponseDto<ProductInfo> paged = new PagedResponseDto<>(
+			page.getContent(),
+			new PageInfoDto(
+				page.getNumber(),
+				page.getSize(),
+				page.getTotalElements(),
+				page.getTotalPages()
+			)
+		);
+
+		ApiResponseDto<PagedResponseDto<ProductInfo>> response =
+			new ApiResponseDto<>(HttpStatus.OK.value(), "전체 상품 목록 조회 성공", paged);
+
+		return ResponseEntity.ok(response);
 	}
 
 	@PostMapping
@@ -74,9 +115,15 @@ public class ProductController {
 		@ApiResponse(responseCode = "201", description = "상품 등록 성공"),
 		@ApiResponse(responseCode = "400", description = "요청 값이 유효하지 않습니다.")
 	})
-	public ResponseEntity<ProductInfo> create(@RequestBody ProductRequest request) {
+	public ResponseEntity<ApiResponseDto<ProductInfo>> createProduct(
+		@RequestBody ProductRequest request
+	) {
 		ProductInfo result = productService.createProduct(request.toCreateCommand());
-		return ResponseEntity.status(HttpStatus.CREATED).body(result);
+
+		ApiResponseDto<ProductInfo> response =
+			new ApiResponseDto<>(HttpStatus.CREATED.value(), "상품 등록 성공", result);
+
+		return ResponseEntity.status(HttpStatus.CREATED).body(response);
 	}
 
 	@PatchMapping("/{id}")
@@ -85,12 +132,16 @@ public class ProductController {
 		@ApiResponse(responseCode = "200", description = "상품 정보 수정 성공"),
 		@ApiResponse(responseCode = "404", description = "해당 ID의 상품이 없습니다.")
 	})
-	public ResponseEntity<ProductInfo> update(
+	public ResponseEntity<ApiResponseDto<ProductInfo>> updateProduct(
 		@Parameter(description = "상품 ID") @PathVariable UUID id,
 		@RequestBody ProductRequest request
 	) {
 		ProductInfo result = productService.updateProduct(id, request.toUpdateCommand());
-		return ResponseEntity.ok(result);
+
+		ApiResponseDto<ProductInfo> response =
+			new ApiResponseDto<>(HttpStatus.OK.value(), "상품 정보 수정 성공", result);
+
+		return ResponseEntity.ok(response);
 	}
 
 	@PatchMapping("/{id}/status")
@@ -99,13 +150,17 @@ public class ProductController {
 		@ApiResponse(responseCode = "200", description = "상품 상태 변경 성공"),
 		@ApiResponse(responseCode = "404", description = "해당 ID의 상품이 없습니다.")
 	})
-	public ResponseEntity<ProductInfo> updateStatus(
+	public ResponseEntity<ApiResponseDto<ProductInfo>> updateProductStatus(
 		@Parameter(description = "상품 ID") @PathVariable UUID id,
 		@RequestBody StatusRequest request
 	) {
 		ProductStatus status = request.status();
 		ProductInfo result = productService.updateStatus(id, status);
-		return ResponseEntity.ok(result);
+
+		ApiResponseDto<ProductInfo> response =
+			new ApiResponseDto<>(HttpStatus.OK.value(), "상품 상태 변경 성공", result);
+
+		return ResponseEntity.ok(response);
 	}
 
 	@DeleteMapping("/{id}")
