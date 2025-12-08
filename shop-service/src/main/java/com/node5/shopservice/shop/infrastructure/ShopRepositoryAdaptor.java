@@ -17,8 +17,8 @@ public class ShopRepositoryAdaptor implements ShopRepository {
     private final ShopJpaRepository shopJpaRepository;
 
     @Override
-    public Page<Shop> findAll(Pageable pageable) {
-        return shopJpaRepository.findAll(pageable);
+    public Page<Shop> findAllByMemberId(UUID memberId, Pageable pageable) {
+        return findAllByMemberId(memberId, pageable);
     }
 
     @Override

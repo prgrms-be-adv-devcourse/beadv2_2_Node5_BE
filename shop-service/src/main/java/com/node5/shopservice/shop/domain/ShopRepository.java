@@ -7,7 +7,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface ShopRepository {
-    Page<Shop> findAll(Pageable pageable);
+    Page<Shop> findAllByMemberId(UUID memberId, Pageable pageable);
     Shop save(Shop shop);
     Optional<Shop> findById(UUID id);
     void deleteById(UUID id);

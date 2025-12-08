@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -21,12 +22,22 @@ public class ShopService {
 
     private final ShopRepository shopRepository;
 
-    public ResponseEntity<ApiResponseDto<PagedResponseDto<ShopInfo>>> findAll(Pageable pageable) {
-        Page<Shop> pagedShops = shopRepository.findAll(pageable);
-        List<ShopInfo> shops = pagedShops.stream().map(ShopInfo::from).toList();
-        PageInfoDto pageInfoDto = new PageInfoDto(pagedShops.getNumber(), pagedShops.getSize(), pagedShops.getTotalElements(), pagedShops.getTotalPages());
-        PagedResponseDto<ShopInfo> pagedResponseDto = new PagedResponseDto<>(shops, pageInfoDto);
+    public ResponseEntity<ApiResponseDto<PagedResponseDto<ShopInfo>>> findMyShops(UUID memberId, Pageable pageable) {
+        Page<Shop> pagedMyShops = shopRepository.findAllByMemberId(memberId, pageable);
+        List<ShopInfo> myShops = pagedMyShops.stream().map(ShopInfo::from).toList();
+        PageInfoDto pageInfoDto = new PageInfoDto(pagedMyShops.getNumber(), pagedMyShops.getSize(), pagedMyShops.getTotalElements(), pagedMyShops.getTotalPages());
+        PagedResponseDto<ShopInfo> pagedResponseDto = new PagedResponseDto<>(myShops, pageInfoDto);
         ApiResponseDto<PagedResponseDto<ShopInfo>> response = new ApiResponseDto<>(HttpStatus.OK.value(), "OK", pagedResponseDto);
+        return ResponseEntity.ok(response);
+    }
+
+    public ResponseEntity<ApiResponseDto<ShopInfo>> findMyShopInfo(UUID memberId, UUID shopId) {
+        Shop shop = shopRepository.findById(shopId).orElseThrow(() -> new IllegalArgumentException("Shop not found: " + shopId));
+        if (!shop.getMemberId().equals(memberId)) {
+            throw new IllegalArgumentException("Shop is not yours");
+        }
+        ShopInfo shopInfo = ShopInfo.from(shop);
+        ApiResponseDto<ShopInfo> response = new ApiResponseDto<>(HttpStatus.OK.value(), "OK", shopInfo);
         return ResponseEntity.ok(response);
     }
 }
