@@ -1,3 +1,5 @@
+package com.node5.memberservice.auth.presentation;
+
 import com.node5.common.domain.ApiResponseDto;
 import com.node5.memberservice.auth.application.AuthService;
 import com.node5.memberservice.auth.application.dto.LoginInfo;
