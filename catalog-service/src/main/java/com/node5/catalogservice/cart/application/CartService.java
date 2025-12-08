@@ -49,8 +49,7 @@ public class CartService {
 	}
 
 	public CartItemInfo decreaseItem(UUID cartItemId, CartItemUpdateCommand command) {
-		CartItem cartItem = cartItemRepository.findById(cartItemId)
-			.orElseThrow(() -> new IllegalArgumentException("CartItem not found. id=" + cartItemId));
+		CartItem cartItem = getCartItemOrThrow(cartItemId);
 
 		int amount = command.quantity(); // 줄이고 싶은 개수
 
@@ -61,8 +60,7 @@ public class CartService {
 	}
 
 	public CartItemInfo updateItem(UUID cartItemId, CartItemUpdateCommand command) {
-		CartItem cartItem = cartItemRepository.findById(cartItemId)
-			.orElseThrow(() -> new IllegalArgumentException("CartItem not found. id=" + cartItemId));
+		CartItem cartItem = getCartItemOrThrow(cartItemId);
 
 		cartItem.updateQuantity(command.quantity()); // 도메인에서 유효성 검사
 
@@ -85,5 +83,10 @@ public class CartService {
 		if (product.getStatus() != ProductStatus.ON_SALE) {
 			throw new IllegalArgumentException("해당 상품은 장바구니에 담을 수 없는 상태입니다. status=" + product.getStatus());
 		}
+	}
+
+	private CartItem getCartItemOrThrow(UUID cartItemId) {
+		return cartItemRepository.findById(cartItemId)
+			.orElseThrow(() -> new IllegalArgumentException("장바구니 항목이 존재하지 않습니다. id=" + cartItemId));
 	}
 }
