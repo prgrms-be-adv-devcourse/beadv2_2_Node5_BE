@@ -7,6 +7,10 @@ import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFac
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 @Component
 public class AuthenticationFilter extends AbstractGatewayFilterFactory<AuthenticationFilter.Config> {
     public AuthenticationFilter() {
@@ -19,10 +23,14 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
             Object attribute = exchange.getAttribute("cached_claims");
 
             if(attribute instanceof Claims claims) {
+                String memberId = claims.getSubject();
+                Set<String> roles = new HashSet<>(claims.get("memberRoles", List.class));
+                String status = claims.get("memberStatus", String.class);
+
                 ServerHttpRequest request = exchange.getRequest().mutate()
-                        .header("Member-Id", claims.getSubject())
-                        .header("Member-Role", claims.get("memberRole", String.class))
-                        .header("Member-Status", claims.get("memberStatus", String.class))
+                        .header("Member-Id", memberId)
+                        .header("Member-Roles", String.join(",", roles))
+                        .header("Member-Status", status)
                         .build();
 
                 return chain.filter(exchange.mutate().request(request).build());
