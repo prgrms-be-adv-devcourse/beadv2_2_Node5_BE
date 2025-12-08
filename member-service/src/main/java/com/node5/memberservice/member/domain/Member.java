@@ -40,18 +40,23 @@ public class Member extends BaseEntity {
 
     private LocalDateTime deletedAt;
 
-    private Member(UUID id, String email, MemberRole role, MemberStatus status) {
+    private Member(UUID id, String email, String name, String phoneNumber, String address, MemberRole role, MemberStatus status) {
         this.id = id;
         this.email = email;
+        this.name = name;
+        this.phoneNumber = phoneNumber;
+        this.address = address;
         this.role = role;
         this.status = status;
+        this.deletedAt = null;
     }
 
-    public static Member createWithEmailOnly(String email) {
+    public static Member create(String email, String name, String phoneNumber, String address) {
         UUID id = UUID.randomUUID();
         MemberRole role = MemberRole.USER;
-        MemberStatus status = MemberStatus.PENDING;
-        return new Member(id, email, role, status);
+        MemberStatus status = MemberStatus.ACTIVE;
+
+        return new Member(id, email, name, phoneNumber, address, role, status);
     }
 
     public void registerRequiredInfo(String name, String phoneNumber, String address) {
