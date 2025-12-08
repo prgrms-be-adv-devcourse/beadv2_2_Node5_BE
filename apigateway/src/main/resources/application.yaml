@@ -29,14 +29,18 @@ spring:
                 - Path=/member-service/**
               filters:
                 - RewritePath=/member-service/(?<segment>.*), /$\{segment}
-
-
             - id: wallet-service
               uri: lb://WALLET-SERVICE
               predicates:
                 - Path=/wallet-service/**
               filters:
                 - RewritePath=/wallet-service/(?<segment>.*), /$\{segment}
+            - id: subscription-service
+              uri: lb://SUBSCRIPTION-SERVICE
+              predicates:
+                - Path=/subscription-service/**
+              filters:
+                - RewritePath=/subscription-service/(?<segment>.*), /$\{segment}
           default-filters:
             - name: GlobalFilter
               args:
