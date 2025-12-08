@@ -34,7 +34,7 @@ public class Member extends BaseEntity {
 
     @Column(nullable = false, length = 20)
     @Convert(converter = MemberRoleSetConverter.class)
-    private Set<MemberRole> roles;
+    private Set<MemberRole> roles = new HashSet<>();
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
