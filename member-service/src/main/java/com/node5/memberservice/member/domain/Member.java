@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -21,18 +23,18 @@ public class Member extends BaseEntity {
     @Column(nullable = false, length = 100)
     private String email;
 
-    @Column(length = 20)
+    @Column(nullable = false, length = 20)
     private String name;
 
-    @Column(name = "phone_number", length = 20)
+    @Column(name = "phone_number", nullable = false, length = 20)
     private String phoneNumber;
 
-    @Column(length = 100)
+    @Column(nullable = false, length = 100)
     private String address;
 
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private MemberRole role;
+    @Convert(converter = MemberRoleSetConverter.class)
+    private Set<MemberRole> roles;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -46,7 +48,7 @@ public class Member extends BaseEntity {
         this.name = name;
         this.phoneNumber = phoneNumber;
         this.address = address;
-        this.role = role;
+        this.roles.add(role);
         this.status = status;
         this.deletedAt = null;
     }
