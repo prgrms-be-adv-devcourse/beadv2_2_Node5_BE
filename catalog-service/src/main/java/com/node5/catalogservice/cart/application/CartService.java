@@ -11,6 +11,9 @@ import com.node5.catalogservice.cart.application.dto.CartItemInfo;
 import com.node5.catalogservice.cart.application.dto.CartItemUpdateCommand;
 import com.node5.catalogservice.cart.domain.CartItem;
 import com.node5.catalogservice.cart.domain.CartItemRepository;
+import com.node5.catalogservice.product.domain.Product;
+import com.node5.catalogservice.product.domain.ProductRepository;
+import com.node5.catalogservice.product.domain.ProductStatus;
 
 import lombok.RequiredArgsConstructor;
 
@@ -19,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 public class CartService {
 
 	private final CartItemRepository cartItemRepository;
+	private final ProductRepository productRepository;
 
 	public Page<CartItemInfo> getCartItems(UUID memberId, Pageable pageable) {
 		return cartItemRepository.findByMemberId(memberId,pageable)
@@ -30,7 +34,8 @@ public class CartService {
 		UUID productId = command.productId();
 		int quantity = command.quantity();
 
-		// TODO: 상품 상태 검증 및 예외처리
+		// 상품 상태 검증
+		validateProduct(productId);
 
 		CartItem cartItem = cartItemRepository.findByMemberIdAndProductId(memberId, productId)
 			.map(existing -> {
@@ -71,5 +76,14 @@ public class CartService {
 
 	public void clearCart(UUID memberId) {
 		cartItemRepository.deleteByMemberId(memberId);
+	}
+
+	private void validateProduct(UUID productId) {
+		Product product = productRepository.findById(productId)
+			.orElseThrow(() -> new IllegalArgumentException("상품이 존재하지 않습니다. id=" + productId));
+
+		if (product.getStatus() != ProductStatus.ON_SALE) {
+			throw new IllegalArgumentException("해당 상품은 장바구니에 담을 수 없는 상태입니다. status=" + product.getStatus());
+		}
 	}
 }
