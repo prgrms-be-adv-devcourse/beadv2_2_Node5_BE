@@ -80,4 +80,8 @@ public class Shop extends BaseEntity {
         this.shopPhoneNumber = command.shopPhoneNumber();
         this.shopAddress = command.shopAddress();
     }
+
+    public void delete() {
+        this.deletedAt = LocalDateTime.now();
+    }
 }

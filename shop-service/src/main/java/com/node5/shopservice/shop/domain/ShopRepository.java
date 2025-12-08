@@ -7,9 +7,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface ShopRepository {
-    Page<Shop> findAllByMemberId(UUID memberId, Pageable pageable);
+    Page<Shop> findAllByMemberIdAndDeletedAtIsNull(UUID memberId, Pageable pageable);
     Shop save(Shop shop);
-    Optional<Shop> findById(UUID id);
-    void delete(Shop shop);
-    int countByMemberId(UUID memberId);
+    Optional<Shop> findByIdAndDeletedAtIsNull(UUID id);
+    int countByMemberIdAndDeletedAtIsNull(UUID memberId);
+    void flush();
 }

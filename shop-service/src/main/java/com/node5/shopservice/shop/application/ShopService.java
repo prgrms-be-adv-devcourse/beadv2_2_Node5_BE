@@ -30,7 +30,7 @@ public class ShopService {
     private final MemberClient memberClient;
 
     public ResponseEntity<ApiResponseDto<PagedResponseDto<ShopListResponse>>> findMyShopList(UUID memberId, Pageable pageable) {
-        Page<Shop> pagedMyShops = shopRepository.findAllByMemberId(memberId, pageable);
+        Page<Shop> pagedMyShops = shopRepository.findAllByMemberIdAndDeletedAtIsNull(memberId, pageable);
         List<ShopListResponse> myShops = pagedMyShops.stream().map(ShopListResponse::from).toList();
         PageInfoDto pageInfoDto = new PageInfoDto(pagedMyShops.getNumber(), pagedMyShops.getSize(), pagedMyShops.getTotalElements(), pagedMyShops.getTotalPages());
         PagedResponseDto<ShopListResponse> pagedResponseDto = new PagedResponseDto<>(myShops, pageInfoDto);
@@ -39,7 +39,7 @@ public class ShopService {
     }
 
     public ResponseEntity<ApiResponseDto<ShopInfoResponse>> findMyShopInfo(UUID memberId, UUID shopId) {
-        Shop shop = shopRepository.findById(shopId).orElseThrow(() -> new IllegalArgumentException("Shop not found: " + shopId));
+        Shop shop = shopRepository.findByIdAndDeletedAtIsNull(shopId).orElseThrow(() -> new IllegalArgumentException("Shop not found: " + shopId));
         if (!shop.getMemberId().equals(memberId)) {
             throw new IllegalArgumentException("Shop is not yours");
         }
@@ -62,7 +62,7 @@ public class ShopService {
 
     @Transactional
     public ResponseEntity<ApiResponseDto<ShopInfoResponse>> modifyMyShopInfo(UUID memberId, UUID shopId, ShopModifyCommand command) {
-        Shop shop = shopRepository.findById(shopId).orElseThrow(() -> new IllegalArgumentException("Shop not found: " + shopId));
+        Shop shop = shopRepository.findByIdAndDeletedAtIsNull(shopId).orElseThrow(() -> new IllegalArgumentException("Shop not found: " + shopId));
         if (!shop.getMemberId().equals(memberId)) {
             throw new IllegalArgumentException("Shop is not yours");
         }
@@ -75,13 +75,14 @@ public class ShopService {
 
     @Transactional
     public ResponseEntity<ApiResponseDto<ShopDeleteResponse>> deleteMyShop(UUID memberId, UUID shopId) {
-        Shop shop = shopRepository.findById(shopId).orElseThrow(() -> new IllegalArgumentException("Shop not found: " + shopId));
+        Shop shop = shopRepository.findByIdAndDeletedAtIsNull(shopId).orElseThrow(() -> new IllegalArgumentException("Shop not found: " + shopId));
         if (!shop.getMemberId().equals(memberId)) {
             throw new IllegalArgumentException("Shop is not yours");
         }
-        shopRepository.delete(shop);
+        shop.delete();
+        shopRepository.flush();
 
-        int shopCount = shopRepository.countByMemberId(memberId);
+        int shopCount = shopRepository.countByMemberIdAndDeletedAtIsNull(memberId);
         String accessToken = null;
         if (shopCount == 0) {
             accessToken = updateMemberRoles(memberId, "SELLER", RoleAction.REMOVE);
@@ -98,7 +99,7 @@ public class ShopService {
             return response.getBody().data();
         } catch (Exception e) {
             log.error("memberClient.updateMemberRoles error : {}", e.getMessage());
-            throw new RuntimeException("권한 업데이트 실패: " + e.getMessage());
+            throw new RuntimeException("권한 업데이트 실패: " + e);
         }
     }
 }

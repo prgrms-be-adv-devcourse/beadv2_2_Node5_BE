@@ -25,7 +25,6 @@ public class ShopController {
 
     @GetMapping
     public ResponseEntity<ApiResponseDto<PagedResponseDto<ShopListResponse>>> findMyShopList(@RequestHeader("Member-Id") UUID memberId, Pageable pageable) {
-        System.out.println("memberId: " + memberId);
         return shopService.findMyShopList(memberId, pageable);
     }
 
