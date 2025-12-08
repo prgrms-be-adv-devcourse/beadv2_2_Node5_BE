@@ -15,6 +15,7 @@ import com.node5.catalogservice.product.domain.Product;
 import com.node5.catalogservice.product.domain.ProductRepository;
 import com.node5.catalogservice.product.domain.ProductStatus;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -72,6 +73,7 @@ public class CartService {
 		cartItemRepository.deleteById(cartItemId);
 	}
 
+	@Transactional
 	public void clearCart(UUID memberId) {
 		cartItemRepository.deleteByMemberId(memberId);
 	}
