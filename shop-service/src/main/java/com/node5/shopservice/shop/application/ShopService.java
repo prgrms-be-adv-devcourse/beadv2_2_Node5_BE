@@ -26,6 +26,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ShopService {
 
+    private static final String ROLE_SELLER = "SELLER";
+
     private final ShopRepository shopRepository;
     private final MemberClient memberClient;
 
@@ -53,7 +55,7 @@ public class ShopService {
         Shop shop = Shop.create(memberId, command);
         Shop savedShop = shopRepository.save(shop);
 
-        String accessToken = updateMemberRoles(memberId, "SELLER", RoleAction.ADD);
+        String accessToken = updateMemberRoles(memberId, RoleAction.ADD);
 
         ShopRegisterResponse shopRegisterResponse = new ShopRegisterResponse(savedShop.getId(), accessToken);
         ApiResponseDto<ShopRegisterResponse> response = new ApiResponseDto<>(HttpStatus.OK.value(), "OK", shopRegisterResponse);
@@ -85,16 +87,16 @@ public class ShopService {
         int shopCount = shopRepository.countByMemberIdAndDeletedAtIsNull(memberId);
         String accessToken = null;
         if (shopCount == 0) {
-            accessToken = updateMemberRoles(memberId, "SELLER", RoleAction.REMOVE);
+            accessToken = updateMemberRoles(memberId, RoleAction.REMOVE);
         }
         ShopDeleteResponse shopDeleteResponse = new ShopDeleteResponse(accessToken);
         ApiResponseDto<ShopDeleteResponse> response = new ApiResponseDto<>(HttpStatus.OK.value(), "OK", shopDeleteResponse);
         return ResponseEntity.ok(response);
     }
 
-    private String updateMemberRoles(UUID memberId, String role, RoleAction action) {
+    private String updateMemberRoles(UUID memberId, RoleAction action) {
         try {
-            RoleModifyRequest request = new RoleModifyRequest(role, action);
+            RoleModifyRequest request = new RoleModifyRequest(ROLE_SELLER, action);
             ResponseEntity<ApiResponseDto<String>> response = memberClient.modifyMemberRoles(memberId, request);
             return response.getBody().data();
         } catch (Exception e) {
