@@ -18,7 +18,7 @@ public class ShopRepositoryAdaptor implements ShopRepository {
 
     @Override
     public Page<Shop> findAllByMemberId(UUID memberId, Pageable pageable) {
-        return findAllByMemberId(memberId, pageable);
+        return shopJpaRepository.findAllByMemberId(memberId, pageable);
     }
 
     @Override
@@ -32,7 +32,12 @@ public class ShopRepositoryAdaptor implements ShopRepository {
     }
 
     @Override
-    public void deleteById(UUID id) {
-        shopJpaRepository.deleteById(id);
+    public void delete(Shop shop) {
+        shopJpaRepository.delete(shop);
+    }
+
+    @Override
+    public int countByMemberId(UUID memberId) {
+        return shopJpaRepository.countByMemberId(memberId);
     }
 }

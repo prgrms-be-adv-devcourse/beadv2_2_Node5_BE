@@ -9,4 +9,5 @@ import java.util.UUID;
 
 public interface ShopJpaRepository extends JpaRepository<Shop, UUID> {
     Page<Shop> findAllByMemberId(UUID memberId, Pageable pageable);
+    int countByMemberId(UUID memberId);
 }

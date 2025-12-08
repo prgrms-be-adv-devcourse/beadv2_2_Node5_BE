@@ -10,5 +10,6 @@ public interface ShopRepository {
     Page<Shop> findAllByMemberId(UUID memberId, Pageable pageable);
     Shop save(Shop shop);
     Optional<Shop> findById(UUID id);
-    void deleteById(UUID id);
+    void delete(Shop shop);
+    int countByMemberId(UUID memberId);
 }

@@ -3,7 +3,12 @@ package com.node5.shopservice.shop.presentation;
 import com.node5.common.domain.ApiResponseDto;
 import com.node5.common.domain.PagedResponseDto;
 import com.node5.shopservice.shop.application.ShopService;
-import com.node5.shopservice.shop.application.dto.ShopInfo;
+import com.node5.shopservice.shop.application.dto.ShopDeleteResponse;
+import com.node5.shopservice.shop.application.dto.ShopInfoResponse;
+import com.node5.shopservice.shop.application.dto.ShopListResponse;
+import com.node5.shopservice.shop.application.dto.ShopRegisterResponse;
+import com.node5.shopservice.shop.presentation.dto.ShopRegisterRequest;
+import com.node5.shopservice.shop.presentation.dto.ShopModifyRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -18,16 +23,30 @@ public class ShopController {
 
     private final ShopService shopService;
 
-    // Todo: memberId는 param으로 안 들어오고 apigateway 통해서 헤더에 담겨 온다.
     @GetMapping
-    public ResponseEntity<ApiResponseDto<PagedResponseDto<ShopInfo>>> findMyShopList(@RequestParam UUID memberId, Pageable pageable) {
-        return shopService.findMyShops(memberId, pageable);
+    public ResponseEntity<ApiResponseDto<PagedResponseDto<ShopListResponse>>> findMyShopList(@RequestHeader("Member-Id") UUID memberId, Pageable pageable) {
+        System.out.println("memberId: " + memberId);
+        return shopService.findMyShopList(memberId, pageable);
     }
 
     @GetMapping("/{shopId}")
-    public ResponseEntity<ApiResponseDto<ShopInfo>> findMyShopInfo(@RequestParam UUID memberId, @PathVariable UUID shopId) {
+    public ResponseEntity<ApiResponseDto<ShopInfoResponse>> findMyShopInfo(@RequestHeader("Member-Id") UUID memberId, @PathVariable UUID shopId) {
         return shopService.findMyShopInfo(memberId, shopId);
     }
 
+    @PostMapping
+    public ResponseEntity<ApiResponseDto<ShopRegisterResponse>> registerShop(@RequestHeader("Member-Id") UUID memberId, @RequestBody ShopRegisterRequest request) {
+        return shopService.registerShop(memberId, request.toCommand());
+    }
+
+    @PutMapping("/{shopId}")
+    public ResponseEntity<ApiResponseDto<ShopInfoResponse>> modifyMyShopInfo(@RequestHeader("Member-Id") UUID memberId, @PathVariable UUID shopId, @RequestBody ShopModifyRequest request) {
+        return shopService.modifyMyShopInfo(memberId, shopId, request.toCommand());
+    }
+
+    @DeleteMapping("/{shopId}")
+    public ResponseEntity<ApiResponseDto<ShopDeleteResponse>> deleteMyShop(@RequestHeader("Member-Id") UUID memberId, @PathVariable UUID shopId) {
+        return shopService.deleteMyShop(memberId, shopId);
+    }
 
 }
