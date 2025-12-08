@@ -11,6 +11,12 @@ spring:
       server:
         webflux:
           routes:
+            - id: catalog-service
+              uri: lb://CATALOG-SERVICE
+              predicates:
+                - Path=/catalog-service/**
+              filters:
+                - RewritePath=/catalog-service/(?<segment>.*), /$\{segment}
             #        - id: shop-service
             #          uri: lb://SHOP-SERVICE
             #          predicates:
@@ -23,6 +29,12 @@ spring:
                 - Path=/member-service/**
               filters:
                 - RewritePath=/member-service/(?<segment>.*), /$\{segment}
+            - id: wallet-service
+              uri: lb://WALLET-SERVICE
+              predicates:
+                - Path=/wallet-service/**
+              filters:
+                - RewritePath=/wallet-service/(?<segment>.*), /$\{segment}
             - id: subscription-service
               uri: lb://SUBSCRIPTION-SERVICE
               predicates:
