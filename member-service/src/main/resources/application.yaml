@@ -34,3 +34,10 @@ server:
 
 token:
   secret: ${TOKEN_SECRET}
+  expiration:
+    access: 3600000
+    refresh: 604800000
+
+kakao:
+  api:
+    key: ${KAKAO_API_KEY}
