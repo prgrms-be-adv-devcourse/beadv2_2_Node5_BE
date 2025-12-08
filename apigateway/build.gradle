@@ -10,5 +10,5 @@ dependencies {
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.3'
     runtimeOnly 'io.jsonwebtoken:jjwt-gson:0.12.3'
 
-    implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui:2.6.0'
+    implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui:2.7.0'
 }
