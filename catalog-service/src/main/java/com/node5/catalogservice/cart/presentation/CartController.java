@@ -99,23 +99,6 @@ public class CartController {
 		);
 	}
 
-	@PatchMapping("/{id}/decrease")
-	@Operation(summary = "장바구니 수량 감소", description = "장바구니 항목의 수량을 감소시킵니다.")
-	@ApiResponses({
-		@ApiResponse(responseCode = "200", description = "장바구니 수량 감소 성공"),
-		@ApiResponse(responseCode = "404", description = "해당 ID의 장바구니 항목이 없습니다.")
-	})
-	public ResponseEntity<ApiResponseDto<CartItemInfo>> decreaseItem(
-		@Parameter(description = "장바구니 항목 ID") @PathVariable("id") UUID id,
-		@RequestBody CartItemUpdateRequest request
-	) {
-		CartItemInfo result = cartService.decreaseItem(id, request.toCommand());
-
-		return ResponseEntity.ok(
-			new ApiResponseDto<>(HttpStatus.OK.value(), "장바구니 수량 감소 성공", result)
-		);
-	}
-
 	@DeleteMapping("/{id}")
 	@Operation(summary = "장바구니 상품 삭제", description = "장바구니에서 특정 항목을 삭제합니다.")
 	@ApiResponses({

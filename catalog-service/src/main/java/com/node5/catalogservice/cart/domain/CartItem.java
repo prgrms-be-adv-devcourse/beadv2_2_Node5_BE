@@ -51,21 +51,6 @@ public class CartItem extends BaseEntity {
 		this.quantity += amount;
 	}
 
-	public void decreaseQuantity(int amount) {
-		validateDecreaseAmount(amount);
-		this.quantity -= amount;
-	}
-
-	private void validateDecreaseAmount(int amount) {
-		if (amount <= 0) {
-			throw new IllegalArgumentException("Decrease amount must be greater than zero.");
-		}
-
-		if (this.quantity - amount <= 0) {
-			throw new IllegalArgumentException("Quantity after decrease must be greater than zero.");
-		}
-	}
-
 	private static void validateQuantity(int quantity) {
 		if (quantity <= 0) {
 			throw new IllegalArgumentException("Quantity must be greater than zero.");

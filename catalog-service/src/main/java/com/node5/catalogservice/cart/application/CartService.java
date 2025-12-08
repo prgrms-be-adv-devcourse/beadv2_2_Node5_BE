@@ -49,17 +49,6 @@ public class CartService {
 		return CartItemInfo.from(saved);
 	}
 
-	public CartItemInfo decreaseItem(UUID cartItemId, CartItemUpdateCommand command) {
-		CartItem cartItem = getCartItemOrThrow(cartItemId);
-
-		int amount = command.quantity(); // 줄이고 싶은 개수
-
-		cartItem.decreaseQuantity(amount); // 도메인에서 유효성 검사
-
-		CartItem saved = cartItemRepository.save(cartItem);
-		return CartItemInfo.from(saved);
-	}
-
 	public CartItemInfo updateItem(UUID cartItemId, CartItemUpdateCommand command) {
 		CartItem cartItem = getCartItemOrThrow(cartItemId);
 
