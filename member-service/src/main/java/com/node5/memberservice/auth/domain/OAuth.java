@@ -39,4 +39,8 @@ public class OAuth extends BaseEntity {
     public static OAuth create(Member member, OAuthUserInfo oAuthUserInfo) {
         return new OAuth(member, oAuthUserInfo.provider(), oAuthUserInfo.providerId());
     }
+
+    public void modifyProviderId(String providerId) {
+        this.providerId = providerId;
+    }
 }
