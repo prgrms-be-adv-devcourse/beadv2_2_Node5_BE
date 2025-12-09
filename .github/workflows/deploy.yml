@@ -43,6 +43,9 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Set up Docker Buildx # multi-arch 빌드를 위한 buildx 활성화
+        uses: docker/setup-buildx-action@v3
+
       # 도커 이미지 build & push
       - name: Build & Push docker image
         uses: docker/build-push-action@v5
