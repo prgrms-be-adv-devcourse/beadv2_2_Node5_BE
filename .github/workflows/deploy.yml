@@ -10,7 +10,7 @@ on:
 jobs:
   build-and-deploy:
     name: build application and make jar file
-    runs-on: ec2-runner
+    runs-on: self-hosted
     strategy:
       matrix:
         service: [
