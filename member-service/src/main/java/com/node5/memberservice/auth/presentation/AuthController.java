@@ -38,7 +38,7 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(authService.register(request.toCommand()));
     }
 
-    @PostMapping("/auth/email/send")
+    @PostMapping("/email/send")
     public ResponseEntity<Void> sendEmailVerificationCode(@RequestBody SendEmailVerificationRequest request) {
         authService.sendEmailVerificationCode(request.toCommand());
         return ResponseEntity.ok().build();

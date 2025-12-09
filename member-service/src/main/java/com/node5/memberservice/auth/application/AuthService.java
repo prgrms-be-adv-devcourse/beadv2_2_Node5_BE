@@ -8,13 +8,16 @@ import com.node5.memberservice.auth.oauth.dto.OAuthUserInfo;
 import com.node5.memberservice.auth.util.JwtProvider;
 import com.node5.memberservice.member.domain.Member;
 import com.node5.memberservice.member.domain.MemberRepository;
+import io.jsonwebtoken.Claims;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -28,19 +31,24 @@ public class AuthService {
     private final Map<String, OAuthProviderService> providerMap;
     private final JwtProvider jwtProvider;
     private final JavaMailSender mailSender;
+    private final StringRedisTemplate stringRedisTemplate;
+
     @Value("${spring.mail.username}")
     private String emailSender;
+
+
 
     public AuthService(
             OAuthRepository oAuthRepository, MemberRepository memberRepository,
             List<OAuthProviderService> providerList,
-            JwtProvider jwtProvider, JavaMailSender mailSender
+            JwtProvider jwtProvider, JavaMailSender mailSender, StringRedisTemplate stringRedisTemplate
     ) {
         this.oAuthRepository = oAuthRepository;
         this.memberRepository = memberRepository;
         this.providerMap = providerList.stream().collect(Collectors.toMap(OAuthProviderService::getProviderName, provider -> provider));
         this.jwtProvider = jwtProvider;
         this.mailSender = mailSender;
+        this.stringRedisTemplate = stringRedisTemplate;
     }
 
     public LoginInfo login(OAuthLoginCommand command) {
@@ -89,10 +97,11 @@ public class AuthService {
         return LoginInfo.success(member, accessToken, refreshToken);
     }
 
-    @Transactional(readOnly = true)
     public void sendEmailVerificationCode(SendEmailVerificationCommand command) {
-        jwtProvider.parseClaims(command.temporaryToken());
-        SimpleMailMessage mailMessage = createMailMessage(command.email(), generateVerificationCode());
+        jwtProvider.validateTemporaryToken(command.temporaryToken());
+        String verificationCode = generateVerificationCode();
+        saveVerificationCode(command.email(), verificationCode);
+        SimpleMailMessage mailMessage = createMailMessage(command.email(), verificationCode);
         mailSender.send(mailMessage);
     }
 
@@ -109,5 +118,10 @@ public class AuthService {
         SecureRandom random = new SecureRandom();
         int code = random.nextInt(1_000_000); // 0 ~ 999999
         return String.format("%06d", code);   // 항상 6자리로 패딩
+    }
+
+    private void saveVerificationCode(String email, String code) {
+        String key = "email:verify:" + email;
+        stringRedisTemplate.opsForValue().set(key, code, Duration.ofMinutes(10));
     }
 }

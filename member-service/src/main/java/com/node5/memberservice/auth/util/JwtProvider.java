@@ -73,7 +73,7 @@ public class JwtProvider {
                 .compact();
     }
 
-    public Claims parseClaims(String token) {
+    private Claims parseClaims(String token) {
         try {
             return Jwts.parser()
                     .verifyWith(secretKey)
@@ -86,6 +86,15 @@ public class JwtProvider {
             throw new JwtException("JWT error");
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage());
+        }
+    }
+
+    public void validateTemporaryToken(String token) {
+        Claims claims = parseClaims(token);
+
+        String type = claims.get("type", String.class);
+        if (!TokenType.TEMPORARY.name().equals(type)) {
+            throw new JwtException("임시 토큰이 아닙니다.");
         }
     }
 
