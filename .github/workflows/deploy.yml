@@ -67,12 +67,3 @@ jobs:
             docker compose pull
             docker compose up -d
             docker image prune -a -f
-
-      - name: Remove IP from Security Group
-        if: always()
-        run: |
-          aws ec2 revoke-security-group-ingress \
-            --group-id ${{ secrets.AWS_SECURITY_GROUP_ID }} \
-            --protocol tcp \
-            --port 22 \
-            --cidr "${{ steps.ip.outputs.ip }}/32"
