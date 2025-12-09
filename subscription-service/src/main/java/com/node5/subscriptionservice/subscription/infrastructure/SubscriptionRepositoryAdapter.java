@@ -2,11 +2,14 @@ package com.node5.subscriptionservice.subscription.infrastructure;
 
 import com.node5.subscriptionservice.subscription.domain.Subscription;
 import com.node5.subscriptionservice.subscription.domain.SubscriptionRepository;
+import com.node5.subscriptionservice.subscription.domain.SubscriptionStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -24,4 +27,9 @@ public class SubscriptionRepositoryAdapter implements SubscriptionRepository {
 
     @Override
     public Page<Subscription> findAllByMemberId(UUID memberId, Pageable pageable){return jpaRepository.findAllByMemberId(memberId,pageable);}
+
+    @Override
+    public List<Subscription> findAllByNextRunDateAndSubscriptionStatus(LocalDate nextRunDate, SubscriptionStatus subscriptionStatus) {
+        return jpaRepository.findAllByNextRunDateAndSubscriptionStatus(nextRunDate, subscriptionStatus);
+    }
 }

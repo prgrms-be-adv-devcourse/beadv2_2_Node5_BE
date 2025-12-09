@@ -8,6 +8,11 @@ spring:
     config:
       uri: http://localhost:8888
       profile: default
+  batch:
+    job:
+      enabled: false
+    jdbc:
+      initialize-schema: always
 
 management:
   endpoints:
