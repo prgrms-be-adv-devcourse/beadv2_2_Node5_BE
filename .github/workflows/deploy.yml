@@ -1,0 +1,65 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    name: build application and make jar file
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        service: [
+          "apigateway",
+          "billing-service",
+          "catalog-service",
+          "member-service",
+          "order-service",
+          "settlement-service",
+          "shop-service",
+          "subscription-service"
+        ]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Build bootJar
+        run: ./gradlew :${{ matrix.service }}:bootJar
+
+      # 도커 로그인
+      - name: Login to Dockerhub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # 도커 이미지 build & push
+      - name: Build & Push docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./${{ matrix.service }}
+          push: true
+          tags: ${{ secrets.DOCKER_REPO }}/${{ matrix.service }}:latest
+
+      # EC2 배포
+      - name: Deploy All Services to EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            echo "${{ secrets.DOCKERHUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+            docker compose pull
+            docker compose up -d
+            docker image prune -a -f
