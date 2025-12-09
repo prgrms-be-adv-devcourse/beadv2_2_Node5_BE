@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.UUID;
 
 import static com.node5.billingservice.wallet.domain.WalletDepositLogState.*;
+import static com.node5.billingservice.wallet.exception.WalletErrorCode.WALLET_LOG_NOT_FOUND;
 import static com.node5.billingservice.wallet.exception.WalletErrorCode.WALLET_NOT_FOUND;
 
 @Service
@@ -56,7 +57,7 @@ public class WalletService {
     @Transactional
     public WalletInfo chargeWallet(UUID memberId, WalletChargeCommand command) {
         Wallet wallet = walletRepository.findByMemberIdForUpdate(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("Wallet not found for memberId: " + memberId));
+                .orElseThrow(() -> new WalletException(WALLET_NOT_FOUND));
         wallet.deposit(command.amount());
 
         WalletDepositLog walletDepositLog = WalletDepositLog.paidBuilder()
@@ -89,9 +90,7 @@ public class WalletService {
         Wallet wallet = walletRepository.findByMemberIdForUpdate(memberId)
                 .orElseThrow(() -> new WalletException(WALLET_NOT_FOUND));
 
-        if (wallet.getBalance() < command.amount()) {
-            throw new IllegalArgumentException("요청한 가격보다 예치금이 부족합니다.");
-        }
+        wallet.validateSufficientBalance(command.amount());
 
         wallet.withdraw(command.amount());
 
@@ -108,29 +107,17 @@ public class WalletService {
     @Transactional
     public WalletInfo requestRefundWallet(UUID memberId, WalletRefundCommand command) {
         Wallet wallet = walletRepository.findByMemberIdForUpdate(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("Wallet not found for memberId: " + memberId));
+                .orElseThrow(() -> new WalletException(WALLET_NOT_FOUND));
 
-        WalletDepositLog walletDepositLog = walletDepositLogRepository.findById(command.walletDepositLogId())
-                .orElseThrow(() -> new IllegalArgumentException("WalletDepositLog not found for id: " + command.walletDepositLogId()));
+        WalletDepositLog depositLog = walletDepositLogRepository.findById(command.walletDepositLogId())
+                .orElseThrow(() -> new WalletException(WALLET_LOG_NOT_FOUND));
 
-        if (walletDepositLog.getState() != PAID) {
-            throw new IllegalArgumentException("환불 가능한 상태가 아닙니다.");
-        }
+        depositLog.validateRefundable(command.paymentKey(), PAID);
 
-        if (walletDepositLog.getPaymentKey() == null) {
-            throw new IllegalArgumentException("결제 키가 존재하지 않습니다.");
-        }
+        wallet.validateSufficientBalance(depositLog.getAmount());
 
-        if (!walletDepositLog.getPaymentKey().equals(command.paymentKey())) {
-            throw new IllegalArgumentException("결제 키가 일치하지 않습니다.");
-        }
-
-        if (wallet.getBalance() < walletDepositLog.getAmount()) {
-            throw new IllegalArgumentException("환불할 예치금이 부족합니다.");
-        }
-
-        wallet.withdraw(walletDepositLog.getAmount());
-        walletDepositLog.changeState(CANCEL_WAITING);
+        wallet.withdraw(depositLog.getAmount());
+        depositLog.changeState(CANCEL_WAITING);
         return WalletInfo.from(wallet);
     }
 
@@ -140,22 +127,11 @@ public class WalletService {
         Wallet wallet = walletRepository.findByMemberIdForUpdate(memberId)
                 .orElseThrow(() -> new WalletException(WALLET_NOT_FOUND));
 
-        WalletDepositLog walletDepositLog = walletDepositLogRepository.findById(command.walletDepositLogId())
-                .orElseThrow(() -> new IllegalArgumentException("WalletDepositLog not found for id: " + command.walletDepositLogId()));
+        WalletDepositLog depositLog = walletDepositLogRepository.findById(command.walletDepositLogId())
+                .orElseThrow(() -> new WalletException(WALLET_LOG_NOT_FOUND));
 
-        if (walletDepositLog.getState() != CANCEL_WAITING) {
-            throw new IllegalArgumentException("환불 가능한 상태가 아닙니다.");
-        }
-
-        if (walletDepositLog.getPaymentKey() == null) {
-            throw new IllegalArgumentException("결제 키가 존재하지 않습니다.");
-        }
-
-        if (!walletDepositLog.getPaymentKey().equals(command.paymentKey())) {
-            throw new IllegalArgumentException("결제 키가 일치하지 않습니다.");
-        }
-
-        walletDepositLog.changeState(CANCELED);
+        depositLog.validateRefundable(command.paymentKey(), CANCEL_WAITING);
+        depositLog.changeState(CANCELED);
         return WalletInfo.from(wallet);
     }
 
@@ -165,23 +141,13 @@ public class WalletService {
         Wallet wallet = walletRepository.findByMemberIdForUpdate(memberId)
                 .orElseThrow(() -> new WalletException(WALLET_NOT_FOUND));
 
-        WalletDepositLog walletDepositLog = walletDepositLogRepository.findById(command.walletDepositLogId())
-                .orElseThrow(() -> new IllegalArgumentException("WalletDepositLog not found for id: " + command.walletDepositLogId()));
+        WalletDepositLog depositLog = walletDepositLogRepository.findById(command.walletDepositLogId())
+                .orElseThrow(() -> new WalletException(WALLET_LOG_NOT_FOUND));
 
-        if (walletDepositLog.getState() != CANCEL_WAITING) {
-            throw new IllegalArgumentException("환불 가능한 상태가 아닙니다.");
-        }
+        depositLog.validateRefundable(command.paymentKey(), CANCEL_WAITING);
 
-        if (walletDepositLog.getPaymentKey() == null) {
-            throw new IllegalArgumentException("결제 키가 존재하지 않습니다.");
-        }
-
-        if (!walletDepositLog.getPaymentKey().equals(command.paymentKey())) {
-            throw new IllegalArgumentException("결제 키가 일치하지 않습니다.");
-        }
-
-        wallet.deposit(walletDepositLog.getAmount());
-        walletDepositLog.changeState(PAID);
+        wallet.deposit(depositLog.getAmount());
+        depositLog.changeState(PAID);
         return WalletInfo.from(wallet);
     }
 }
