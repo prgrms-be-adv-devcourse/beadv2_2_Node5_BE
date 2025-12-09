@@ -1,12 +1,14 @@
 package com.node5.catalogservice.search.application;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.node5.catalogservice.search.application.dto.ProductSearchResponse;
 import com.node5.catalogservice.search.domain.ProductDocument;
-import com.node5.catalogservice.search.infrastrucutre.ProductSearchRepository;
+import com.node5.catalogservice.search.domain.ProductSearchSort;
+import com.node5.catalogservice.search.infrastructure.ProductSearchRepository;
 import com.node5.catalogservice.search.presentation.dto.ProductSearchRequest;
 
 import lombok.RequiredArgsConstructor;
@@ -23,75 +25,68 @@ public class SearchService {
 		String category = request.category();
 		Integer minPrice = request.minPrice();
 		Integer maxPrice = request.maxPrice();
+		ProductSearchSort sort = request.sort();
 
 		boolean hasKeyword = keyword != null && !keyword.isBlank();
 		boolean hasCategory = category != null && !category.isBlank();
-		boolean hasPriceRange = (minPrice != null && maxPrice != null);
+		boolean hasPriceRange = minPrice != null && maxPrice != null;
 
-		// Integer → Long 변환
-		Long min = (minPrice != null) ? minPrice.longValue() : null;
-		Long max = (maxPrice != null) ? maxPrice.longValue() : null;
-
-		// TODO: shopId, sort는 1차 구현에서는 사용하지 않음
-		// String shopId = request.shopId();
-		// ProductSearchSort sort = request.sort();
+		// 정렬 포함된 pageable 생성
+		Pageable sortedPageable = PageRequest.of(
+			pageable.getPageNumber(),
+			pageable.getPageSize(),
+			(sort == null ? ProductSearchSort.LATEST : sort).toSort()
+		);
 
 		Page<ProductDocument> result;
 
-		// 1) 가격 범위 없는 기존 분기
+		// 1) 가격 범위 없는 경우
 		if (!hasPriceRange) {
 			if (!hasKeyword && !hasCategory) {
-				result = productSearchRepository.findByStatus("ON_SALE", pageable);
+				result = productSearchRepository.findByStatus("ON_SALE", sortedPageable);
 
 			} else if (hasKeyword && !hasCategory) {
-				result = productSearchRepository
-					.findByStatusAndNameContainingIgnoreCase("ON_SALE", keyword, pageable);
+				result = productSearchRepository.findByStatusAndNameContainingIgnoreCase(
+					"ON_SALE", keyword, sortedPageable);
 
 			} else if (!hasKeyword && hasCategory) {
-				result = productSearchRepository
-					.findByStatusAndCategory("ON_SALE", category, pageable);
+				result = productSearchRepository.findByStatusAndCategory(
+					"ON_SALE", category, sortedPageable);
 
-			} else { // keyword + category
-				result = productSearchRepository
-					.findByStatusAndNameContainingIgnoreCaseAndCategory(
-						"ON_SALE", keyword, category, pageable
-					);
+			} else {
+				result = productSearchRepository.findByStatusAndNameContainingIgnoreCaseAndCategory(
+					"ON_SALE", keyword, category, sortedPageable);
 			}
 
 			// 2) 가격 범위 있는 경우
 		} else {
 			if (!hasKeyword && !hasCategory) {
-				result = productSearchRepository
-					.findByStatusAndPriceBetween("ON_SALE", min, max, pageable);
+				result = productSearchRepository.findByStatusAndPriceBetween(
+					"ON_SALE", minPrice, maxPrice, sortedPageable);
 
 			} else if (hasKeyword && !hasCategory) {
-				result = productSearchRepository
-					.findByStatusAndNameContainingIgnoreCaseAndPriceBetween(
-						"ON_SALE", keyword, min, max, pageable
-					);
+				result = productSearchRepository.findByStatusAndNameContainingIgnoreCaseAndPriceBetween(
+					"ON_SALE", keyword, minPrice, maxPrice, sortedPageable);
 
 			} else if (!hasKeyword && hasCategory) {
-				result = productSearchRepository
-					.findByStatusAndCategoryAndPriceBetween(
-						"ON_SALE", category, min, max, pageable
-					);
+				result = productSearchRepository.findByStatusAndCategoryAndPriceBetween(
+					"ON_SALE", category, minPrice, maxPrice, sortedPageable);
 
-			} else { // keyword + category + price range
-				result = productSearchRepository
-					.findByStatusAndNameContainingIgnoreCaseAndCategoryAndPriceBetween(
-						"ON_SALE", keyword, category, min, max, pageable
-					);
+			} else {
+				result = productSearchRepository.findByStatusAndNameContainingIgnoreCaseAndCategoryAndPriceBetween(
+					"ON_SALE", keyword, category, minPrice, maxPrice, sortedPageable);
 			}
 		}
 
-		// ES 도큐먼트에서 응답 DTO 변환
+		// ES 도큐먼트 → 응답 DTO 변환
 		return result.map(doc ->
 			new ProductSearchResponse(
 				doc.getProductId(),
 				doc.getName(),
 				doc.getCategory(),
 				doc.getPrice(),
-				doc.getStatus()
+				doc.getStatus(),
+				doc.getCreatedAt()
 			)
 		);
 	}

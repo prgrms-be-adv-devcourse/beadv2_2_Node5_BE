@@ -1,4 +1,4 @@
-package com.node5.catalogservice.search.infrastrucutre;
+package com.node5.catalogservice.search.infrastructure;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,56 +13,26 @@ public interface ProductSearchRepository extends ElasticsearchRepository<Product
 
 	// 2단계: 키워드만
 	Page<ProductDocument> findByStatusAndNameContainingIgnoreCase(
-		String status,
-		String name,
-		Pageable pageable
-	);
+		String status, String name, Pageable pageable);
 
 	// 3단계: 카테고리만
 	Page<ProductDocument> findByStatusAndCategory(
-		String status,
-		String category,
-		Pageable pageable
-	);
+		String status, String category, Pageable pageable);
 
 	// 3단계: 키워드 + 카테고리 같이 쓸 때
 	Page<ProductDocument> findByStatusAndNameContainingIgnoreCaseAndCategory(
-		String status,
-		String name,
-		String category,
-		Pageable pageable
-	);
+		String status, String name, String category, Pageable pageable);
 
-	// 4단계: 가격 범위 추가 버전들 (Long 사용)
+	// 4단계: 가격 범위 추가 버전들
 	Page<ProductDocument> findByStatusAndPriceBetween(
-		String status,
-		Long minPrice,
-		Long maxPrice,
-		Pageable pageable
-	);
+		String status, Integer minPrice, Integer maxPrice, Pageable pageable);
 
 	Page<ProductDocument> findByStatusAndNameContainingIgnoreCaseAndPriceBetween(
-		String status,
-		String name,
-		Long minPrice,
-		Long maxPrice,
-		Pageable pageable
-	);
+		String status, String keyword, Integer minPrice, Integer maxPrice, Pageable pageable);
 
 	Page<ProductDocument> findByStatusAndCategoryAndPriceBetween(
-		String status,
-		String category,
-		Long minPrice,
-		Long maxPrice,
-		Pageable pageable
-	);
+		String status, String category, Integer minPrice, Integer maxPrice, Pageable pageable);
 
 	Page<ProductDocument> findByStatusAndNameContainingIgnoreCaseAndCategoryAndPriceBetween(
-		String status,
-		String name,
-		String category,
-		Long minPrice,
-		Long maxPrice,
-		Pageable pageable
-	);
+		String status, String keyword, String category, Integer minPrice, Integer maxPrice, Pageable pageable);
 }

@@ -1,5 +1,7 @@
 package com.node5.catalogservice.search.domain;
 
+import java.time.LocalDateTime;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
@@ -28,15 +30,26 @@ public class ProductDocument {
 	@Field(type = FieldType.Keyword)
 	private String status; // ON_SALE, HIDDEN, DISCONTINUED
 
+	@Field(type = FieldType.Date, format = {}, pattern = "uuuu-MM-dd'T'HH:mm:ss")
+	private LocalDateTime createdAt;
+
 	protected ProductDocument() {
 	}
 
-	public ProductDocument(String productId, String name, String category, Long price, String status) {
-		this.productId = productId;
+	public ProductDocument(
+		String id,
+		String name,
+		String category,
+		Long price,
+		String status,
+		LocalDateTime createdAt
+	) {
+		this.productId = id;
 		this.name = name;
 		this.category = category;
 		this.price = price;
 		this.status = status;
+		this.createdAt = createdAt;
 	}
 
 	public static ProductDocument from(Product product) {
@@ -45,7 +58,8 @@ public class ProductDocument {
 			product.getName(),
 			product.getCategory(),
 			product.getPrice().longValue(), // BigDecimal → long
-			product.getStatus().name()
+			product.getStatus().name(),
+			product.getCreatedAt()
 		);
 	}
 }
