@@ -26,25 +26,25 @@ public class AuthController {
     private final AuthService authService;
 
     @Operation(summary = "OAuth 로그인", description = "OAuth 로그인을 처리합니다.")
-    @ApiResponse(responseCode = "200", description = "로그인 성공")
     @PostMapping("/oauth/login")
     public ResponseEntity<LoginInfo> oAuthLogin(@RequestBody OAuthLoginRequest request) {
         return ResponseEntity.ok(authService.login(request.toCommand()));
     }
 
     @Operation(summary = "OAuth 회원가입", description = "OAuth 회원가입을 처리합니다.")
-    @ApiResponse(responseCode = "200", description = "회원가입 성공")
     @PostMapping("/oauth/register")
     public ResponseEntity<LoginInfo> register(@RequestBody OAuthRegisterRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(authService.register(request.toCommand()));
     }
 
+    @Operation(summary = "이메일 인증 코드 전송", description = "입력한 이메일로 인증 코드를 전송합니다.")
     @PostMapping("/email/send")
     public ResponseEntity<Void> sendEmailVerificationCode(@RequestBody SendEmailVerificationRequest request) {
         authService.sendEmailVerificationCode(request.toCommand());
         return ResponseEntity.ok().build();
     }
 
+    @Operation(summary = "이메일 인증 코드 확인", description = "입력한 이메일과 인증 코드를 확인합니다.")
     @PostMapping("/email/verify")
     public ResponseEntity<Void> verifyEmail(@RequestBody VerifyEmailRequest request) {
         authService.verifyEmail(request.toCommand());
