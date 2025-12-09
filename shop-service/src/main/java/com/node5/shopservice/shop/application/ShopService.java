@@ -20,6 +20,7 @@ import java.util.UUID;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ShopService {
 
     private static final String ROLE_SELLER = "SELLER";
@@ -33,7 +34,6 @@ public class ShopService {
         return pagedMyShops.map(ShopListResponse::from);
     }
 
-    @Transactional(readOnly = true)
     public ShopInfoResponse findMyShopInfo(UUID memberId, UUID shopId) {
         Shop shop = shopRepository.findByIdAndDeletedAtIsNull(shopId).orElseThrow(() -> new IllegalArgumentException("Shop not found: " + shopId));
         if (!shop.getMemberId().equals(memberId)) {
