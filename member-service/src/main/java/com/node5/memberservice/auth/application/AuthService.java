@@ -23,6 +23,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional(readOnly = true)
 public class AuthService {
 
     private final OAuthRepository oAuthRepository;
@@ -146,12 +147,12 @@ public class AuthService {
         return code.equals(stored);
     }
 
-    public void markVerified(String email) {
+    private void markVerified(String email) {
         stringRedisTemplate.opsForValue()
                 .set(VERIFIED_EMAIL_KEY_PREFIX + email, "true", Duration.ofMinutes(10));
     }
 
-    public boolean isVerified(String email) {
+    private boolean isVerified(String email) {
         return "true".equals(stringRedisTemplate.opsForValue()
                 .get(VERIFIED_EMAIL_KEY_PREFIX + email));
     }
