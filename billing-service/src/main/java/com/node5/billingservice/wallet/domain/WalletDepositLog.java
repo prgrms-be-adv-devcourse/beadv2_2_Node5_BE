@@ -37,7 +37,7 @@ public class WalletDepositLog extends BaseEntity{
     private WalletDepositLogState state;
 
     public void validateRefundable(String paymentKey, WalletDepositLogState state) {
-        if (this.state == state) {
+        if (this.state != state) {
             throw new WalletException(REFUND_STATE_INVALID);
         }
         if (this.paymentKey == null) {
