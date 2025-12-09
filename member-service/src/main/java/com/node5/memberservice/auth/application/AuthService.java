@@ -1,19 +1,16 @@
 package com.node5.memberservice.auth.application;
 
-import com.node5.common.domain.ApiResponseDto;
 import com.node5.memberservice.auth.application.dto.JwtMemberInfo;
 import com.node5.memberservice.auth.application.dto.LoginInfo;
 import com.node5.memberservice.auth.application.dto.OAuthLoginCommand;
 import com.node5.memberservice.auth.application.dto.OAuthRegisterCommand;
-import com.node5.memberservice.auth.oauth.dto.OAuthUserInfo;
 import com.node5.memberservice.auth.domain.OAuth;
 import com.node5.memberservice.auth.domain.OAuthRepository;
 import com.node5.memberservice.auth.oauth.OAuthProviderService;
+import com.node5.memberservice.auth.oauth.dto.OAuthUserInfo;
 import com.node5.memberservice.auth.util.JwtProvider;
 import com.node5.memberservice.member.domain.Member;
 import com.node5.memberservice.member.domain.MemberRepository;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -40,7 +37,7 @@ public class AuthService {
         this.jwtProvider = jwtProvider;
     }
 
-    public ResponseEntity<ApiResponseDto<LoginInfo>> login(OAuthLoginCommand command) {
+    public LoginInfo login(OAuthLoginCommand command) {
 
         OAuthProviderService providerService = providerMap.get(command.provider());
 
@@ -57,19 +54,14 @@ public class AuthService {
             JwtMemberInfo jwtMemberInfo = JwtMemberInfo.from(member);
             String accessToken = jwtProvider.generateAccessToken(jwtMemberInfo);
             String refreshToken = jwtProvider.generateRefreshToken(jwtMemberInfo);
-            LoginInfo loginInfo = LoginInfo.success(member, accessToken, refreshToken);
-            ApiResponseDto<LoginInfo> response = new ApiResponseDto<>(HttpStatus.OK.value(), "로그인 성공", loginInfo);
-            return ResponseEntity.ok(response);
+            return LoginInfo.success(member, accessToken, refreshToken);
         }
 
         String temporaryToken = jwtProvider.generateTemporaryToken(oAuthUserInfo);
-        LoginInfo loginInfo = LoginInfo.emailRequired(temporaryToken);
-        ApiResponseDto<LoginInfo> response = new ApiResponseDto<>(HttpStatus.OK.value(), "이메일 필요", loginInfo);
-
-        return ResponseEntity.ok(response);
+        return LoginInfo.emailRequired(temporaryToken);
     }
 
-    public ResponseEntity<ApiResponseDto<LoginInfo>> register(OAuthRegisterCommand command) {
+    public LoginInfo register(OAuthRegisterCommand command) {
         OAuthUserInfo oAuthUserInfo = jwtProvider.getOAuthUserInfo(command.temporaryToken());
         Optional<Member> existMember = memberRepository.findByEmail(command.email());
 
@@ -88,9 +80,6 @@ public class AuthService {
         JwtMemberInfo jwtMemberInfo = JwtMemberInfo.from(member);
         String accessToken = jwtProvider.generateAccessToken(jwtMemberInfo);
         String refreshToken = jwtProvider.generateRefreshToken(jwtMemberInfo);
-        LoginInfo loginInfo = LoginInfo.success(member, accessToken, refreshToken);
-        ApiResponseDto<LoginInfo> response = new ApiResponseDto<>(HttpStatus.OK.value(), "회원 가입 성공", loginInfo);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return LoginInfo.success(member, accessToken, refreshToken);
     }
 }
