@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-deploy:
+  build-and-push:
     name: build application and make jar file
     runs-on: ubuntu-24.04
     strategy:
@@ -51,7 +51,31 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKER_REPO }}/${{ matrix.service }}:latest
 
-      # EC2 배포
+  deploy:
+    runs-on: ubuntu-24.04
+    needs: build-and-push
+
+    # EC2 배포
+    steps:
+      - name: Get GitHub Actions IP
+        id: ip
+        uses: haythem/public-ip@v1.3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Add GitHub IP to Security Group
+        run: |
+          aws ec2 authorize-security-group-ingress \
+            --group-id ${{ secrets.AWS_SECURITY_GROUP_ID }} \
+            --protocol tcp \
+            --port 22 \
+            --cidr "${{ steps.ip.outputs.ip }}/32"
+
       - name: Deploy All Services to EC2
         uses: appleboy/ssh-action@master
         with:
@@ -63,3 +87,12 @@ jobs:
             docker compose pull
             docker compose up -d
             docker image prune -a -f
+
+      - name: Remove IP from Security Group
+        if: always()
+        run: |
+          aws ec2 revoke-security-group-ingress \
+            --group-id ${{ secrets.AWS_SECURITY_GROUP_ID }} \
+            --protocol tcp \
+            --port 22 \
+            --cidr "${{ steps.ip.outputs.ip }}/32"
