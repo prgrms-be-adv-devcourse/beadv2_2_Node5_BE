@@ -46,12 +46,10 @@ public class MemberService {
     }
 
     @Transactional
-    public ResponseEntity<ApiResponseDto<String>> modifyMemberRoles(UUID memberId, RoleModifyCommand command) {
+    public String modifyMemberRoles(UUID memberId, RoleModifyCommand command) {
         Member member = memberRepository.findById(memberId).orElseThrow(() -> new EntityNotFoundException("Member not found: " + memberId));
         member.modifyRoles(command.role(), command.action());
         JwtMemberInfo jwtMemberInfo = JwtMemberInfo.from(member);
-        String accessToken = jwtProvider.generateAccessToken(jwtMemberInfo);
-        ApiResponseDto<String> response = new ApiResponseDto<>(HttpStatus.OK.value(), "로그인 성공", accessToken);
-        return ResponseEntity.ok(response);
+        return jwtProvider.generateAccessToken(jwtMemberInfo);
     }
 }

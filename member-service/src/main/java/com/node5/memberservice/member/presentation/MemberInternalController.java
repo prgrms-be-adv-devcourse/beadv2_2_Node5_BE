@@ -1,6 +1,5 @@
 package com.node5.memberservice.member.presentation;
 
-import com.node5.common.domain.ApiResponseDto;
 import com.node5.memberservice.member.application.MemberService;
 import com.node5.memberservice.member.presentation.dto.RoleModifyRequest;
 import lombok.RequiredArgsConstructor;
@@ -17,8 +16,8 @@ public class MemberInternalController {
     private final MemberService memberService;
 
     @PostMapping("/{memberId}/roles")
-    public ResponseEntity<ApiResponseDto<String>> modifyMemberRoles(@PathVariable UUID memberId, @RequestBody RoleModifyRequest request) {
-        return memberService.modifyMemberRoles(memberId, request.toCommand());
+    public ResponseEntity<String> modifyMemberRoles(@PathVariable UUID memberId, @RequestBody RoleModifyRequest request) {
+        return ResponseEntity.ok(memberService.modifyMemberRoles(memberId, request.toCommand()));
     }
 
 }
