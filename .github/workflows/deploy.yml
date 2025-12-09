@@ -5,6 +5,8 @@ on:
     branches:
       -main
 
+  workflow_dispatch:
+
 jobs:
   build-and-deploy:
     name: build application and make jar file
