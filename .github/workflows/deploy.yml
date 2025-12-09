@@ -1,0 +1,118 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      -main
+
+jobs:
+  build-and-deploy:
+    name: build application and make jar file
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Set Permission to gradlew
+        run: chmod +x ./gradlew
+
+      - name: Build all modules
+        run: ./gradlew clean build
+
+      - name: Build all boot jars
+        run: |
+          ./gradlew \
+            :apigateway:bootJar \
+            :billing-service:bootJar \
+            :catalog-service:bootJar \
+            :member-service:bootJar \
+            :order-service:bootJar \
+            :settlement-service:bootJar \
+            :shop-service:bootJar \
+            :subscription-service:bootJar
+
+      # 도커 로그인
+      - name: Login to Dockerhub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      # 서비스별 도커 build & push
+      - name: Build & Push apigateway
+        uses: docker/build-push-action@v5
+        with:
+          context: ./apigateway
+          push: true
+          tags: ${{ secrets.DOCKER_REPO }}/apigateway:latest
+
+      - name: Build & Push billing-service
+        uses: docker/build-push-action@v5
+        with:
+          context: ./billing-service
+          push: true
+          tags: ${{ secrets.DOCKER_REPO }}/billing-service:latest
+
+      - name: Build & Push catalog-service
+        uses: docker/build-push-action@v5
+        with:
+          context: ./catalog-service
+          push: true
+          tags: ${{ secrets.DOCKER_REPO }}/catalog-service:latest
+
+      - name: Build & Push member-service
+        uses: docker/build-push-action@v5
+        with:
+          context: ./member-service
+          push: true
+          tags: ${{ secrets.DOCKER_REPO }}/member-service:latest
+
+      - name: Build & Push order-service
+        uses: docker/build-push-action@v5
+        with:
+          context: ./order-service
+          push: true
+          tags: ${{ secrets.DOCKER_REPO }}/order-service:latest
+
+      - name: Build & Push settlement-service
+        uses: docker/build-push-action@v5
+        with:
+          context: ./settlement-service
+          push: true
+          tags: ${{ secrets.DOCKER_REPO }}/settlement-service:latest
+
+      - name: Build & Push shop-service
+        uses: docker/build-push-action@v5
+        with:
+          context: ./shop-service
+          push: true
+          tags: ${{ secrets.DOCKER_REPO }}/shop-service:latest
+
+      - name: Build & Push subscription-service
+        uses: docker/build-push-action@v5
+        with:
+          context: ./subscription-service
+          push: true
+          tags: ${{ secrets.DOCKER_REPO }}/subscription-service:latest
+
+      # EC2 배포
+      - name: Deploy All Services to EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            echo "${{ secrets.DOCKERHUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+            docker compose pull
+            docker compose up -d
+            docker image prune -a -f
