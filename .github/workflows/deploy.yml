@@ -34,12 +34,14 @@ jobs:
       - name: Build bootJar
         run: ./gradlew :${{ matrix.service }}:bootJar
 
+      # 도커 로그인
       - name: Login to Dockerhub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
+      # 도커 이미지 build & push
       - name: Build & Push docker image
         uses: docker/build-push-action@v5
         with:
