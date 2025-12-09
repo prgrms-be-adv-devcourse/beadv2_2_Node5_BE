@@ -4,6 +4,7 @@ import com.node5.memberservice.auth.application.AuthService;
 import com.node5.memberservice.auth.application.dto.LoginInfo;
 import com.node5.memberservice.auth.presentation.dto.OAuthLoginRequest;
 import com.node5.memberservice.auth.presentation.dto.OAuthRegisterRequest;
+import com.node5.memberservice.auth.presentation.dto.SendEmailVerificationRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -35,5 +36,11 @@ public class AuthController {
     @PostMapping("/oauth/register")
     public ResponseEntity<LoginInfo> register(@RequestBody OAuthRegisterRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(authService.register(request.toCommand()));
+    }
+
+    @PostMapping("/auth/email/send")
+    public ResponseEntity<Void> sendEmailVerificationCode(@RequestBody SendEmailVerificationRequest request) {
+        authService.sendEmailVerificationCode(request.toCommand());
+        return ResponseEntity.ok().build();
     }
 }

@@ -1,9 +1,6 @@
 package com.node5.memberservice.auth.application;
 
-import com.node5.memberservice.auth.application.dto.JwtMemberInfo;
-import com.node5.memberservice.auth.application.dto.LoginInfo;
-import com.node5.memberservice.auth.application.dto.OAuthLoginCommand;
-import com.node5.memberservice.auth.application.dto.OAuthRegisterCommand;
+import com.node5.memberservice.auth.application.dto.*;
 import com.node5.memberservice.auth.domain.OAuth;
 import com.node5.memberservice.auth.domain.OAuthRepository;
 import com.node5.memberservice.auth.oauth.OAuthProviderService;
@@ -11,8 +8,13 @@ import com.node5.memberservice.auth.oauth.dto.OAuthUserInfo;
 import com.node5.memberservice.auth.util.JwtProvider;
 import com.node5.memberservice.member.domain.Member;
 import com.node5.memberservice.member.domain.MemberRepository;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.security.SecureRandom;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -25,16 +27,20 @@ public class AuthService {
     private final MemberRepository memberRepository;
     private final Map<String, OAuthProviderService> providerMap;
     private final JwtProvider jwtProvider;
+    private final JavaMailSender mailSender;
+    @Value("${spring.mail.username}")
+    private String emailSender;
 
     public AuthService(
             OAuthRepository oAuthRepository, MemberRepository memberRepository,
             List<OAuthProviderService> providerList,
-            JwtProvider jwtProvider
+            JwtProvider jwtProvider, JavaMailSender mailSender
     ) {
         this.oAuthRepository = oAuthRepository;
         this.memberRepository = memberRepository;
         this.providerMap = providerList.stream().collect(Collectors.toMap(OAuthProviderService::getProviderName, provider -> provider));
         this.jwtProvider = jwtProvider;
+        this.mailSender = mailSender;
     }
 
     public LoginInfo login(OAuthLoginCommand command) {
@@ -81,5 +87,27 @@ public class AuthService {
         String accessToken = jwtProvider.generateAccessToken(jwtMemberInfo);
         String refreshToken = jwtProvider.generateRefreshToken(jwtMemberInfo);
         return LoginInfo.success(member, accessToken, refreshToken);
+    }
+
+    @Transactional(readOnly = true)
+    public void sendEmailVerificationCode(SendEmailVerificationCommand command) {
+        jwtProvider.parseClaims(command.temporaryToken());
+        SimpleMailMessage mailMessage = createMailMessage(command.email(), generateVerificationCode());
+        mailSender.send(mailMessage);
+    }
+
+    private SimpleMailMessage createMailMessage(String to, String verificationCode) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(to);
+        message.setSubject("[MyRoutine] 이메일 인증 코드");
+        message.setText("인증 코드: " + verificationCode);
+        message.setFrom(emailSender);
+        return message;
+    }
+
+    private String generateVerificationCode() {
+        SecureRandom random = new SecureRandom();
+        int code = random.nextInt(1_000_000); // 0 ~ 999999
+        return String.format("%06d", code);   // 항상 6자리로 패딩
     }
 }
