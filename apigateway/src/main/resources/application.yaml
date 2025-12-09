@@ -17,16 +17,16 @@ spring:
                 - Path=/catalog-service/**
               filters:
                 - RewritePath=/catalog-service/(?<segment>.*), /$\{segment}
-            #        - id: shop-service
-            #          uri: lb://SHOP-SERVICE
-            #          predicates:
-            #            - Path=/shop-service/**
-            #          filters:
-            #            - RewritePath=/shop-service/(?<segment>.*), /$\{segment}
+            - id: shop-service
+              uri: lb://SHOP-SERVICE
+              predicates:
+                - Path=/shop-service/**
+              filters:
+                - RewritePath=/shop-service/(?<segment>.*), /$\{segment}
             - id: member-service
               uri: lb://MEMBER-SERVICE
               predicates:
-                - Path=/member-service/**
+                - Path=/member-service/api/v1/**, /member-service/v3/**
               filters:
                 - RewritePath=/member-service/(?<segment>.*), /$\{segment}
             - id: billing-service
