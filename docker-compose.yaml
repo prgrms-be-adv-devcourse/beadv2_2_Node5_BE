@@ -20,6 +20,7 @@ services:
       - "8888:8888"
     depends_on:
       - database
+
   discovery-service:
     image: node5dev/discovery:latest
     ports:
