@@ -19,6 +19,19 @@ spring:
         format_sql: true
         jdbc:
           time_zone: Asia/Seoul
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        default-encoding: UTF-8
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
 
 api:
   v1: /api/v1
