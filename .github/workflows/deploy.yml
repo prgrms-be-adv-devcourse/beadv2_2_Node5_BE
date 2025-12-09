@@ -8,9 +8,9 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-push:
+  build-and-deploy:
     name: build application and make jar file
-    runs-on: ubuntu-24.04
+    runs-on: self-hosted
     strategy:
       matrix:
         service: [
