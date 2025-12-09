@@ -12,7 +12,7 @@ import com.node5.catalogservice.product.domain.Product;
 import lombok.Getter;
 
 @Getter
-@Document(indexName = "products")
+@Document(indexName = "#{@productIndexName}")
 public class ProductDocument {
 
 	@Id

@@ -16,15 +16,18 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
+import org.springframework.test.context.ActiveProfiles;
 
 import com.node5.catalogservice.search.application.dto.ProductSearchResponse;
+import com.node5.catalogservice.search.config.ProductIndexConfig;
 import com.node5.catalogservice.search.domain.ProductDocument;
 import com.node5.catalogservice.search.domain.ProductSearchSort;
 import com.node5.catalogservice.search.infrastructure.ProductSearchRepository;
 import com.node5.catalogservice.search.presentation.dto.ProductSearchRequest;
 
 @DataElasticsearchTest
-@Import(SearchService.class)
+@ActiveProfiles("test")
+@Import({SearchService.class, ProductIndexConfig.class})
 public class SearchServiceTest {
 
 	@MockBean
