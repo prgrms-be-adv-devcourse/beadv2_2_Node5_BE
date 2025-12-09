@@ -2,6 +2,7 @@ package com.node5.memberservice.member.domain;
 
 import com.node5.common.domain.BaseEntity;
 import com.node5.memberservice.auth.application.dto.OAuthRegisterCommand;
+import com.node5.memberservice.member.presentation.dto.RoleAction;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -67,5 +68,13 @@ public class Member extends BaseEntity {
         this.phoneNumber = phoneNumber;
         this.address = address;
         this.status = MemberStatus.ACTIVE;
+    }
+
+    public void modifyRoles(String role, RoleAction action) {
+        if (action == RoleAction.ADD) {
+            this.roles.add(MemberRole.valueOf(role));
+        } else if (action == RoleAction.REMOVE) {
+            this.roles.remove(MemberRole.valueOf(role));
+        }
     }
 }
