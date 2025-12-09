@@ -28,7 +28,6 @@ public class ShopService {
     private final ShopRepository shopRepository;
     private final MemberClient memberClient;
 
-    @Transactional(readOnly = true)
     public Page<ShopListResponse> findMyShopList(UUID memberId, Pageable pageable) {
         Page<Shop> pagedMyShops = shopRepository.findAllByMemberIdAndDeletedAtIsNull(memberId, pageable);
         return pagedMyShops.map(ShopListResponse::from);
