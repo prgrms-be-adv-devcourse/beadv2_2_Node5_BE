@@ -1,11 +1,11 @@
-name: Subscription Service CI
+name: Member Service CI
 
 on:
   pull_request:
     branches:
       - develop
     paths:
-      - "subscription-service/**"
+      - "member-service/**"
       - "common/**"
       - "config/**"
       - "discovery/**"
@@ -31,7 +31,7 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Gradle Build
-        run: ./gradlew :subscription-service:build
+        run: ./gradlew :member-service:build
 
       - name: Run Tests
-        run: ./gradlew :subscription-service:test
+        run: ./gradlew :member-service:test
