@@ -5,7 +5,7 @@ spring:
   application:
     name: apigateway
   config:
-    import: optional:configserver:http://config-server:8888
+    import: optional:configserver:http://config-service:8888
   cloud:
     gateway:
       server:
