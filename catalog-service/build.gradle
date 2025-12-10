@@ -6,6 +6,8 @@ dependencies {
     runtimeOnly 'org.postgresql:postgresql'
     implementation 'org.springframework.boot:spring-boot-starter-web'
 
+    implementation 'org.springframework.kafka:spring-kafka'
+
     // API 문서
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0'
 
