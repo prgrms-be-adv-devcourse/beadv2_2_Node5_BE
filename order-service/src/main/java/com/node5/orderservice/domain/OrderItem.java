@@ -14,7 +14,7 @@ import java.util.UUID;
 
 @Getter
 @Entity
-@Table(name = "\"order_item\"")
+@Table(name = "\"order_item\"", schema = "order")
 public class OrderItem extends BaseEntity {
 
     @Id
