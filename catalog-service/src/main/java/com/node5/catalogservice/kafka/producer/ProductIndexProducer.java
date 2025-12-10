@@ -11,7 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 상품 저장 후 이벤트 발행
+ * 상품 저장/수정 후 이벤트 발행
  */
 
 @Slf4j
@@ -25,10 +25,18 @@ public class ProductIndexProducer {
 	private String productIndexTopic;
 
 	public void sendProductIndexEvent(Product product) {
-		ProductIndexEvent event = ProductIndexEvent.from(product);
+		ProductIndexEvent event = ProductIndexEvent.create(product);
 
 		log.info("Kafka 상품 색인 이벤트 전송, productId={}, name={}",
 			event.productId(), event.name());
+
+		send(event);
+	}
+
+	public void sendProductUpdateEvent(Product product) {
+		ProductIndexEvent event = ProductIndexEvent.update(product);
+
+		log.info("Kafka 상품 수정 이벤트 발행, productId={}", event.productId());
 
 		send(event);
 	}

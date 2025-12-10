@@ -61,6 +61,7 @@ public class ProductService {
 		return ProductInfo.from(saved);
 	}
 
+	@Transactional
 	public ProductInfo updateProduct(UUID id, ProductUpdateCommand command) {
 		Product product = productRepository.findById(id)
 			.orElseThrow(() -> new IllegalArgumentException("Product not found. id=" + id));
@@ -75,6 +76,9 @@ public class ProductService {
 		);
 
 		Product saved = productRepository.save(product);
+
+		productIndexProducer.sendProductUpdateEvent(saved);
+
 		return ProductInfo.from(saved);
 	}
 
@@ -84,6 +88,9 @@ public class ProductService {
 
 		product.changeStatus(status);
 		Product saved = productRepository.save(product);
+
+		productIndexProducer.sendProductUpdateEvent(saved);
+
 		return ProductInfo.from(saved);
 	}
 

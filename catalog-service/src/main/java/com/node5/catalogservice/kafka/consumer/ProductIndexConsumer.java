@@ -27,8 +27,8 @@ public class ProductIndexConsumer {
 	)
 	public void consume(ProductIndexEvent event) {
 
-		log.info("Kafka 상품 색인 이벤트 수신, id={}, name={}, status={}",
-			event.productId(), event.name(), event.status());
+		log.info("Kafka 상품 색인 이벤트 수신, id={}, name={}, status={}, type={}",
+			event.productId(), event.name(), event.status(), event.type());
 
 		// Kafka 이벤트 -> ES 문서로 변환
 		ProductDocument document = new ProductDocument(
@@ -43,6 +43,6 @@ public class ProductIndexConsumer {
 		// ES 색인
 		productSearchRepository.save(document);
 
-		log.info("ES 상품 색인 완료, id={}", document.getProductId());
+		log.info("ES 상품 색인 완료, id={}, type={}", document.getProductId(), event.type());
 	}
 }

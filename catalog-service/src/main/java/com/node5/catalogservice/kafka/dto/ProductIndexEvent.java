@@ -15,17 +15,31 @@ public record ProductIndexEvent(
 	String category,
 	long price,
 	String status,
-	LocalDateTime createdAt
+	LocalDateTime createdAt,
+	ProductIndexEventType type
 ) {
 
-	public static ProductIndexEvent from(Product product) {
+	public static ProductIndexEvent create(Product product) {
 		return new ProductIndexEvent(
 			product.getId(),
 			product.getName(),
 			product.getCategory(),
 			product.getPrice().longValue(),
 			product.getStatus().name(),
-			product.getCreatedAt()
+			product.getCreatedAt(),
+			ProductIndexEventType.CREATE
+		);
+	}
+
+	public static ProductIndexEvent update(Product product) {
+		return new ProductIndexEvent(
+			product.getId(),
+			product.getName(),
+			product.getCategory(),
+			product.getPrice().longValue(),
+			product.getStatus().name(),
+			product.getCreatedAt(),
+			ProductIndexEventType.UPDATE
 		);
 	}
 }
