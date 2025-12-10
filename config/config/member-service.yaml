@@ -53,3 +53,5 @@ token:
 kakao:
   api:
     key: ${KAKAO_API_KEY}
+  redirect:
+    url: ${KAKAO_REDIRECT_URL}

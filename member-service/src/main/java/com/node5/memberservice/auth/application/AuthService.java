@@ -106,6 +106,8 @@ public class AuthService {
             oAuthRepository.save(oAuth);
         }
 
+        // Todo - POST /billing-service/intenal/wallets/{memberId}
+
         JwtMemberInfo jwtMemberInfo = JwtMemberInfo.from(member);
         String accessToken = jwtProvider.generateAccessToken(jwtMemberInfo);
         String refreshToken = jwtProvider.generateRefreshToken(jwtMemberInfo);
