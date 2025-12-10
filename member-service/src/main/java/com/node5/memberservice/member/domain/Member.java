@@ -1,6 +1,8 @@
 package com.node5.memberservice.member.domain;
 
 import com.node5.common.domain.BaseEntity;
+import com.node5.memberservice.auth.application.dto.OAuthRegisterCommand;
+import com.node5.memberservice.member.application.dto.MemberModifyCommand;
 import com.node5.memberservice.member.presentation.dto.RoleAction;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -15,7 +17,7 @@ import java.util.UUID;
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
-@Table(name = "\"member\"", schema = "public")
+@Table(name = "\"member\"", schema = "member")
 public class Member extends BaseEntity {
 
     @Id
@@ -54,19 +56,12 @@ public class Member extends BaseEntity {
         this.deletedAt = null;
     }
 
-    public static Member create(String email, String name, String phoneNumber, String address) {
+    public static Member create(OAuthRegisterCommand command) {
         UUID id = UUID.randomUUID();
         MemberRole role = MemberRole.USER;
         MemberStatus status = MemberStatus.ACTIVE;
 
-        return new Member(id, email, name, phoneNumber, address, role, status);
-    }
-
-    public void registerRequiredInfo(String name, String phoneNumber, String address) {
-        this.name = name;
-        this.phoneNumber = phoneNumber;
-        this.address = address;
-        this.status = MemberStatus.ACTIVE;
+        return new Member(id, command.email(), command.name(), command.phoneNumber(), command.address(), role, status);
     }
 
     public void modifyRoles(String role, RoleAction action) {
@@ -75,5 +70,15 @@ public class Member extends BaseEntity {
         } else if (action == RoleAction.REMOVE) {
             this.roles.remove(MemberRole.valueOf(role));
         }
+    }
+
+    public void modifyInfo(MemberModifyCommand command) {
+        this.name = command.name();
+        this.phoneNumber = command.phoneNumber();
+        this.address = command.address();
+    }
+
+    public void delete() {
+        this.deletedAt = LocalDateTime.now();
     }
 }

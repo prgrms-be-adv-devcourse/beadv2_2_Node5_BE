@@ -7,5 +7,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface MemberJpaRepository extends JpaRepository<Member, UUID> {
+    Optional<Member> findByIdAndDeletedAtIsNull(UUID id);
     Optional<Member> findByEmail(String email);
 }

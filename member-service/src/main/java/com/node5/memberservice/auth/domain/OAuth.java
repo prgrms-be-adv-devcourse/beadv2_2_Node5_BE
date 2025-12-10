@@ -13,7 +13,7 @@ import java.util.UUID;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "o_auth", schema = "public")
+@Table(name = "o_auth", schema = "member")
 public class OAuth extends BaseEntity {
 
     @Id
@@ -38,5 +38,9 @@ public class OAuth extends BaseEntity {
 
     public static OAuth create(Member member, OAuthUserInfo oAuthUserInfo) {
         return new OAuth(member, oAuthUserInfo.provider(), oAuthUserInfo.providerId());
+    }
+
+    public void modifyProviderId(String providerId) {
+        this.providerId = providerId;
     }
 }
