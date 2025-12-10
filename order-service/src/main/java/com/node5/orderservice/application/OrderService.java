@@ -10,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -30,7 +29,7 @@ public class OrderService {
     private final OrderItemRepository orderItemRepository;
     private final OrderTransactionService orderTransactionService;
 
-    public ResponseEntity<OrderCreateInfo> create(OrderCommand command) {
+    public OrderCreateInfo create(OrderCommand command) {
         // 주문번호 생성, 총 주문 금액 계산하여 Order 생성
         String orderNum = generateNewOrderNum();
         Optional<BigDecimal> totalAmountOptional = command.items().stream()
@@ -52,10 +51,10 @@ public class OrderService {
         // TODO 결제 API 호출
         orderTransactionService.updateOrderStatus(orderId, PAID); // 결제 성공 가정 (임시)
 
-        return ResponseEntity.ok().body(OrderCreateInfo.from(saved));
+        return OrderCreateInfo.from(saved);
     }
 
-    public ResponseEntity<OrderListInfo> getOrderList(UUID memberId, int page, int size, String period) {
+    public OrderListInfo getOrderList(UUID memberId, int page, int size, String period) {
         // 오늘 기준 n개월(period) 전 시점 구하기
         LocalDateTime nMonthsAgo = LocalDateTime.now().minusMonths(Integer.parseInt(period));
 
@@ -68,7 +67,7 @@ public class OrderService {
 
         // 페이징 결과 처리
         if(!orderPage.hasContent()){
-            return ResponseEntity.ok().body(OrderListInfo.from(pageInfo, Collections.emptyList()));
+            return OrderListInfo.from(pageInfo, Collections.emptyList());
         }
 
         // - 주문 ID 목록 추출
@@ -94,10 +93,10 @@ public class OrderService {
         }).toList();
 
         // - OrderListInfo DTO 생성 (OrderListDetailInfo + 페이징 정보)
-        return ResponseEntity.ok().body(OrderListInfo.from(pageInfo, orderListInfos));
+        return OrderListInfo.from(pageInfo, orderListInfos);
     }
 
-    public ResponseEntity<OrderDetailInfo> getOrderDetail(UUID orderId) {
+    public OrderDetailInfo getOrderDetail(UUID orderId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException(orderId));
 
@@ -106,10 +105,10 @@ public class OrderService {
                 .map(OrderItemInfo::from)
                 .toList();
 
-        return ResponseEntity.ok().body(OrderDetailInfo.from(order, orderItemInfos));
+        return OrderDetailInfo.from(order, orderItemInfos);
     }
 
-    public ResponseEntity<OrderStatusInfo> cancel(UUID orderId, UUID memberId) {
+    public OrderStatusInfo cancel(UUID orderId, UUID memberId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException(orderId));
 
@@ -131,11 +130,11 @@ public class OrderService {
             );
         }
 
-        return ResponseEntity.ok().body(OrderStatusInfo.from(order));
+        return OrderStatusInfo.from(order);
     }
 
 
-    public ResponseEntity<OrderStatusInfo> refund(UUID orderId, UUID memberId) {
+    public OrderStatusInfo refund(UUID orderId, UUID memberId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException(orderId));
 
@@ -157,10 +156,10 @@ public class OrderService {
             );
         }
 
-        return ResponseEntity.ok().body(OrderStatusInfo.from(order));
+        return OrderStatusInfo.from(order);
     }
 
-    public String generateNewOrderNum() {
+    private String generateNewOrderNum() {
         Long nextSequenceValue = orderRepository.getNextSequenceNum();
 
         String datePart = LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE);
