@@ -53,30 +53,16 @@ jobs:
 
     # EC2 배포
   deploy:
+    name: Deploy to EC2
     runs-on: self-hosted
     needs: build-and-push
-    steps:
-      # 1) docker-compose 파일 업로드
-      - name: Upload docker-compose.yaml
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          source: "./docker-compose.yaml"
-          target: "/home/ubuntu/"
 
-      # 2) SSH로 접속해서 배포
-      - name: Deploy Services to EC2
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            cd /home/ubuntu
-            
-            echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
-            docker compose pull
-            docker compose up -d
-            docker image prune -a -f
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Docker login & deploy
+        run: |
+          echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+          docker compose pull
+          docker compose up -d
+          docker image prune -a -f
