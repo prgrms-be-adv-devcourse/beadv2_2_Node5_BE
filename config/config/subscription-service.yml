@@ -16,6 +16,10 @@ spring:
         format_sql: true
         jdbc:
           time_zone: Asia/Seoul
+  task:
+    scheduling:
+      cron:
+        subscription-order: ${SUBSCRIPTION_ORDER_CRON}
 
 api:
   v1: /api/v1

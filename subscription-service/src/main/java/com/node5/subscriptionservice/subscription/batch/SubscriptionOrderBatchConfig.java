@@ -16,6 +16,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @Configuration
@@ -23,44 +24,44 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SubscriptionOrderBatchConfig {
 
+    private final SubscriptionRepository subscriptionRepository;
+    private final SubscriptionRecurrenceRuleRepository subscriptionRecurrenceRuleRepository;
+
     @Bean
     public Job subscriptionOrderJob(JobRepository jobRepository,
-                                    Step orderStep) {
+                                    Step subscriptionOrderStep) {
         return new JobBuilder("subscriptionOrderJob", jobRepository)
-                .start(orderStep)
+                .start(subscriptionOrderStep)
                 .build();
     }
 
     @Bean
-    public Step orderStep(JobRepository jobRepository,
-                          PlatformTransactionManager transactionManager,
-                          SubscriptionRepository subscriptionRepository,
-                          SubscriptionRecurrenceRuleRepository subscriptionRecurrenceRuleRepository){
-        return new StepBuilder("orderStep", jobRepository)
+    public Step subscriptionOrderStep(JobRepository jobRepository,
+                          PlatformTransactionManager transactionManager){
+        return new StepBuilder("subscriptionOrderStep", jobRepository)
                 .tasklet((contribution, chunkContext) -> {
-                    LocalDate today = LocalDate.now();
-                    List<Subscription> subscriptions = subscriptionRepository
-                            .findAllByNextRunDateAndSubscriptionStatus(today, SubscriptionStatus.ACTIVE);
+                    String subscriptionParam = (String) chunkContext.getStepContext()
+                            .getJobParameters()
+                            .get("subscriptionId");
+                    String runDateParam = (String) chunkContext.getStepContext()
+                            .getJobParameters()
+                            .get("runDate");
 
-                    if (subscriptions.isEmpty()) {
-                        log.info("No subscriptions to process for today");
-                        return RepeatStatus.FINISHED;
-                    }
+                    UUID subscriptionId = UUID.fromString(subscriptionParam);
+                    LocalDate runDate = LocalDate.parse(runDateParam);
 
-                    subscriptions.forEach(subscription -> {
-                        try {
-                            requestOrder(subscription);
+                    Subscription subscription = subscriptionRepository.findById(subscriptionId)
+                            .orElseThrow(() -> new RuntimeException("subscription not found"));
 
-                            List<SubscriptionRecurrenceRule> rules =
+                    requestOrder(subscription);
+
+                    List<SubscriptionRecurrenceRule> rules =
                                     subscriptionRecurrenceRuleRepository.findBySubscriptionId(subscription.getId());
-                            subscription.calculateNextRunDate(rules);
-                            subscriptionRepository.save(subscription);
+                    subscription.calculateNextRunDate(rules);
+                    subscriptionRepository.save(subscription);
 
-                            log.info("Order processed for subscription {}", subscription.getId());
-                        } catch (Exception ex) {
-                            log.error("Failed to process subscription {}: {}", subscription.getId(), ex.getMessage(), ex);
-                        }
-                    });
+                    log.info("Order processed subscription {} for runDAte = {}", subscriptionId, runDate);
+
                     return RepeatStatus.FINISHED;
                 }, transactionManager)
                 .build();

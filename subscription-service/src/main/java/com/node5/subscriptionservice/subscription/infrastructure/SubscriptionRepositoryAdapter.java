@@ -9,7 +9,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -29,7 +28,7 @@ public class SubscriptionRepositoryAdapter implements SubscriptionRepository {
     public Page<Subscription> findAllByMemberId(UUID memberId, Pageable pageable){return jpaRepository.findAllByMemberId(memberId,pageable);}
 
     @Override
-    public List<Subscription> findAllByNextRunDateAndSubscriptionStatus(LocalDate nextRunDate, SubscriptionStatus subscriptionStatus) {
-        return jpaRepository.findAllByNextRunDateAndSubscriptionStatus(nextRunDate, subscriptionStatus);
+    public Page<Subscription> findAllByNextRunDateAndSubscriptionStatus(LocalDate nextRunDate, SubscriptionStatus subscriptionStatus, Pageable pageable) {
+        return jpaRepository.findAllByNextRunDateAndSubscriptionStatus(nextRunDate, subscriptionStatus, pageable);
     }
 }

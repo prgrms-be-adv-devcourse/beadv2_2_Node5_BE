@@ -1,7 +1,5 @@
 package com.node5.subscriptionservice.subscription.domain;
 
-import java.time.DayOfWeek;
-
 public enum RecurrenceType {
     MONTHLY, WEEKLY;
 
