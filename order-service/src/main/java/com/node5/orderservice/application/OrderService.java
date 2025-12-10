@@ -2,11 +2,10 @@ package com.node5.orderservice.application;
 
 import com.node5.common.domain.PageInfoDto;
 import com.node5.orderservice.application.dto.*;
-import com.node5.orderservice.domain.Order;
-import com.node5.orderservice.domain.OrderItem;
-import com.node5.orderservice.domain.OrderItemRepository;
-import com.node5.orderservice.domain.OrderRepository;
+import com.node5.orderservice.domain.*;
+import com.node5.orderservice.exception.OrderAccessDeniedException;
 import com.node5.orderservice.exception.OrderNotFoundException;
+import com.node5.orderservice.exception.OrderRequestNotAllowedException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -21,12 +20,15 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.node5.orderservice.domain.OrderStatus.*;
+
 @Service
 @RequiredArgsConstructor
 public class OrderService {
 
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
+    private final OrderTransactionService orderTransactionService;
 
     public ResponseEntity<OrderCreateInfo> create(OrderCommand command) {
         // 주문번호 생성, 총 주문 금액 계산하여 Order 생성
@@ -48,6 +50,7 @@ public class OrderService {
         orderItemRepository.saveAll(orderItems);
 
         // TODO 결제 API 호출
+        orderTransactionService.updateOrderStatus(orderId, PAID); // 결제 성공 가정 (임시)
 
         return ResponseEntity.ok().body(OrderCreateInfo.from(saved));
     }
@@ -104,6 +107,57 @@ public class OrderService {
                 .toList();
 
         return ResponseEntity.ok().body(OrderDetailInfo.from(order, orderItemInfos));
+    }
+
+    public ResponseEntity<OrderStatusInfo> cancel(UUID orderId, UUID memberId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException(orderId));
+
+        if(!order.getMemberId().equals(memberId)){
+            throw new OrderAccessDeniedException(order.getId(), memberId, "취소");
+        }
+
+        // 취소가 가능한 주문 상태인지 확인
+        if(order.getStatus() == PAID){
+            // TODO 결제 취소 API 호출
+            // - 결제 취소 성공 시: orderTransactionService.updateOrderStatus(order, CANCELED)
+            // - 결제 취소 실패 시: [예외 처리]
+            orderTransactionService.updateOrderStatus(orderId, CANCELED); // 결제 취소 성공 가정 (임시)
+        }else{
+            throw new OrderRequestNotAllowedException(
+                    order.getId(),
+                    order.getStatus(),
+                    "취소는 주문의 상태가 결제 완료일 때 가능합니다."
+            );
+        }
+
+        return ResponseEntity.ok().body(OrderStatusInfo.from(order));
+    }
+
+
+    public ResponseEntity<OrderStatusInfo> refund(UUID orderId, UUID memberId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException(orderId));
+
+        if(!order.getMemberId().equals(memberId)){
+            throw new OrderAccessDeniedException(order.getId(), memberId, "환불");
+        }
+
+        // 환불이 가능한 주문 상태인지 확인
+        if(order.getStatus() == DELIVERY_ING || order.getStatus() == DELIVERY_COMPLETED){
+            // TODO 결제 취소 API 호출
+            // - 결제 취소 성공 시: (배송 로직 생략) orderTransactionService.updateOrderStatus(order, REFUND_COMPLETED)
+            // - 결제 취소 실패 시: [예외 처리]
+            orderTransactionService.updateOrderStatus(orderId, REFUND_COMPLETED); // 결제 취소 성공 가정 (임시)
+        }else{
+            throw new OrderRequestNotAllowedException(
+                    order.getId(),
+                    order.getStatus(),
+                    "환불은 주문의 상태가 배송 중이거나 배송 완료일 때 가능합니다."
+            );
+        }
+
+        return ResponseEntity.ok().body(OrderStatusInfo.from(order));
     }
 
     public String generateNewOrderNum() {

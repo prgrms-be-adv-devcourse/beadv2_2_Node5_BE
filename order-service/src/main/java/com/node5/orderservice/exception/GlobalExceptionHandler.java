@@ -51,4 +51,18 @@ public class GlobalExceptionHandler {
                 .body(ErrorResponse.of(404, "ORDER_NOT_FOUND", e.getMessage(), request.getRequestURI()));
     }
 
+    @ExceptionHandler(OrderAccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleOrderAccessDenied(OrderAccessDeniedException e, HttpServletRequest request) {
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(ErrorResponse.of(403, "ORDER_ACCESS_DENIED", e.getMessage(), request.getRequestURI()));
+    }
+
+    @ExceptionHandler(OrderRequestNotAllowedException.class)
+    public ResponseEntity<ErrorResponse> handleOrderRequestNotAllowed(OrderRequestNotAllowedException e, HttpServletRequest request) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ErrorResponse.of(400, "ORDER_REQUEST_NOT_ALLOWED", e.getMessage(), request.getRequestURI()));
+    }
+
 }
