@@ -31,7 +31,7 @@ public class OrderService {
     private final OrderItemService orderItemService;
     private final OrderItemRepository orderItemRepository;
 
-    public ResponseEntity<ApiResponseDto<OrderCreateInfo>> create(OrderCommand command){
+    public ResponseEntity<ApiResponseDto<OrderCreateInfo>> create(OrderCommand command) {
         // Order 생성
         String orderNum = generateNewOrderNum();
         Optional<BigDecimal> totalAmountOptional = command.items().stream()
@@ -99,7 +99,7 @@ public class OrderService {
         return ResponseEntity.ok().body(responseDto);
     }
 
-    public ResponseEntity<ApiResponseDto<OrderDetailInfo>> getOrderDetail(UUID orderId){
+    public ResponseEntity<ApiResponseDto<OrderDetailInfo>> getOrderDetail(UUID orderId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Order not found: " + orderId));
 

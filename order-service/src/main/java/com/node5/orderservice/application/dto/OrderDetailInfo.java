@@ -9,7 +9,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 
-public record OrderDetailInfo (
+public record OrderDetailInfo(
         UUID orderId,
         String orderNum,
         String orderDate,
@@ -23,14 +23,14 @@ public record OrderDetailInfo (
 ) {
 
     // 배송지 정보
-    public record DeliveryInfo (
+    public record DeliveryInfo(
             String recipientName,
             String recipientAddress
     ) {
     }
 
     // 결제 정보
-    public record PaymentInfo (
+    public record PaymentInfo(
             BigDecimal paidAmount, // 결제 금액
             String transactionDate // 결제 일시
     ) {

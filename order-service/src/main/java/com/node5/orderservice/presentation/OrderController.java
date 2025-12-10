@@ -28,7 +28,7 @@ public class OrderController {
 
     @Operation(summary = "주문 생성", description = "장바구니 상품이나 정기 구독 상품 주문 정보를 Order, OrderItem 테이블에 등록한다.")
     @PostMapping
-    public ResponseEntity<ApiResponseDto<OrderCreateInfo>> create(@RequestBody @Valid OrderCreateRequest request){
+    public ResponseEntity<ApiResponseDto<OrderCreateInfo>> create(@RequestBody @Valid OrderCreateRequest request) {
         return orderService.create(request.toCommand());
     }
 
@@ -46,7 +46,7 @@ public class OrderController {
 
     @Operation(summary = "주문 상세 조회", description = "주문 ID로부터 특정 주문 상세 내역을 조회한다.")
     @GetMapping("/{orderId}")
-    public ResponseEntity<ApiResponseDto<OrderDetailInfo>> getOrder(@PathVariable("orderId") UUID id){
+    public ResponseEntity<ApiResponseDto<OrderDetailInfo>> getOrder(@PathVariable("orderId") UUID id) {
         return orderService.getOrderDetail(id);
     }
 

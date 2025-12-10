@@ -8,7 +8,7 @@ public record OrderCreateInfo(
         UUID orderId
 ) {
 
-    public static OrderCreateInfo from (Order order) {
+    public static OrderCreateInfo from(Order order) {
         return new OrderCreateInfo(
                 order.getId()
         );

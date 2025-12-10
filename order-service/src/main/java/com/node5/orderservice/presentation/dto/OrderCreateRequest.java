@@ -37,7 +37,7 @@ public record OrderCreateRequest(
     ) {
     }
 
-    public OrderCommand toCommand(){
+    public OrderCommand toCommand() {
         List<OrderItemCommand> itemCommands = this.items.stream()
                 .map(item -> new OrderItemCommand(
                         item.productId,
