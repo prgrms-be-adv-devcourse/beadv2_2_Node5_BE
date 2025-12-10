@@ -29,7 +29,7 @@ public class SubscriptionOrderJobScheduler {
     private final Job subscriptionOrderJob;
     private final SubscriptionRepository subscriptionRepository;
 
-    @Scheduled(cron = "${spring.task.}")
+    @Scheduled(cron = "${spring.task.scheduling.cron.subscription-order}")
     public void runSubscriptionOrderJob() {
         LocalDate today = LocalDate.now();
         log.info("Running subscription order for date {}", today);

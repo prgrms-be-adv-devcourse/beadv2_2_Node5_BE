@@ -28,41 +28,19 @@ public class SubscriptionService {
     private final SubscriptionRepository subscriptionRepository;
     private final SubscriptionRecurrenceRuleRepository subscriptionRecurrenceRuleRepository;
 
-    public ResponseEntity<ApiResponseDto<SubscriptionInfo>> findById(UUID id) {
+    public SubscriptionInfo findById(UUID id) {
         Subscription subscription = subscriptionRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Subscription not found: " + id));
-
-        SubscriptionInfo subscriptionInfo = toSubscriptionInfo(subscription);
-
-        ApiResponseDto<SubscriptionInfo> responseDto = new ApiResponseDto<>(HttpStatus.OK.value(), "구독 조회 성공", subscriptionInfo);
-        return ResponseEntity.ok(responseDto);
+        return toSubscriptionInfo(subscription);
     }
 
-    public ResponseEntity<ApiResponseDto<PagedResponseDto<SubscriptionInfo>>> findAllByMemberId(UUID memberId, Pageable pageable) {
-        Page<Subscription> page = subscriptionRepository.findAllByMemberId(memberId, pageable);
-
-        List<SubscriptionInfo> subscriptionInfos = page.getContent().stream()
-                .map(subscription -> toSubscriptionInfo(subscription))
-                .toList();
-
-        PageInfoDto pageInfo = new PageInfoDto(
-                page.getNumber(),
-                page.getSize(),
-                page.getTotalElements(),
-                page.getTotalPages()
-        );
-
-        PagedResponseDto<SubscriptionInfo> pagedResponse =
-                new PagedResponseDto<>(subscriptionInfos, pageInfo);
-
-        ApiResponseDto<PagedResponseDto<SubscriptionInfo>> response =
-                new ApiResponseDto<>(HttpStatus.OK.value(), "구독 목록 조회 성공", pagedResponse);
-
-        return ResponseEntity.ok(response);
+    public Page<SubscriptionInfo> findAllByMemberId(UUID memberId, Pageable pageable) {
+        Page<Subscription> subscriptions = subscriptionRepository.findAllByMemberId(memberId, pageable);
+        return subscriptions.map(this::toSubscriptionInfo);
     }
 
     @Transactional
-    public ResponseEntity<ApiResponseDto<SubscriptionInfo>> create(SubscriptionCreateCommand command) {
+    public SubscriptionInfo create(SubscriptionCreateCommand command) {
         Subscription subscription = Subscription.create(
                 command.memberId(),
                 command.productId(),
@@ -87,14 +65,11 @@ public class SubscriptionService {
         Subscription savedSubscription = subscriptionRepository.save(subscription);
         subscriptionRecurrenceRuleRepository.saveAll(rules);
 
-        SubscriptionInfo subscriptionInfo = toSubscriptionInfo(savedSubscription);
-
-        ApiResponseDto<SubscriptionInfo> responseDto = new ApiResponseDto<>(HttpStatus.CREATED.value(), "구독 생성 성공", subscriptionInfo);
-        return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
+        return toSubscriptionInfo(savedSubscription);
     }
 
     @Transactional
-    public ResponseEntity<ApiResponseDto<SubscriptionInfo>> update(SubscriptionUpdateCommand command, UUID id) {
+    public SubscriptionInfo update(SubscriptionUpdateCommand command, UUID id) {
         Subscription subscription = subscriptionRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Subscription not found: " + id));
 
@@ -120,50 +95,40 @@ public class SubscriptionService {
             subscriptionRecurrenceRuleRepository.saveAll(newRules);
         }
 
-        SubscriptionInfo subscriptionInfo = toSubscriptionInfo(updatedSubscription);
-
-        ApiResponseDto<SubscriptionInfo> responseDto = new ApiResponseDto<>(HttpStatus.OK.value(), "구독 수정 성공", subscriptionInfo);
-        return ResponseEntity.ok(responseDto);
+        return toSubscriptionInfo(updatedSubscription);
     }
 
     @Transactional
-    public ResponseEntity<ApiResponseDto<SubscriptionInfo>> pause(UUID id) {
+    public SubscriptionInfo pause(UUID id) {
         Subscription subscription = subscriptionRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Subscription not found: " + id));
 
         subscription.pause();
         Subscription updatedSubscription = subscriptionRepository.save(subscription);
 
-        SubscriptionInfo subscriptionInfo = toSubscriptionInfo(updatedSubscription);
-
-        ApiResponseDto<SubscriptionInfo> responseDto = new ApiResponseDto<>(HttpStatus.OK.value(), "구독 일시정지 성공", subscriptionInfo);
-        return ResponseEntity.ok(responseDto);
+        return toSubscriptionInfo(updatedSubscription);
     }
 
     @Transactional
-    public ResponseEntity<ApiResponseDto<SubscriptionInfo>> resume(UUID id) {
+    public SubscriptionInfo resume(UUID id) {
         Subscription subscription = subscriptionRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Subscription not found: " + id));
 
         subscription.resume();
         Subscription updatedSubscription = subscriptionRepository.save(subscription);
 
-        SubscriptionInfo subscriptionInfo = toSubscriptionInfo(updatedSubscription);
-
-        ApiResponseDto<SubscriptionInfo> responseDto = new ApiResponseDto<>(HttpStatus.OK.value(), "구독 재개 성공", subscriptionInfo);
-        return ResponseEntity.ok(responseDto);
+        return toSubscriptionInfo(updatedSubscription);
     }
 
     @Transactional
-    public ResponseEntity<ApiResponseDto<SubscriptionInfo>> delete(UUID id) {
+    public SubscriptionInfo delete(UUID id) {
         Subscription subscription = subscriptionRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Subscription not found: " + id));
 
         subscription.delete();
-        subscriptionRepository.save(subscription);
+        Subscription saved = subscriptionRepository.save(subscription);
 
-        ApiResponseDto<SubscriptionInfo> responseDto = new ApiResponseDto<>(HttpStatus.NO_CONTENT.value(), "구독 삭제 성공", null);
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(responseDto);
+        return toSubscriptionInfo(saved);
     }
 
     private List<SubscriptionRecurrenceRule> createSubscriptionRecurrenceRule(UUID subscriptionId, RecurrenceType recurrenceType, List<DayOfWeek> dayOfWeek, Integer dayOfMonth) {
@@ -211,6 +176,6 @@ public class SubscriptionService {
                 .toList();
         Integer dayOfMonth = rules.get(0).getDayOfMonth();
 
-        return SubscriptionInfo.from(subscription, ruleType, dayOfWeek, dayOfMonth);
+        return SubscriptionInfo.of(subscription, ruleType, dayOfWeek, dayOfMonth);
     }
 }

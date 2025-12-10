@@ -25,7 +25,7 @@ public record SubscriptionInfo(
         List<Integer> dayOfWeek,
         Integer dayOfMonth
 ) {
-    public static SubscriptionInfo from(Subscription subscription, RecurrenceType recurrenceType, List<DayOfWeek> dayOfWeek, Integer dayOfMonth) {
+    public static SubscriptionInfo of(Subscription subscription, RecurrenceType recurrenceType, List<DayOfWeek> dayOfWeek, Integer dayOfMonth) {
         List<Integer> dayOfWeekList =
                 dayOfWeek == null
                         ? List.of()
