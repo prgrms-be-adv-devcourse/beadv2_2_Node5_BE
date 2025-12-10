@@ -13,64 +13,89 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql
+    healthcheck: # Healthcheck 추가
+      test: ["CMD-SHELL", "pg_isready -U node5 -d my_routine"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   config-service:
     image: node5dev/config:latest
     ports:
       - "8888:8888"
     depends_on:
-      - database
+      database:
+        condition: service_healthy
     volumes:
       - /home/ubuntu/config:/app/config
+    healthcheck: # Healthcheck 추가
+      test: [ "CMD", "curl", "-f", "http://localhost:8888/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   discovery-service:
     image: node5dev/discovery:latest
     ports:
       - "8761:8761"
     depends_on:
-      - config-service
+      config-service:
+        condition: service_healthy
+    healthcheck: # Healthcheck 추가
+      test: [ "CMD", "curl", "-f", "http://localhost:8761/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   billing-service:
     image: node5dev/billing-service:latest
     depends_on:
-      - discovery-service
+      discovery-service:
+        condition: service_healthy
 
   catalog-service:
     image: node5dev/catalog-service:latest
     depends_on:
-      - discovery-service
+      discovery-service:
+        condition: service_healthy
 
   member-service:
     image: node5dev/member-service:latest
     depends_on:
-      - discovery-service
+      discovery-service:
+        condition: service_healthy
 
   order-service:
     image: node5dev/order-service:latest
     depends_on:
-      - discovery-service
+      discovery-service:
+        condition: service_healthy
 
   settlement-service:
     image: node5dev/settlement-service:latest
     depends_on:
-      - discovery-service
+      discovery-service:
+        condition: service_healthy
 
   shop-service:
     image: node5dev/shop-service:latest
     depends_on:
-      - discovery-service
+      discovery-service:
+        condition: service_healthy
 
   subscription-service:
     image: node5dev/subscription-service:latest
     depends_on:
-      - discovery-service
+      discovery-service:
+        condition: service_healthy
 
   apigateway-service:
     image: node5dev/apigateway:latest
     ports:
       - "8000:8000"
     depends_on:
-      - discovery-service
+      discovery-service:
+        condition: service_healthy
 
 volumes:
   postgres_data:
