@@ -25,7 +25,11 @@ import com.node5.catalogservice.search.domain.ProductSearchSort;
 import com.node5.catalogservice.search.infrastructure.ProductSearchRepository;
 import com.node5.catalogservice.search.presentation.dto.ProductSearchRequest;
 
-@DataElasticsearchTest
+@DataElasticsearchTest(properties = {
+	"spring.cloud.config.enabled=false",
+	"spring.cloud.config.fail-fast=false",
+	"spring.config.import="
+})
 @ActiveProfiles("test")
 @Import({SearchService.class, ElasticsearchIndexConfig.class})
 public class SearchServiceTest {
