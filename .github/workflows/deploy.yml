@@ -63,6 +63,6 @@ jobs:
       - name: Docker login & deploy
         run: |
           echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
-          docker-compose pull
-          docker-compose up -d
+          docker compose pull
+          docker compose up -d
           docker image prune -a -f
