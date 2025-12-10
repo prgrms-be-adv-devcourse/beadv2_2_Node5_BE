@@ -17,7 +17,7 @@ import java.util.UUID;
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
-@Table(name = "\"shop\"", schema = "public")
+@Table(name = "\"shop\"", schema = "shop")
 public class Shop extends BaseEntity {
 
     @Id

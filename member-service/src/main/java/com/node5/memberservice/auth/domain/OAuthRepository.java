@@ -11,4 +11,6 @@ public interface OAuthRepository {
     Optional<OAuth> findByProviderAndProviderId(String provider, String providerId);
 
     Optional<OAuth> findByProviderAndMember(String provider, Member member);
+
+    void deleteByMember(Member member);
 }

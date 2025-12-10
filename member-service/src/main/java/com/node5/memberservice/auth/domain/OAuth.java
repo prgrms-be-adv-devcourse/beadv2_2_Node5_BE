@@ -13,7 +13,7 @@ import java.util.UUID;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "o_auth", schema = "public")
+@Table(name = "o_auth", schema = "member")
 public class OAuth extends BaseEntity {
 
     @Id
