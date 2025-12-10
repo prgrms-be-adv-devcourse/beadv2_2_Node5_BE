@@ -2,6 +2,7 @@ package com.node5.orderservice.exception;
 
 import com.node5.common.exception.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,7 +16,6 @@ import java.util.stream.Collectors;
 @Slf4j
 public class GlobalExceptionHandler {
 
-    // @Valid Exception
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException e, HttpServletRequest request) {
 
@@ -28,7 +28,22 @@ public class GlobalExceptionHandler {
                 .body(ErrorResponse.of(400, "VALIDATION_ERROR", message, request.getRequestURI()));
     }
 
-    // Order Not Found Exception
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ErrorResponse> handleValidation(ConstraintViolationException e, HttpServletRequest request) {
+
+        String message = e.getConstraintViolations().stream()
+                .map(violation -> {
+                    String propertyPath = violation.getPropertyPath().toString();
+                    String field = propertyPath.substring(propertyPath.lastIndexOf('.') + 1);
+                    return field + ": " + violation.getMessage();
+                })
+                .collect(Collectors.joining(", "));
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ErrorResponse.of(400, "VALIDATION_ERROR", message, request.getRequestURI()));
+    }
+
     @ExceptionHandler(OrderNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleOrderNotFound(OrderNotFoundException e, HttpServletRequest request) {
         return ResponseEntity
