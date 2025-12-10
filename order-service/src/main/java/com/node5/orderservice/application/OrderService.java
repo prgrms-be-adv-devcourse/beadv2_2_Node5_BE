@@ -8,6 +8,7 @@ import com.node5.orderservice.domain.Order;
 import com.node5.orderservice.domain.OrderItem;
 import com.node5.orderservice.domain.OrderItemRepository;
 import com.node5.orderservice.domain.OrderRepository;
+import com.node5.orderservice.exception.OrderNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -32,7 +33,7 @@ public class OrderService {
     private final OrderItemRepository orderItemRepository;
 
     public ResponseEntity<ApiResponseDto<OrderCreateInfo>> create(OrderCommand command) {
-        // Order 생성
+        // 주문번호 생성, 총 주문 금액 계산하여 Order 생성
         String orderNum = generateNewOrderNum();
         Optional<BigDecimal> totalAmountOptional = command.items().stream()
                 .map(OrderItemCommand::totalPrice)
@@ -57,7 +58,6 @@ public class OrderService {
     }
 
     public ResponseEntity<PagedApiResponseDto<OrderListInfo>> getOrderList(UUID memberId, int page, int size, String period) {
-
         // 오늘 기준 n개월(period) 전 시점 구하기
         LocalDateTime nMonthsAgo = LocalDateTime.now().minusMonths(Integer.parseInt(period));
 
@@ -101,7 +101,7 @@ public class OrderService {
 
     public ResponseEntity<ApiResponseDto<OrderDetailInfo>> getOrderDetail(UUID orderId) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new IllegalArgumentException("Order not found: " + orderId));
+                .orElseThrow(() -> new OrderNotFoundException(orderId));
 
         List<OrderItem> orderItems = orderItemRepository.findByOrderId(orderId);
         List<OrderItemInfo> orderItemInfos = orderItems.stream()

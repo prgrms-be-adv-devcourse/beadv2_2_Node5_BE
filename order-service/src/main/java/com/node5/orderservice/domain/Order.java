@@ -12,7 +12,7 @@ import java.util.UUID;
 
 @Getter
 @Entity
-@Table(name = "\"order\"", schema = "order")
+@Table(name = "\"order\"", schema = "\"order\"")
 public class Order extends BaseEntity {
 
     @Id
