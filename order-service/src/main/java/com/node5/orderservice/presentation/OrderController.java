@@ -47,7 +47,7 @@ public class OrderController {
         return orderService.getOrderDetail(id);
     }
 
-    @Operation(summary = "주문 취소", description = "주문의 상태를 CANCEL_REQUESTED로 변경하고, 결제 취소가 완료되면 CANCEL_COMPLETED로 변경한다.")
+    @Operation(summary = "주문 취소", description = "주문의 상태가 PAID인 경우 취소가 가능하며, 결제 취소 성공 시 주문의 상태가 CANCELED로 변경된다.")
     @PatchMapping("/{orderId}/cancel")
     public ResponseEntity<OrderStatusInfo> cancel(
             @PathVariable("orderId") UUID orderId,
@@ -56,7 +56,7 @@ public class OrderController {
         return orderService.cancel(orderId, memberId);
     }
 
-    @Operation(summary = "주문 환불", description = "주문의 상태를 REFUND_REQUESTED로 변경하고, 결제 취소가 완료되면 REFUND_COMPLETED로 변경한다.")
+    @Operation(summary = "주문 환불", description = "주문의 상태가 DELIVERY_*인 경우 취소가 가능하며, 결제 취소 성공 시 주문의 상태가 REFUND_COMPLETED로 변경된다.")
     @PatchMapping("/{orderId}/refund")
     public ResponseEntity<OrderStatusInfo> refund(
             @PathVariable("orderId") UUID orderId,
