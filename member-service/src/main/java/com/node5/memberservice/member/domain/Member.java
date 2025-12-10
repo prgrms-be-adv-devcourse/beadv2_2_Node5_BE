@@ -1,18 +1,23 @@
 package com.node5.memberservice.member.domain;
 
 import com.node5.common.domain.BaseEntity;
+import com.node5.memberservice.auth.application.dto.OAuthRegisterCommand;
+import com.node5.memberservice.member.application.dto.MemberModifyCommand;
+import com.node5.memberservice.member.presentation.dto.RoleAction;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
-@Table(name = "\"member\"", schema = "public")
+@Table(name = "\"member\"", schema = "member")
 public class Member extends BaseEntity {
 
     @Id
@@ -21,18 +26,18 @@ public class Member extends BaseEntity {
     @Column(nullable = false, length = 100)
     private String email;
 
-    @Column(length = 20)
+    @Column(nullable = false, length = 20)
     private String name;
 
-    @Column(name = "phone_number", length = 20)
+    @Column(name = "phone_number", nullable = false, length = 20)
     private String phoneNumber;
 
-    @Column(length = 100)
+    @Column(nullable = false, length = 100)
     private String address;
 
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private MemberRole role;
+    @Convert(converter = MemberRoleSetConverter.class)
+    private Set<MemberRole> roles = new HashSet<>();
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -40,24 +45,40 @@ public class Member extends BaseEntity {
 
     private LocalDateTime deletedAt;
 
-    private Member(UUID id, String email, MemberRole role, MemberStatus status) {
+    private Member(UUID id, String email, String name, String phoneNumber, String address, MemberRole role, MemberStatus status) {
         this.id = id;
         this.email = email;
-        this.role = role;
-        this.status = status;
-    }
-
-    public static Member createWithEmailOnly(String email) {
-        UUID id = UUID.randomUUID();
-        MemberRole role = MemberRole.USER;
-        MemberStatus status = MemberStatus.PENDING;
-        return new Member(id, email, role, status);
-    }
-
-    public void registerRequiredInfo(String name, String phoneNumber, String address) {
         this.name = name;
         this.phoneNumber = phoneNumber;
         this.address = address;
-        this.status = MemberStatus.ACTIVE;
+        this.roles.add(role);
+        this.status = status;
+        this.deletedAt = null;
+    }
+
+    public static Member create(OAuthRegisterCommand command) {
+        UUID id = UUID.randomUUID();
+        MemberRole role = MemberRole.USER;
+        MemberStatus status = MemberStatus.ACTIVE;
+
+        return new Member(id, command.email(), command.name(), command.phoneNumber(), command.address(), role, status);
+    }
+
+    public void modifyRoles(String role, RoleAction action) {
+        if (action == RoleAction.ADD) {
+            this.roles.add(MemberRole.valueOf(role));
+        } else if (action == RoleAction.REMOVE) {
+            this.roles.remove(MemberRole.valueOf(role));
+        }
+    }
+
+    public void modifyInfo(MemberModifyCommand command) {
+        this.name = command.name();
+        this.phoneNumber = command.phoneNumber();
+        this.address = command.address();
+    }
+
+    public void delete() {
+        this.deletedAt = LocalDateTime.now();
     }
 }

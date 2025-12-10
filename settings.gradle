@@ -5,12 +5,11 @@ include(
         'apigateway',
         'config',
         'discovery',
+        'billing-service',
         'catalog-service',
         'member-service',
         'order-service',
-        'payment-service',
         'settlement-service',
         'shop-service',
         'subscription-service',
-        'wallet-service'
 )

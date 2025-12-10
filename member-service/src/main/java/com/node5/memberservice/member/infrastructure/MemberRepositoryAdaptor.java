@@ -15,8 +15,8 @@ public class MemberRepositoryAdaptor implements MemberRepository {
     private final MemberJpaRepository memberJpaRepository;
 
     @Override
-    public Optional<Member> findById(UUID id) {
-        return memberJpaRepository.findById(id);
+    public Optional<Member> findByIdAndDeletedAtIsNull(UUID id) {
+        return memberJpaRepository.findByIdAndDeletedAtIsNull(id);
     }
 
     @Override
@@ -27,10 +27,5 @@ public class MemberRepositoryAdaptor implements MemberRepository {
     @Override
     public Member save(Member member) {
         return memberJpaRepository.save(member);
-    }
-
-    @Override
-    public void deleteById(UUID id) {
-        memberJpaRepository.deleteById(id);
     }
 }
