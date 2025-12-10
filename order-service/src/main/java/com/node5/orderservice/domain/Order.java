@@ -6,6 +6,8 @@ import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Getter
@@ -31,10 +33,16 @@ public class Order extends BaseEntity {
     private OrderType orderType;
 
     @Column
+    private LocalDateTime paidAt; //결제 일시
+
+    @Column
+    private LocalDateTime closedAt; //취소, 환불, 배송 완료 일시
+
+    @Column
     private UUID subscriptionId;
 
     @Column
-    private int totalAmount; //총 주문 금액
+    private BigDecimal totalAmount; //총 주문 금액
 
     @Column(nullable = false, length = 50)
     private String recipientName;
@@ -52,7 +60,7 @@ public class Order extends BaseEntity {
             String orderNum,
             OrderType orderType,
             UUID subscriptionId,
-            int totalAmount,
+            BigDecimal totalAmount,
             String recipientName,
             String recipientAddress
     ) {
@@ -70,7 +78,7 @@ public class Order extends BaseEntity {
     public static Order create(
             OrderCommand command,
             String orderNum,
-            int totalAmount
+            BigDecimal totalAmount
     ) {
         return Order.builder()
                 .id(UUID.randomUUID())

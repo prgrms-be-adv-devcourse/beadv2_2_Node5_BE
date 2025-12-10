@@ -9,6 +9,7 @@ import jakarta.persistence.Table;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Getter
@@ -22,17 +23,23 @@ public class OrderItem extends BaseEntity {
     @Column(nullable = false)
     private UUID orderId;
 
-    @Column
+    @Column(nullable = false)
+    private UUID productId;
+
+    @Column(nullable = false)
     private String name;
 
     @Column
-    private int unitPrice;
+    private String imgUrl; // 대표 이미지 url
 
-    @Column
+    @Column(nullable = false)
+    private BigDecimal unitPrice;
+
+    @Column(nullable = false)
     private int quantity;
 
-    @Column
-    private int totalPrice; //상품별 주문 금액
+    @Column(nullable = false)
+    private BigDecimal totalPrice; // 상품별 주문 금액
 
     protected OrderItem() { }
 
@@ -40,14 +47,18 @@ public class OrderItem extends BaseEntity {
     private OrderItem(
             UUID id,
             UUID orderId,
+            UUID productId,
             String name,
-            int unitPrice,
+            String imgUrl,
+            BigDecimal unitPrice,
             int quantity,
-            int totalPrice
+            BigDecimal totalPrice
     ) {
         this.id = id;
         this.orderId = orderId;
+        this.productId = productId;
         this.name = name;
+        this.imgUrl = imgUrl;
         this.unitPrice = unitPrice;
         this.quantity = quantity;
         this.totalPrice = totalPrice;
@@ -60,7 +71,9 @@ public class OrderItem extends BaseEntity {
         return OrderItem.builder()
                 .id(UUID.randomUUID())
                 .orderId(orderId)
+                .productId(command.productId())
                 .name(command.name())
+                .imgUrl(command.imgUrl())
                 .unitPrice(command.unitPrice())
                 .quantity(command.quantity())
                 .totalPrice(command.totalPrice())

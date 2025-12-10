@@ -6,6 +6,7 @@ import com.node5.orderservice.domain.OrderType;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -29,9 +30,10 @@ public record OrderCreateRequest(
             UUID productId,
 
             String name,
-            Integer unitPrice,
+            String imgUrl,
+            BigDecimal unitPrice,
             Integer quantity,
-            Integer totalPrice
+            BigDecimal totalPrice
     ) {
     }
 
@@ -40,6 +42,7 @@ public record OrderCreateRequest(
                 .map(item -> new OrderItemCommand(
                         item.productId,
                         item.name,
+                        item.imgUrl,
                         item.unitPrice,
                         item.quantity,
                         item.totalPrice
