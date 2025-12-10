@@ -186,7 +186,6 @@ public class AuthService {
         String key = REFRESH_TOKEN_KEY_PREFIX + memberId;
         String storedRefreshToken = stringRedisTemplate.opsForValue().get(key);
         if (!refreshToken.equals(storedRefreshToken)) {
-            stringRedisTemplate.delete(key);
             throw new IllegalArgumentException("토큰이 일치하지 않습니다.");
         }
     }

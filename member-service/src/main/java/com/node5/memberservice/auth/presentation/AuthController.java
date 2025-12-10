@@ -52,7 +52,7 @@ public class AuthController {
         return ResponseEntity.ok(authService.refreshToken(request.toCommand()));
     }
 
-    @PostMapping("/loout")
+    @PostMapping("/logout")
     public ResponseEntity<Void> logout(@RequestHeader("Member-Id") UUID memberId) {
         authService.logout(memberId);
         return ResponseEntity.ok().build();
