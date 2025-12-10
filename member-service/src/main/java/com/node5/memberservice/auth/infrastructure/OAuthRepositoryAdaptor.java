@@ -27,4 +27,10 @@ public class OAuthRepositoryAdaptor implements OAuthRepository {
     public Optional<OAuth> findByProviderAndMember(String provider, Member member) {
         return oAuthJpaRepository.findByProviderAndMember(provider, member);
     }
+
+    @Override
+    public void deleteByMember(Member member) {
+        oAuthJpaRepository.deleteByMember(member);
+    }
+
 }
