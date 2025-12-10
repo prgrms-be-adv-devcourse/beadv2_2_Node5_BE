@@ -17,24 +17,24 @@ spring:
                 - Path=/catalog-service/**
               filters:
                 - RewritePath=/catalog-service/(?<segment>.*), /$\{segment}
-            #        - id: shop-service
-            #          uri: lb://SHOP-SERVICE
-            #          predicates:
-            #            - Path=/shop-service/**
-            #          filters:
-            #            - RewritePath=/shop-service/(?<segment>.*), /$\{segment}
+            - id: shop-service
+              uri: lb://SHOP-SERVICE
+              predicates:
+                - Path=/shop-service/**
+              filters:
+                - RewritePath=/shop-service/(?<segment>.*), /$\{segment}
             - id: member-service
               uri: lb://MEMBER-SERVICE
               predicates:
-                - Path=/member-service/**
+                - Path=/member-service/api/v1/**, /member-service/v3/**
               filters:
                 - RewritePath=/member-service/(?<segment>.*), /$\{segment}
-            - id: wallet-service
-              uri: lb://WALLET-SERVICE
+            - id: billing-service
+              uri: lb://BILLING-SERVICE
               predicates:
-                - Path=/wallet-service/**
+                - Path=/billing-service/**
               filters:
-                - RewritePath=/wallet-service/(?<segment>.*), /$\{segment}
+                - RewritePath=/billing-service/(?<segment>.*), /$\{segment}
             - id: subscription-service
               uri: lb://SUBSCRIPTION-SERVICE
               predicates:
@@ -46,6 +46,7 @@ spring:
               args:
                 preLogger: true
                 postLogger: true
+            - name: AuthenticationFilter
           discovery:
             locator:
               enabled: true

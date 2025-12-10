@@ -26,12 +26,6 @@ public class MemberController {
         return memberService.findById(memberId);
     }
 
-    @Operation(summary = "회원 생성", description = "이메일로 회원을 생성합니다.")
-    @PostMapping
-    public ResponseEntity<ApiResponseDto<MemberInfo>> create(String email) {
-        return memberService.create(email);
-    }
-
     @Operation(summary = "회원 정보 등록", description = "회원의 필수 정보를 등록합니다.")
     @PostMapping("/{memberId}")
     public ResponseEntity<ApiResponseDto<MemberInfo>> registerRequiredInfo(@PathVariable UUID memberId, @RequestBody MemberRegisterRequest request) {

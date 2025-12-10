@@ -1,0 +1,74 @@
+version: "3"
+
+services:
+  database:
+    image: postgres:18
+    container_name: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: node5
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: my_routine
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  config-service:
+    image: node5dev/config:latest
+    ports:
+      - "8888:8888"
+    depends_on:
+      - database
+
+  discovery-service:
+    image: node5dev/discovery:latest
+    ports:
+      - "8761:8761"
+    depends_on:
+      - config-service
+
+  billing-service:
+    image: node5dev/billing-service:latest
+    depends_on:
+      - discovery-service
+
+  catalog-service:
+    image: node5dev/catalog-service:latest
+    depends_on:
+      - discovery-service
+
+  member-service:
+    image: node5dev/member-service:latest
+    depends_on:
+      - discovery-service
+
+  order-service:
+    image: node5dev/order-service:latest
+    depends_on:
+      - discovery-service
+
+  settlement-service:
+    image: node5dev/settlement-service:latest
+    depends_on:
+      - discovery-service
+
+  shop-service:
+    image: node5dev/shop-service:latest
+    depends_on:
+      - discovery-service
+
+  subscription-service:
+    image: node5dev/subscription-service:latest
+    depends_on:
+      - discovery-service
+
+  apigateway-service:
+    image: node5dev/apigateway:latest
+    ports:
+      - "8000:8000"
+    depends_on:
+      - discovery-service
+
+volumes:
+  postgres_data:
