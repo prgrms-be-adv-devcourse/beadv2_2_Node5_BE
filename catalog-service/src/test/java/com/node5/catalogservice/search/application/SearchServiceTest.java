@@ -19,7 +19,7 @@ import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.test.context.ActiveProfiles;
 
 import com.node5.catalogservice.search.application.dto.ProductSearchResponse;
-import com.node5.catalogservice.search.config.ProductIndexConfig;
+import com.node5.catalogservice.search.config.ElasticsearchIndexConfig;
 import com.node5.catalogservice.search.domain.ProductDocument;
 import com.node5.catalogservice.search.domain.ProductSearchSort;
 import com.node5.catalogservice.search.infrastructure.ProductSearchRepository;
@@ -27,7 +27,7 @@ import com.node5.catalogservice.search.presentation.dto.ProductSearchRequest;
 
 @DataElasticsearchTest
 @ActiveProfiles("test")
-@Import({SearchService.class, ProductIndexConfig.class})
+@Import({SearchService.class, ElasticsearchIndexConfig.class})
 public class SearchServiceTest {
 
 	@MockBean
