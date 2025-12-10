@@ -29,7 +29,6 @@ import java.util.stream.Collectors;
 public class OrderService {
 
     private final OrderRepository orderRepository;
-    private final OrderItemService orderItemService;
     private final OrderItemRepository orderItemRepository;
 
     public ResponseEntity<ApiResponseDto<OrderCreateInfo>> create(OrderCommand command) {
@@ -49,7 +48,7 @@ public class OrderService {
         List<OrderItem> orderItems = itemCommands.stream()
                 .map(oi -> OrderItem.create(orderId, oi))
                 .toList();
-        orderItemService.saveAll(orderItems);
+        orderItemRepository.saveAll(orderItems);
 
         // TODO 결제 API 호출
 
