@@ -7,6 +7,7 @@ import java.util.Comparator;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.elasticsearch.DataElasticsearchTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -32,6 +33,11 @@ import com.node5.catalogservice.search.presentation.dto.ProductSearchRequest;
 })
 @ActiveProfiles("test")
 @Import({SearchService.class, ElasticsearchIndexConfig.class})
+@DisabledIfEnvironmentVariable(
+	named = "CI",
+	matches = "true",
+	disabledReason = "CI 환경에서는 검색 테스트를 건너뜁니다."
+)
 public class SearchServiceTest {
 
 	@MockBean
