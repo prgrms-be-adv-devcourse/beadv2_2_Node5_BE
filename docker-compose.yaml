@@ -12,7 +12,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
 
   config-service:
     image: node5dev/config:latest
@@ -20,6 +20,8 @@ services:
       - "8888:8888"
     depends_on:
       - database
+    volumes:
+      - /home/ubuntu/config:/app/config
 
   discovery-service:
     image: node5dev/discovery:latest
