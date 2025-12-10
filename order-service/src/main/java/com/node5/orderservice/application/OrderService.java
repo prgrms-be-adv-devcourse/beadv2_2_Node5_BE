@@ -1,8 +1,6 @@
 package com.node5.orderservice.application;
 
-import com.node5.common.domain.ApiResponseDto;
 import com.node5.common.domain.PageInfoDto;
-import com.node5.common.domain.PagedApiResponseDto;
 import com.node5.orderservice.application.dto.*;
 import com.node5.orderservice.domain.Order;
 import com.node5.orderservice.domain.OrderItem;
@@ -13,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -31,7 +28,7 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
 
-    public ResponseEntity<ApiResponseDto<OrderCreateInfo>> create(OrderCommand command) {
+    public ResponseEntity<OrderCreateInfo> create(OrderCommand command) {
         // 주문번호 생성, 총 주문 금액 계산하여 Order 생성
         String orderNum = generateNewOrderNum();
         Optional<BigDecimal> totalAmountOptional = command.items().stream()
@@ -52,11 +49,10 @@ public class OrderService {
 
         // TODO 결제 API 호출
 
-        ApiResponseDto<OrderCreateInfo> responseDto = new ApiResponseDto<>(HttpStatus.CREATED.value(), "주문 생성 성공", OrderCreateInfo.from(saved));
-        return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
+        return ResponseEntity.ok().body(OrderCreateInfo.from(saved));
     }
 
-    public ResponseEntity<PagedApiResponseDto<OrderListInfo>> getOrderList(UUID memberId, int page, int size, String period) {
+    public ResponseEntity<OrderListInfo> getOrderList(UUID memberId, int page, int size, String period) {
         // 오늘 기준 n개월(period) 전 시점 구하기
         LocalDateTime nMonthsAgo = LocalDateTime.now().minusMonths(Integer.parseInt(period));
 
@@ -69,7 +65,7 @@ public class OrderService {
 
         // 페이징 결과 처리
         if(!orderPage.hasContent()){
-            return ResponseEntity.ok().body(new PagedApiResponseDto<>(HttpStatus.OK.value(), "주문 목록 조회 성공", Collections.emptyList(), pageInfo));
+            return ResponseEntity.ok().body(OrderListInfo.from(pageInfo, Collections.emptyList()));
         }
 
         // - 주문 ID 목록 추출
@@ -84,21 +80,21 @@ public class OrderService {
         Map<UUID, List<OrderItem>> orderGroup = orderedItems.stream()
                 .collect(Collectors.groupingBy(OrderItem::getOrderId));
 
-        // - OrderListInfo DTO 생성
-        List<OrderListInfo> orderListInfos = orderPage.getContent().stream()
+        // - OrderListDetailInfo DTO 생성
+        List<OrderListInfo.OrderListDetailInfo> orderListInfos = orderPage.getContent().stream()
                 .map(order -> {
                     List<OrderItem> orderItemList = orderGroup.get(order.getId());
                     List<OrderItemInfo> orderedItemInfos = orderItemList.stream()
                             .map(OrderItemInfo::from)
                             .toList();
-            return OrderListInfo.from(order, orderedItemInfos);
+            return OrderListInfo.OrderListDetailInfo.from(order, orderedItemInfos);
         }).toList();
 
-        PagedApiResponseDto<OrderListInfo> responseDto = new PagedApiResponseDto<>(HttpStatus.OK.value(), "주문 목록 조회 성공", orderListInfos, pageInfo);
-        return ResponseEntity.ok().body(responseDto);
+        // - OrderListInfo DTO 생성 (OrderListDetailInfo + 페이징 정보)
+        return ResponseEntity.ok().body(OrderListInfo.from(pageInfo, orderListInfos));
     }
 
-    public ResponseEntity<ApiResponseDto<OrderDetailInfo>> getOrderDetail(UUID orderId) {
+    public ResponseEntity<OrderDetailInfo> getOrderDetail(UUID orderId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException(orderId));
 
@@ -107,8 +103,7 @@ public class OrderService {
                 .map(OrderItemInfo::from)
                 .toList();
 
-        ApiResponseDto<OrderDetailInfo> responseDto = new ApiResponseDto<>(HttpStatus.OK.value(), "주문 상세 조회 성공", OrderDetailInfo.from(order, orderItemInfos));
-        return ResponseEntity.ok().body(responseDto);
+        return ResponseEntity.ok().body(OrderDetailInfo.from(order, orderItemInfos));
     }
 
     public String generateNewOrderNum() {
