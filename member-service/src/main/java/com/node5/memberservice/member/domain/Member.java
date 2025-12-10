@@ -1,6 +1,7 @@
 package com.node5.memberservice.member.domain;
 
 import com.node5.common.domain.BaseEntity;
+import com.node5.memberservice.auth.application.dto.OAuthRegisterCommand;
 import com.node5.memberservice.member.presentation.dto.RoleAction;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -54,12 +55,12 @@ public class Member extends BaseEntity {
         this.deletedAt = null;
     }
 
-    public static Member create(String email, String name, String phoneNumber, String address) {
+    public static Member create(OAuthRegisterCommand command) {
         UUID id = UUID.randomUUID();
         MemberRole role = MemberRole.USER;
         MemberStatus status = MemberStatus.ACTIVE;
 
-        return new Member(id, email, name, phoneNumber, address, role, status);
+        return new Member(id, command.email(), command.name(), command.phoneNumber(), command.address(), role, status);
     }
 
     public void registerRequiredInfo(String name, String phoneNumber, String address) {

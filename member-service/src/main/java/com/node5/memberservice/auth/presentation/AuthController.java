@@ -1,16 +1,21 @@
 package com.node5.memberservice.auth.presentation;
 
-import com.node5.common.domain.ApiResponseDto;
 import com.node5.memberservice.auth.application.AuthService;
 import com.node5.memberservice.auth.application.dto.LoginInfo;
 import com.node5.memberservice.auth.presentation.dto.OAuthLoginRequest;
 import com.node5.memberservice.auth.presentation.dto.OAuthRegisterRequest;
+import com.node5.memberservice.auth.presentation.dto.SendEmailVerificationRequest;
+import com.node5.memberservice.auth.presentation.dto.VerifyEmailRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "Auth", description = "인증 관련 API")
 @RestController
@@ -21,16 +26,29 @@ public class AuthController {
     private final AuthService authService;
 
     @Operation(summary = "OAuth 로그인", description = "OAuth 로그인을 처리합니다.")
-    @ApiResponse(responseCode = "200", description = "로그인 성공")
     @PostMapping("/oauth/login")
-    public ResponseEntity<ApiResponseDto<LoginInfo>> oAuthLogin(@RequestBody OAuthLoginRequest request) {
-        return authService.login(request.toCommand());
+    public ResponseEntity<LoginInfo> oAuthLogin(@RequestBody OAuthLoginRequest request) {
+        return ResponseEntity.ok(authService.login(request.toCommand()));
     }
 
     @Operation(summary = "OAuth 회원가입", description = "OAuth 회원가입을 처리합니다.")
-    @ApiResponse(responseCode = "200", description = "회원가입 성공")
     @PostMapping("/oauth/register")
-    public ResponseEntity<ApiResponseDto<LoginInfo>> register(@RequestBody OAuthRegisterRequest request) {
-        return authService.register(request.toCommand());
+    public ResponseEntity<LoginInfo> register(@RequestBody OAuthRegisterRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(authService.register(request.toCommand()));
     }
+
+    @Operation(summary = "이메일 인증 코드 전송", description = "입력한 이메일로 인증 코드를 전송합니다.")
+    @PostMapping("/email/send")
+    public ResponseEntity<Void> sendEmailVerificationCode(@RequestBody SendEmailVerificationRequest request) {
+        authService.sendEmailVerificationCode(request.toCommand());
+        return ResponseEntity.ok().build();
+    }
+
+    @Operation(summary = "이메일 인증 코드 확인", description = "입력한 이메일과 인증 코드를 확인합니다.")
+    @PostMapping("/email/verify")
+    public ResponseEntity<Void> verifyEmail(@RequestBody VerifyEmailRequest request) {
+        authService.verifyEmail(request.toCommand());
+        return ResponseEntity.ok().build();
+    }
+
 }

@@ -26,12 +26,12 @@ public record LoginInfo(
         );
     }
 
-    public static LoginInfo emailRequired(String temporaryToken) {
+    public static LoginInfo newMember(String temporaryToken) {
         return new LoginInfo(
                 null,
                 null,
                 null,
-                "EMAIL_REQUIRED",
+                "NEW_MEMBER",
                 null,
                 null,
                 temporaryToken

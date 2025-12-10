@@ -89,6 +89,15 @@ public class JwtProvider {
         }
     }
 
+    public void validateTemporaryToken(String token) {
+        Claims claims = parseClaims(token);
+
+        String type = claims.get("type", String.class);
+        if (!TokenType.TEMPORARY.name().equals(type)) {
+            throw new JwtException("임시 토큰이 아닙니다.");
+        }
+    }
+
     public OAuthUserInfo getOAuthUserInfo(String token) {
         Claims claims = parseClaims(token);
 
