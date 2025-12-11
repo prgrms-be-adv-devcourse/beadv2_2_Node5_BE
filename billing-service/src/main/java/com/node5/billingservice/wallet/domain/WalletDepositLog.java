@@ -14,7 +14,7 @@ import java.util.UUID;
 import static com.node5.billingservice.wallet.exception.WalletErrorCode.*;
 
 @Schema(description = "예치금 입금 로그")
-@Table(name = "\"wallet_deposit_log\"", schema = "public")
+@Table(name = "\"wallet_deposit_log\"", schema = "billing")
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -26,47 +26,17 @@ public class WalletDepositLog extends BaseEntity{
     @Column(nullable = false, updatable = false)
     private UUID memberId;
 
-    @Column(nullable = true, unique = true, updatable = false, length = 30)
-    private String paymentKey;
+    @Column(nullable = false, unique = true)
+    private UUID settlementId;
 
     @Column(nullable = false)
     private Long amount;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private WalletDepositLogState state;
-
-    public void validateRefundable(String paymentKey, WalletDepositLogState state) {
-        if (this.state != state) {
-            throw new WalletException(REFUND_STATE_INVALID);
-        }
-        if (this.paymentKey == null) {
-            throw new WalletException(PAYMENT_KEY_NOT_FOUND);
-        }
-        if (!this.paymentKey.equals(paymentKey)) {
-            throw new WalletException(PAYMENT_KEY_MISMATCH);
-        }
-    }
-
-    public void changeState(WalletDepositLogState state) {
-        this.state = state;
-    }
-
-    @Builder(builderMethodName = "paidBuilder", builderClassName = "PaidBuilder")
-    public WalletDepositLog(UUID memberId, String paymentKey, Long amount) {
+    @Builder
+    public WalletDepositLog(UUID memberId, UUID settlementId, Long amount) {
         this.id = UUID.randomUUID();
         this.memberId = memberId;
-        this.paymentKey = paymentKey;
+        this.settlementId = settlementId;
         this.amount = amount;
-        this.state = WalletDepositLogState.PAID;
-    }
-
-    @Builder(builderMethodName = "settledBuilder", builderClassName = "SettledBuilder")
-    public WalletDepositLog(UUID memberId, Long amount) {
-        this.id = UUID.randomUUID();
-        this.memberId = memberId;
-        this.paymentKey = null;
-        this.amount = amount;
-        this.state = WalletDepositLogState.SETTLED;
     }
 }

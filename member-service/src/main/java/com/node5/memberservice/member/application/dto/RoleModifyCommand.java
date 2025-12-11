@@ -1,9 +1,8 @@
 package com.node5.memberservice.member.application.dto;
 
-import com.node5.memberservice.member.presentation.dto.RoleAction;
+import com.node5.memberservice.member.domain.MemberRole;
 
 public record RoleModifyCommand(
-        String role,
-        RoleAction action
+        MemberRole role
 ) {
 }

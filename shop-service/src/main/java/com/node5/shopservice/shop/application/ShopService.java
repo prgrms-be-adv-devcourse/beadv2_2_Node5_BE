@@ -1,12 +1,13 @@
 package com.node5.shopservice.shop.application;
 
-import com.node5.common.domain.ApiResponseDto;
 import com.node5.shopservice.shop.application.dto.*;
 import com.node5.shopservice.shop.client.MemberClient;
 import com.node5.shopservice.shop.client.dto.RoleAction;
 import com.node5.shopservice.shop.client.dto.RoleModifyRequest;
 import com.node5.shopservice.shop.domain.Shop;
 import com.node5.shopservice.shop.domain.ShopRepository;
+import com.node5.shopservice.shop.exception.ShopErrorCode;
+import com.node5.shopservice.shop.exception.ShopException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -29,15 +30,11 @@ public class ShopService {
     private final MemberClient memberClient;
 
     public Page<ShopListResponse> findMyShopList(UUID memberId, Pageable pageable) {
-        Page<Shop> pagedMyShops = shopRepository.findAllByMemberIdAndDeletedAtIsNull(memberId, pageable);
-        return pagedMyShops.map(ShopListResponse::from);
+        return shopRepository.findAllByMemberIdAndDeletedAtIsNull(memberId, pageable).map(ShopListResponse::from);
     }
 
     public ShopInfoResponse findMyShopInfo(UUID memberId, UUID shopId) {
-        Shop shop = shopRepository.findByIdAndDeletedAtIsNull(shopId).orElseThrow(() -> new IllegalArgumentException("Shop not found: " + shopId));
-        if (!shop.getMemberId().equals(memberId)) {
-            throw new IllegalArgumentException("Shop is not yours");
-        }
+        Shop shop = getOwnedShopOrThrow(memberId, shopId);
         return ShopInfoResponse.from(shop);
     }
 
@@ -46,47 +43,61 @@ public class ShopService {
         Shop shop = Shop.create(memberId, command);
         Shop savedShop = shopRepository.save(shop);
 
-        String accessToken = updateMemberRoles(memberId, RoleAction.ADD);
+        String newAccessToken = updateMemberRoles(memberId, RoleAction.ADD);
 
-        return new ShopRegisterResponse(savedShop.getId(), accessToken);
+        return new ShopRegisterResponse(savedShop.getId(), newAccessToken);
     }
 
     @Transactional
     public ShopInfoResponse modifyMyShopInfo(UUID memberId, UUID shopId, ShopModifyCommand command) {
-        Shop shop = shopRepository.findByIdAndDeletedAtIsNull(shopId).orElseThrow(() -> new IllegalArgumentException("Shop not found: " + shopId));
-        if (!shop.getMemberId().equals(memberId)) {
-            throw new IllegalArgumentException("Shop is not yours");
-        }
+        Shop shop = getOwnedShopOrThrow(memberId, shopId);
         shop.update(command);
-
         return ShopInfoResponse.from(shop);
     }
 
     @Transactional
     public ShopDeleteResponse deleteMyShop(UUID memberId, UUID shopId) {
-        Shop shop = shopRepository.findByIdAndDeletedAtIsNull(shopId).orElseThrow(() -> new IllegalArgumentException("Shop not found: " + shopId));
-        if (!shop.getMemberId().equals(memberId)) {
-            throw new IllegalArgumentException("Shop is not yours");
-        }
+        Shop shop = getOwnedShopOrThrow(memberId, shopId);
         shop.delete();
         shopRepository.flush();
 
         int shopCount = shopRepository.countByMemberIdAndDeletedAtIsNull(memberId);
-        String accessToken = null;
+        String newAccessToken = null;
         if (shopCount == 0) {
-            accessToken = updateMemberRoles(memberId, RoleAction.REMOVE);
+            newAccessToken = updateMemberRoles(memberId, RoleAction.REMOVE);
         }
-        return new ShopDeleteResponse(accessToken);
+        return new ShopDeleteResponse(newAccessToken);
+    }
+
+    private Shop getShopOrThrow(UUID shopId) {
+        return shopRepository.findByIdAndDeletedAtIsNull(shopId)
+                .orElseThrow(() -> new ShopException(ShopErrorCode.SHOP_NOT_FOUND));
+    }
+
+    private Shop getOwnedShopOrThrow(UUID memberId, UUID shopId) {
+        Shop shop = getShopOrThrow(shopId);
+        if (!shop.getMemberId().equals(memberId)) {
+            throw new ShopException(ShopErrorCode.SHOP_NOT_OWNED);
+        }
+        return shop;
     }
 
     private String updateMemberRoles(UUID memberId, RoleAction action) {
         try {
-            RoleModifyRequest request = new RoleModifyRequest(ROLE_SELLER, action);
-            ResponseEntity<ApiResponseDto<String>> response = memberClient.modifyMemberRoles(memberId, request);
-            return response.getBody().data();
+            return switch (action) {
+                case ADD -> {
+                    RoleModifyRequest request = new RoleModifyRequest(ROLE_SELLER);
+                    ResponseEntity<String> response = memberClient.addMemberRole(memberId, request);
+                    yield response.getBody();
+                }
+                case REMOVE -> {
+                    ResponseEntity<String> response = memberClient.deleteMemberRole(memberId, ROLE_SELLER);
+                    yield response.getBody();
+                }
+            };
         } catch (Exception e) {
             log.error("memberClient.updateMemberRoles error : {}", e.getMessage());
-            throw new RuntimeException("권한 업데이트 실패: " + e);
+            throw new ShopException(ShopErrorCode.ROLE_UPDATE_FAILED);
         }
     }
 }

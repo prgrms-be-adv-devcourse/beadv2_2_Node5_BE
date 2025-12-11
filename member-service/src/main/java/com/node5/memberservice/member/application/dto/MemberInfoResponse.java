@@ -4,7 +4,7 @@ import com.node5.memberservice.member.domain.Member;
 
 import java.util.UUID;
 
-public record MemberInfo(
+public record MemberInfoResponse(
         UUID id,
         String email,
         String name,
@@ -12,8 +12,8 @@ public record MemberInfo(
         String address
 ) {
 
-    public static MemberInfo from(Member member) {
-        return new MemberInfo(
+    public static MemberInfoResponse from(Member member) {
+        return new MemberInfoResponse(
                 member.getId(),
                 member.getEmail(),
                 member.getName(),

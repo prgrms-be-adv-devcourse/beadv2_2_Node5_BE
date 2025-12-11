@@ -6,12 +6,13 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import static com.node5.billingservice.wallet.exception.WalletErrorCode.INSUFFICIENT_WALLET_BALANCE;
 
 @Schema(description = "예치금")
-@Table(name = "\"wallet\"", schema = "public")
+@Table(name = "\"wallet\"", schema = "billing")
 @Getter
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -28,6 +29,8 @@ public class Wallet extends BaseEntity {
     // 잔액
     @Column(nullable = false)
     private Long balance;
+
+    private LocalDateTime deletedAt;
 
     public void deposit(Long amount) {
         this.balance += amount;
@@ -46,10 +49,15 @@ public class Wallet extends BaseEntity {
         }
     }
 
+    public void delete() {
+        this.deletedAt = LocalDateTime.now();
+    }
+
     @Builder
     private Wallet(UUID memberId) {
         this.id = UUID.randomUUID();
         this.memberId = memberId;
         this.balance = 0L;
+        this.deletedAt = null;
     }
 }

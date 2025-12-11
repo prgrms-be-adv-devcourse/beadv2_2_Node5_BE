@@ -4,7 +4,7 @@ import com.node5.memberservice.member.domain.Member;
 
 import java.util.UUID;
 
-public record LoginInfo(
+public record LoginInfoResponse(
         UUID id,
         String memberName,
         String memberStatus,
@@ -14,8 +14,8 @@ public record LoginInfo(
         String temporaryToken
 ) {
 
-    public static LoginInfo success(Member member, String accessToken, String refreshToken) {
-        return new LoginInfo(
+    public static LoginInfoResponse success(Member member, String accessToken, String refreshToken) {
+        return new LoginInfoResponse(
                 member.getId(),
                 member.getName(),
                 member.getStatus().name(),
@@ -26,8 +26,8 @@ public record LoginInfo(
         );
     }
 
-    public static LoginInfo newMember(String temporaryToken) {
-        return new LoginInfo(
+    public static LoginInfoResponse newMember(String temporaryToken) {
+        return new LoginInfoResponse(
                 null,
                 null,
                 null,

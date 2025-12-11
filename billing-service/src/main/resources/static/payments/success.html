@@ -20,14 +20,17 @@
         orderId: params.get('orderId'),
         amount: Number(params.get('amount'))
     };
-    const walletId = params.get('walletId');
+    const memberId = params.get('memberId');
     document.getElementById('payload').textContent = JSON.stringify(payload, null, 2);
 
     async function confirmPayment() {
         try {
-            const response = await fetch(`/api/v1/payments/${walletId}/confirm`, {
+            const response = await fetch(`/api/v1/payments/confirm`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Member-Id': memberId
+                },
                 body: JSON.stringify(payload)
             });
             const data = await response.json();

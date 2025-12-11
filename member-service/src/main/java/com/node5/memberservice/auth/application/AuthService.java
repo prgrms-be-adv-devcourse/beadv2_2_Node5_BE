@@ -3,6 +3,8 @@ package com.node5.memberservice.auth.application;
 import com.node5.memberservice.auth.application.dto.*;
 import com.node5.memberservice.auth.domain.OAuth;
 import com.node5.memberservice.auth.domain.OAuthRepository;
+import com.node5.memberservice.auth.exception.AuthErrorCode;
+import com.node5.memberservice.auth.exception.AuthException;
 import com.node5.memberservice.auth.oauth.OAuthProviderService;
 import com.node5.memberservice.auth.oauth.dto.OAuthUserInfo;
 import com.node5.memberservice.auth.util.JwtProvider;
@@ -60,12 +62,12 @@ public class AuthService {
         this.stringRedisTemplate = stringRedisTemplate;
     }
 
-    public LoginInfo login(OAuthLoginCommand command) {
+    public LoginInfoResponse login(OAuthLoginCommand command) {
 
         OAuthProviderService providerService = providerMap.get(command.provider());
 
         if (providerService == null) {
-            throw new IllegalArgumentException("Invalid provider: " + command.provider());
+            throw new AuthException(AuthErrorCode.INVALID_PROVIDER);
         }
 
         OAuthUserInfo oAuthUserInfo = providerService.getUserInfo(command.providerCode());
@@ -78,22 +80,23 @@ public class AuthService {
             String accessToken = jwtProvider.generateAccessToken(jwtMemberInfo);
             String refreshToken = jwtProvider.generateRefreshToken(jwtMemberInfo);
             saveRefreshToken(refreshToken, member.getId().toString());
-            return LoginInfo.success(member, accessToken, refreshToken);
+            return LoginInfoResponse.success(member, accessToken, refreshToken);
         }
 
         String temporaryToken = jwtProvider.generateTemporaryToken(oAuthUserInfo);
-        return LoginInfo.newMember(temporaryToken);
+        return LoginInfoResponse.newMember(temporaryToken);
     }
 
     @Transactional
-    public LoginInfo register(OAuthRegisterCommand command) {
+    public LoginInfoResponse register(OAuthRegisterCommand command) {
         String email = command.email();
         if (!isVerified(email)) {
-            throw new IllegalArgumentException("인증되지 않은 이메일입니다.");
+            throw new AuthException(AuthErrorCode.EMAIL_NOT_VERIFIED);
         }
-        OAuthUserInfo oAuthUserInfo = jwtProvider.getOAuthUserInfo(command.temporaryToken());
-        Optional<Member> existMember = memberRepository.findByEmailAndDeletedAtIsNull(email);
 
+        OAuthUserInfo oAuthUserInfo = jwtProvider.getOAuthUserInfo(command.temporaryToken());
+
+        Optional<Member> existMember = memberRepository.findByEmailAndDeletedAtIsNull(email);
         Member member = existMember.orElseGet(() -> memberRepository.save(Member.create(command)));
 
         Optional<OAuth> existOAuth = oAuthRepository.findByProviderAndMember(oAuthUserInfo.provider(), member);
@@ -115,7 +118,7 @@ public class AuthService {
 
         stringRedisTemplate.delete(VERIFIED_EMAIL_KEY_PREFIX + email);
 
-        return LoginInfo.success(member, accessToken, refreshToken);
+        return LoginInfoResponse.success(member, accessToken, refreshToken);
     }
 
     public void sendEmailVerificationCode(SendEmailVerificationCommand command) {
@@ -128,7 +131,7 @@ public class AuthService {
 
     public void verifyEmail(VerifyEmailCommand command) {
         if (!verifyCode(command.email(), command.verificationCode())) {
-            throw new IllegalArgumentException("인증 코드가 일치하지 않습니다.");
+            throw new AuthException(AuthErrorCode.EMAIL_CODE_MISMATCH);
         }
         markVerified(command.email());
         stringRedisTemplate.delete(EMAIL_VERIFY_CODE_KEY_PREFIX + command.email());
@@ -142,13 +145,12 @@ public class AuthService {
         UUID memberUuid;
         try {
             memberUuid = UUID.fromString(memberId);
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("잘못된 형식입니다.");
+        } catch (Exception e) {
+            throw new AuthException(AuthErrorCode.INVALID_MEMBER_ID);
         }
 
-        Member member = memberRepository.findByIdAndDeletedAtIsNull(memberUuid).orElseThrow(
-                () -> new IllegalArgumentException("존재하지 않는 회원id: " + memberUuid)
-        );
+        Member member = memberRepository.findByIdAndDeletedAtIsNull(memberUuid)
+                .orElseThrow(() -> new AuthException(AuthErrorCode.MEMBER_NOT_FOUND));
 
         compareRefreshToken(refreshToken, member.getId().toString());
 
@@ -188,7 +190,7 @@ public class AuthService {
         String key = REFRESH_TOKEN_KEY_PREFIX + memberId;
         String storedRefreshToken = stringRedisTemplate.opsForValue().get(key);
         if (!refreshToken.equals(storedRefreshToken)) {
-            throw new IllegalArgumentException("토큰이 일치하지 않습니다.");
+            throw new AuthException(AuthErrorCode.REFRESH_TOKEN_NOT_MATCH);
         }
     }
 
