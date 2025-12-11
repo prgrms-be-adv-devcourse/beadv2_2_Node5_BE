@@ -8,7 +8,6 @@ import java.util.UUID;
 public record PaymentFailureInfo(
         UUID id,
         String orderId,
-        String paymentKey,
         String errorCode,
         String errorMessage,
         Long amount,
@@ -18,7 +17,6 @@ public record PaymentFailureInfo(
         return new PaymentFailureInfo(
                 failure.getId(),
                 failure.getOrderId(),
-                failure.getPaymentKey(),
                 failure.getErrorCode(),
                 failure.getErrorMessage(),
                 failure.getAmount(),

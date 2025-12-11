@@ -7,8 +7,6 @@ import jakarta.validation.constraints.Positive;
 public record PaymentFailureRequest(
         @NotBlank(message = "주문 아이디는 필수입니다.")
         String orderId,
-        @NotBlank(message = "결제 키는 필수입니다.")
-        String paymentKey,
         @NotBlank(message = "실패 코드는 필수입니다.")
         String code,
         @NotBlank(message = "실패 메시지는 필수입니다.")
@@ -18,6 +16,6 @@ public record PaymentFailureRequest(
         String rawPayload
 ) {
     public PaymentFailureCommand toCommand() {
-        return new PaymentFailureCommand(orderId, paymentKey, code, message, amount, rawPayload);
+        return new PaymentFailureCommand(orderId, code, message, amount, rawPayload);
     }
 }
