@@ -11,7 +11,7 @@ import java.util.UUID;
 import static com.node5.billingservice.wallet.exception.WalletErrorCode.INSUFFICIENT_WALLET_BALANCE;
 
 @Schema(description = "예치금")
-@Table(name = "\"wallet\"", schema = "public")
+@Table(name = "\"wallet\"", schema = "billing")
 @Getter
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
