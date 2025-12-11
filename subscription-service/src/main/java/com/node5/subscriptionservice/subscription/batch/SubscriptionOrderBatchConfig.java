@@ -1,5 +1,9 @@
 package com.node5.subscriptionservice.subscription.batch;
 
+import com.node5.common.domain.ApiResponseDto;
+import com.node5.subscriptionservice.subscription.client.OrderClient;
+import com.node5.subscriptionservice.subscription.client.dto.OrderCreateInfo;
+import com.node5.subscriptionservice.subscription.client.dto.OrderCreateRequest;
 import com.node5.subscriptionservice.subscription.domain.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,10 +16,12 @@ import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -26,6 +32,7 @@ public class SubscriptionOrderBatchConfig {
 
     private final SubscriptionRepository subscriptionRepository;
     private final SubscriptionRecurrenceRuleRepository subscriptionRecurrenceRuleRepository;
+    private final OrderClient orderClient;
 
     @Bean
     public Job subscriptionOrderJob(JobRepository jobRepository,
@@ -37,7 +44,7 @@ public class SubscriptionOrderBatchConfig {
 
     @Bean
     public Step subscriptionOrderStep(JobRepository jobRepository,
-                          PlatformTransactionManager transactionManager){
+                                      PlatformTransactionManager transactionManager) {
         return new StepBuilder("subscriptionOrderStep", jobRepository)
                 .tasklet((contribution, chunkContext) -> {
                     String subscriptionParam = (String) chunkContext.getStepContext()
@@ -56,7 +63,7 @@ public class SubscriptionOrderBatchConfig {
                     requestOrder(subscription);
 
                     List<SubscriptionRecurrenceRule> rules =
-                                    subscriptionRecurrenceRuleRepository.findBySubscriptionId(subscription.getId());
+                            subscriptionRecurrenceRuleRepository.findBySubscriptionId(subscription.getId());
                     subscription.calculateNextRunDate(rules);
                     subscriptionRepository.save(subscription);
 
@@ -68,7 +75,37 @@ public class SubscriptionOrderBatchConfig {
     }
 
     private void requestOrder(Subscription subscription) {
-        // TODO: 주문 도메인 API 연동
-        log.info("Requesting order creation for subscription {}", subscription.getId());
+        OrderCreateRequest request = new OrderCreateRequest(
+                subscription.getMemberId(),
+                "SUBSCRIPTION",
+                subscription.getId(),
+                null, //주문자name
+                subscription.getDeliveryAddress(),
+                List.of(
+                        new OrderCreateRequest.OrderItemRequest(
+                                subscription.getProductId(),
+                                "",
+                                "",
+                                subscription.getPricePerItem(),
+                                subscription.getQuantity(),
+                                subscription.getTotalPrice()
+                        )
+                )
+        );
+
+        try {
+            ResponseEntity<OrderCreateInfo> response = orderClient.create(request);
+            if (!response.getStatusCode().is2xxSuccessful()) {
+                throw new IllegalStateException("Order service responded with status " + response.getStatusCode());
+            }
+
+            Optional<OrderCreateInfo> responseBody = Optional.ofNullable(response.getBody());
+            log.info("Requesting order creation for subscription {} -> order response: {}",
+                    subscription.getId(),
+                    responseBody.map(OrderCreateInfo::orderId).orElse(null));
+        } catch (Exception ex) {
+            log.error("Failed to request order for subscription {}: {}", subscription.getId(), ex.getMessage(), ex);
+            throw new RuntimeException("Order request failed", ex);
+        }
     }
 }
