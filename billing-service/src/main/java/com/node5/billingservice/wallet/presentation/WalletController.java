@@ -22,19 +22,19 @@ public class WalletController {
 
     @Operation(summary = "예치금 조회", description = "회원의 예치금 정보를 조회한다.")
     @GetMapping
-    public ResponseEntity<WalletInfo> getWallet(@RequestParam UUID memberId) {
+    public ResponseEntity<WalletInfo> getWallet(@RequestHeader("Member-Id") UUID memberId) {
         return ResponseEntity.ok(walletService.getWallet(memberId));
     }
 
     @Operation(summary = "예치금 입금 내역 조회", description = "회원의 예치금 입금 내역을 조회한다.")
     @GetMapping("/deposits")
-    public ResponseEntity<Page<WalletDepositInfo>> getDepositLogs(@RequestParam UUID memberId, Pageable pageable) {
+    public ResponseEntity<Page<WalletDepositInfo>> getDepositLogs(@RequestHeader("Member-Id") UUID memberId, Pageable pageable) {
         return ResponseEntity.ok(walletService.getDeposits(memberId, pageable));
     }
 
     @Operation(summary = "예치금 출금 내역 조회", description = "회원의 예치금 출금 내역을 조회한다.")
     @GetMapping("/withdraws")
-    public ResponseEntity<Page<WalletWithdrawInfo>> getWithdraws(@RequestParam UUID memberId, Pageable pageable) {
+    public ResponseEntity<Page<WalletWithdrawInfo>> getWithdraws(@RequestHeader("Member-Id") UUID memberId, Pageable pageable) {
         return ResponseEntity.ok(walletService.getWithdraws(memberId, pageable));
     }
 
