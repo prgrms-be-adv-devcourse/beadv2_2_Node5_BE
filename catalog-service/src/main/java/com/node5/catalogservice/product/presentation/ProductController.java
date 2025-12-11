@@ -28,6 +28,7 @@ import com.node5.catalogservice.product.domain.ProductStatus;
 import com.node5.catalogservice.product.presentation.dto.PresignedUrlRequest;
 import com.node5.catalogservice.product.presentation.dto.PresignedUrlResponse;
 import com.node5.catalogservice.product.presentation.dto.ProductRequest;
+import com.node5.catalogservice.product.presentation.dto.ProductUpdateRequest;
 import com.node5.catalogservice.product.presentation.dto.StatusRequest;
 import com.node5.common.domain.ApiResponseDto;
 import com.node5.common.domain.PageInfoDto;
@@ -118,29 +119,24 @@ public class ProductController {
 		return ResponseEntity.ok(response);
 	}
 
-	@PostMapping("/products")
+	@PostMapping
 	public ResponseEntity<ProductInfo> createProduct(
 		@RequestHeader("Member-Id") UUID memberId,
 		@RequestBody ProductRequest request
 	) {
-
-		ProductCommand command = request.toCreateCommand();
-
+		ProductCommand command = request.toCommand();
 		ProductInfo info = productService.createProduct(memberId, command);
 
-		return ResponseEntity
-			.status(HttpStatus.CREATED)
-			.body(info);
+		return ResponseEntity.status(HttpStatus.CREATED).body(info);
 	}
 
 	@PutMapping("/{productId}")
 	public ResponseEntity<ProductInfo> updateProduct(
 		@RequestHeader("Member-Id") UUID memberId,
 		@PathVariable UUID productId,
-		@RequestBody ProductRequest request
+		@RequestBody ProductUpdateRequest request
 	) {
-		ProductUpdateCommand command = request.toUpdateCommand();
-
+		ProductUpdateCommand command = request.toCommand();
 		ProductInfo response = productService.updateProduct(memberId, productId, command);
 
 		return ResponseEntity.ok(response);

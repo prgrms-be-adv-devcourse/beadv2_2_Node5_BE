@@ -29,7 +29,7 @@ public record ProductRequest(
 	String thumbnailUrl
 ) {
 
-	public ProductCommand toCreateCommand() {
+	public ProductCommand toCommand() {
 
 		if (shopId == null || shopId.isBlank()) {
 			throw new IllegalArgumentException("Shop id cannot be null or blank");
@@ -49,17 +49,6 @@ public record ProductRequest(
 			price,
 			stock,
 			status,
-			category,
-			thumbnailUrl
-		);
-	}
-
-	public ProductUpdateCommand toUpdateCommand() {
-		return new ProductUpdateCommand(
-			name,
-			description,
-			price,
-			stock,
 			category,
 			thumbnailUrl
 		);
