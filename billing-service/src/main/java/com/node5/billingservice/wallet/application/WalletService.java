@@ -11,9 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
-import static com.node5.billingservice.wallet.domain.WalletDepositLogState.*;
-import static com.node5.billingservice.wallet.exception.WalletErrorCode.WALLET_LOG_NOT_FOUND;
-import static com.node5.billingservice.wallet.exception.WalletErrorCode.WALLET_NOT_FOUND;
+import static com.node5.billingservice.wallet.exception.WalletErrorCode.*;
 
 @Service
 @RequiredArgsConstructor
@@ -53,101 +51,56 @@ public class WalletService {
         return withdrawLogPage.map(WalletWithdrawInfo::from);
     }
 
-    // 예치금 충전 (내부 api로 수정 예정)
-    @Transactional
-    public WalletInfo chargeWallet(UUID memberId, WalletChargeCommand command) {
-        Wallet wallet = walletRepository.findByMemberIdForUpdate(memberId)
-                .orElseThrow(() -> new WalletException(WALLET_NOT_FOUND));
-        wallet.deposit(command.amount());
-
-        WalletDepositLog walletDepositLog = WalletDepositLog.paidBuilder()
-                .memberId(memberId)
-                .paymentKey(command.paymentKey())
-                .amount(command.amount())
-                .build();
-        walletDepositLogRepository.save(walletDepositLog);
-        return WalletInfo.from(wallet);
-    }
-
-    // 예치금 정산 (내부 api로 수정 예정)
+    // 예치금 정산
     @Transactional
     public WalletInfo settleWallet(UUID memberId, WalletSettleCommand command) {
         Wallet wallet = walletRepository.findByMemberIdForUpdate(memberId)
                 .orElseThrow(() -> new WalletException(WALLET_NOT_FOUND));
-        wallet.deposit(command.amount());
 
-        WalletDepositLog walletDepositLog = WalletDepositLog.settledBuilder()
+        WalletDepositLog walletDepositLog = WalletDepositLog.builder()
                 .memberId(memberId)
+                .settlementId(command.settlementId())
                 .amount(command.amount())
                 .build();
         walletDepositLogRepository.save(walletDepositLog);
+
+        wallet.deposit(command.amount());
         return WalletInfo.from(wallet);
     }
 
-    //예치금 사용 (내부 api로 수정 예정)
+    //예치금 사용
     @Transactional
     public WalletInfo withdrawWallet(UUID memberId, WalletWithdrawCommand command) {
         Wallet wallet = walletRepository.findByMemberIdForUpdate(memberId)
                 .orElseThrow(() -> new WalletException(WALLET_NOT_FOUND));
 
-        wallet.validateSufficientBalance(command.amount());
-
-        wallet.withdraw(command.amount());
+        wallet.validateSufficientBalance(command.withdrawAmount());
 
         WalletWithdrawLog walletWithdrawLog = WalletWithdrawLog.builder()
                 .memberId(memberId)
-                .amount(command.amount())
+                .orderId(command.orderId())
+                .amount(command.withdrawAmount())
                 .build();
         walletWithdrawLogRepository.save(walletWithdrawLog);
+
+        wallet.withdraw(command.withdrawAmount());
         return WalletInfo.from(wallet);
     }
 
-    // 예치금 환불 요청 (내부 api로 수정 예정)
-    // 예치금 환불은 PAID 상태인 입금 내역에 대해서만 요청 가능
+    // 예치금 환불 요청
+    // 예치금 환불은 PAID 상태인 출금 내역에 대해서만 요청 가능
     @Transactional
-    public WalletInfo requestRefundWallet(UUID memberId, WalletRefundCommand command) {
+    public WalletInfo refundWallet(UUID memberId, WalletRefundCommand command) {
         Wallet wallet = walletRepository.findByMemberIdForUpdate(memberId)
                 .orElseThrow(() -> new WalletException(WALLET_NOT_FOUND));
 
-        WalletDepositLog depositLog = walletDepositLogRepository.findById(command.walletDepositLogId())
-                .orElseThrow(() -> new WalletException(WALLET_LOG_NOT_FOUND));
+        WalletWithdrawLog withdrawLog = walletWithdrawLogRepository.findByOrderId(command.orderId())
+                .orElseThrow(() -> new WalletException(WALLET_WITHDRAW_LOG_NOT_FOUND));
 
-        depositLog.validateRefundable(command.paymentKey(), PAID);
+        withdrawLog.validateRefundable(command.orderId(), command.refundAmount());
+        withdrawLog.refund();
 
-        wallet.validateSufficientBalance(depositLog.getAmount());
-
-        wallet.withdraw(depositLog.getAmount());
-        depositLog.changeState(CANCEL_WAITING);
-        return WalletInfo.from(wallet);
-    }
-
-    // 예치금 환불 성공 (내부 api로 수정 예정)
-    @Transactional
-    public WalletInfo confirmRefundWallet(UUID memberId, WalletRefundCommand command) {
-        Wallet wallet = walletRepository.findByMemberIdForUpdate(memberId)
-                .orElseThrow(() -> new WalletException(WALLET_NOT_FOUND));
-
-        WalletDepositLog depositLog = walletDepositLogRepository.findById(command.walletDepositLogId())
-                .orElseThrow(() -> new WalletException(WALLET_LOG_NOT_FOUND));
-
-        depositLog.validateRefundable(command.paymentKey(), CANCEL_WAITING);
-        depositLog.changeState(CANCELED);
-        return WalletInfo.from(wallet);
-    }
-
-    // 예치금 환불 실패 (내부 api로 수정 예정)
-    @Transactional
-    public WalletInfo failRefundWallet(UUID memberId, WalletRefundCommand command) {
-        Wallet wallet = walletRepository.findByMemberIdForUpdate(memberId)
-                .orElseThrow(() -> new WalletException(WALLET_NOT_FOUND));
-
-        WalletDepositLog depositLog = walletDepositLogRepository.findById(command.walletDepositLogId())
-                .orElseThrow(() -> new WalletException(WALLET_LOG_NOT_FOUND));
-
-        depositLog.validateRefundable(command.paymentKey(), CANCEL_WAITING);
-
-        wallet.deposit(depositLog.getAmount());
-        depositLog.changeState(PAID);
+        wallet.deposit(withdrawLog.getAmount());
         return WalletInfo.from(wallet);
     }
 }
