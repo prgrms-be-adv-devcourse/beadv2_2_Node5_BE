@@ -28,12 +28,6 @@ public class WalletInternalController {
         return ResponseEntity.status(CREATED).body(walletService.createWallet(memberId));
     }
 
-//    @Operation(summary = "예치금 충전", description = "회원의 예치금을 충전한다.")
-//    @PutMapping("/{memberId}/charge")
-//    public ResponseEntity<WalletInfo> charge(@PathVariable UUID memberId, @Valid @RequestBody WalletChargeRequest request) {
-//        return ResponseEntity.ok(walletService.chargeWallet(memberId, request.toCommand()));
-//    }
-
     @Operation(summary = "예치금 정산", description = "회원의 예치금을 정산받는다.")
     @PutMapping("/settle")
     public ResponseEntity<WalletInfo> settle(@RequestHeader("Member-Id") UUID memberId, @Valid @RequestBody WalletSettleRequest request) {
@@ -51,16 +45,4 @@ public class WalletInternalController {
     public ResponseEntity<WalletInfo> requestRefund(@RequestHeader("Member-Id") UUID memberId, @Valid @RequestBody WalletRefundRequest request) {
         return ResponseEntity.ok(walletService.refundWallet(memberId, request.toCommand()));
     }
-
-//    @Operation(summary = "예치금 환불 성공", description = "회원의 예치금 환불이 성공한다.")
-//    @PutMapping("/{memberId}/refund/success")
-//    public ResponseEntity<WalletInfo> successRefund(@PathVariable UUID memberId, @Valid @RequestBody WalletRefundRequest request) {
-//        return ResponseEntity.ok(walletService.confirmRefundWallet(memberId, request.toCommand()));
-//    }
-//
-//    @Operation(summary = "예치금 환불 실패", description = "회원의 예치금 환불이 실패한다.")
-//    @PutMapping("/{memberId}/refund/fail")
-//    public ResponseEntity<WalletInfo> failRefund(@PathVariable UUID memberId, @Valid @RequestBody WalletRefundRequest request) {
-//        return ResponseEntity.ok(walletService.failRefundWallet(memberId, request.toCommand()));
-//    }
 }
