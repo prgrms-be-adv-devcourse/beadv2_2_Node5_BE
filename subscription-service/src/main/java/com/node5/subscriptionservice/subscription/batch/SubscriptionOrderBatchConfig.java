@@ -81,7 +81,7 @@ public class SubscriptionOrderBatchConfig {
                 subscription.getMemberId(),
                 "SUBSCRIPTION",
                 subscription.getId(),
-                null, //주문자name
+                "subscription-batch", // TODO: 주문자 이름
                 subscription.getDeliveryAddress(),
                 List.of(
                         new OrderCreateRequest.OrderItemRequest(
