@@ -103,4 +103,12 @@ public class WalletService {
         wallet.deposit(withdrawLog.getAmount());
         return WalletInfo.from(wallet);
     }
+
+    //예치금 삭제
+    @Transactional
+    public void deleteWallet(UUID memberId) {
+        Wallet wallet = walletRepository.findByMemberIdForUpdate(memberId)
+                .orElseThrow(() -> new WalletException(WALLET_NOT_FOUND));
+        wallet.delete();
+    }
 }

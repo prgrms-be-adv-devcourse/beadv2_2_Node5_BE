@@ -45,4 +45,11 @@ public class WalletInternalController {
     public ResponseEntity<WalletInfo> requestRefund(@RequestHeader("Member-Id") UUID memberId, @Valid @RequestBody WalletRefundRequest request) {
         return ResponseEntity.ok(walletService.refundWallet(memberId, request.toCommand()));
     }
+
+    @Operation(summary = "예치금 삭제", description = "회원의 예치금 계좌를 삭제한다.")
+    @DeleteMapping
+    public ResponseEntity<Void> deleteWallet(@RequestHeader("Member-Id") UUID memberId) {
+        walletService.deleteWallet(memberId);
+        return ResponseEntity.ok().build();
+    }
 }

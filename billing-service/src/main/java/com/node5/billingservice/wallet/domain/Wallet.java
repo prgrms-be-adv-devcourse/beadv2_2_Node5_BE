@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import static com.node5.billingservice.wallet.exception.WalletErrorCode.INSUFFICIENT_WALLET_BALANCE;
@@ -29,6 +30,8 @@ public class Wallet extends BaseEntity {
     @Column(nullable = false)
     private Long balance;
 
+    private LocalDateTime deletedAt;
+
     public void deposit(Long amount) {
         this.balance += amount;
     }
@@ -46,10 +49,15 @@ public class Wallet extends BaseEntity {
         }
     }
 
+    public void delete() {
+        this.deletedAt = LocalDateTime.now();
+    }
+
     @Builder
     private Wallet(UUID memberId) {
         this.id = UUID.randomUUID();
         this.memberId = memberId;
         this.balance = 0L;
+        this.deletedAt = null;
     }
 }
