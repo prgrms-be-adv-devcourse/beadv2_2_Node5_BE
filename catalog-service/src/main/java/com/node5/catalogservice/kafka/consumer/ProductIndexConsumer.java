@@ -35,6 +35,7 @@ public class ProductIndexConsumer {
 			event.productId().toString(),
 			event.name(),
 			event.category(),
+			event.thumbnailUrl(),
 			event.price(),
 			event.status(),
 			event.createdAt()

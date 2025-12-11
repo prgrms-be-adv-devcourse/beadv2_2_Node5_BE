@@ -39,7 +39,11 @@ apigateway:
 app:
   search:
     product-index-name: products
-
     kafka:
       topics:
         product-index: product-index-topic
+
+  s3:
+    bucket: myroutine-s3-bucket
+    region: ap-northeast-2
+    presigned-url-expiration-seconds: 600

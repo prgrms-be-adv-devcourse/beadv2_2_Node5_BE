@@ -24,6 +24,9 @@ public class ProductDocument {
 	@Field(type = FieldType.Keyword)
 	private String category;
 
+	@Field(type = FieldType.Keyword)
+	private String thumbnailUrl;
+
 	@Field(type = FieldType.Long)
 	private Long price;
 
@@ -40,6 +43,7 @@ public class ProductDocument {
 		String id,
 		String name,
 		String category,
+		String thumbnailUrl,
 		Long price,
 		String status,
 		LocalDateTime createdAt
@@ -47,6 +51,7 @@ public class ProductDocument {
 		this.productId = id;
 		this.name = name;
 		this.category = category;
+		this.thumbnailUrl = thumbnailUrl;
 		this.price = price;
 		this.status = status;
 		this.createdAt = createdAt;
@@ -57,7 +62,8 @@ public class ProductDocument {
 			product.getId().toString(),
 			product.getName(),
 			product.getCategory(),
-			product.getPrice().longValue(), // BigDecimal → long
+			product.getThumbnailUrl(),
+			product.getPrice().longValue(),
 			product.getStatus().name(),
 			product.getCreatedAt()
 		);
