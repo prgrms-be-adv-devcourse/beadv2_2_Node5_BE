@@ -17,6 +17,7 @@ import reactor.core.publisher.Mono;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 
 @Slf4j
@@ -48,18 +49,26 @@ public class ReactiveAuthorization implements ReactiveAuthorizationManager<Autho
                     .parseSignedClaims(token)
                     .getPayload();
 
-            String type = claims.get("type", String.class);
+            if (!"ACCESS".equals(claims.get("type", String.class))) {
+                return Mono.just(new AuthorizationDecision(false));
+            }
 
-            if (!type.equals("ACCESS")) throw new IllegalArgumentException("ACCESS 토큰이 아닙니다.");
+            if (claims.getSubject() == null || claims.getSubject().isBlank()) {
+                return Mono.just(new AuthorizationDecision(false));
+            }
 
-            log.info("인증 성공: userId={}", claims.getSubject());
+            Object roleObj = claims.get("memberRoles");
+            if (!(roleObj instanceof List<?> roleList) || roleList.isEmpty()) {
+                return Mono.just(new AuthorizationDecision(false));
+            }
+
+            if (!(claims.get("memberStatus") instanceof String memberStatus) || memberStatus.isBlank()) {
+                return Mono.just(new AuthorizationDecision(false));
+            }
+
             context.getExchange().getAttributes().put("cached_claims", claims);
             return Mono.just(new AuthorizationDecision(true));
-        } catch (ExpiredJwtException e) {
-            log.warn("토큰 유효기간 만료: {}", e.getMessage());
-            return Mono.just(new AuthorizationDecision(false));
         } catch (Exception e) {
-            log.warn("토큰 검증 실패: {}", e.getMessage());
             return Mono.just(new AuthorizationDecision(false));
         }
     }
