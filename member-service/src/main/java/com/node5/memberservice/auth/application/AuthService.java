@@ -14,7 +14,6 @@ import com.node5.memberservice.member.domain.MemberRepository;
 import com.node5.memberservice.redis.application.RedisService;
 import io.jsonwebtoken.Claims;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
