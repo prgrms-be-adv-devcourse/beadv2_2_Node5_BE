@@ -11,6 +11,7 @@ import com.node5.memberservice.auth.util.JwtProvider;
 import com.node5.memberservice.auth.util.TokenType;
 import com.node5.memberservice.member.domain.Member;
 import com.node5.memberservice.member.domain.MemberRepository;
+import com.node5.memberservice.redis.application.RedisService;
 import io.jsonwebtoken.Claims;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -20,12 +21,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
-import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
@@ -37,21 +36,19 @@ public class AuthService {
     private final Map<String, OAuthProviderService> providerMap;
     private final JwtProvider jwtProvider;
     private final JavaMailSender mailSender;
-    private final StringRedisTemplate stringRedisTemplate;
+    private final RedisService redisService;
 
     @Value("${spring.mail.username}")
     private String sender;
 
-    private final String EMAIL_VERIFY_CODE_KEY_PREFIX = "email:verify:";
-    private final String VERIFIED_EMAIL_KEY_PREFIX = "email:verified:";
-    private final String REFRESH_TOKEN_KEY_PREFIX = "refresh:";
-
 
     public AuthService(
-            OAuthRepository oAuthRepository, MemberRepository memberRepository,
+            OAuthRepository oAuthRepository,
+            MemberRepository memberRepository,
             List<OAuthProviderService> providerList,
             JwtProvider jwtProvider,
             JavaMailSender mailSender,
+            RedisService redisService,
             StringRedisTemplate stringRedisTemplate
     ) {
         this.oAuthRepository = oAuthRepository;
@@ -59,6 +56,7 @@ public class AuthService {
         this.providerMap = providerList.stream().collect(Collectors.toMap(OAuthProviderService::getProviderName, provider -> provider));
         this.jwtProvider = jwtProvider;
         this.mailSender = mailSender;
+        this.redisService = redisService;
         this.stringRedisTemplate = stringRedisTemplate;
     }
 
@@ -79,7 +77,7 @@ public class AuthService {
             JwtMemberInfo jwtMemberInfo = JwtMemberInfo.from(member);
             String accessToken = jwtProvider.generateAccessToken(jwtMemberInfo);
             String refreshToken = jwtProvider.generateRefreshToken(jwtMemberInfo);
-            saveRefreshToken(refreshToken, member.getId().toString());
+            redisService.saveRefreshToken(member.getId(), refreshToken);
             return LoginInfoResponse.success(member, accessToken, refreshToken);
         }
 
@@ -90,7 +88,7 @@ public class AuthService {
     @Transactional
     public LoginInfoResponse register(OAuthRegisterCommand command) {
         String email = command.email();
-        if (!isVerified(email)) {
+        if (!"true".equals(redisService.getVerifiedEmail(email))) {
             throw new AuthException(AuthErrorCode.EMAIL_NOT_VERIFIED);
         }
 
@@ -114,9 +112,9 @@ public class AuthService {
         JwtMemberInfo jwtMemberInfo = JwtMemberInfo.from(member);
         String accessToken = jwtProvider.generateAccessToken(jwtMemberInfo);
         String refreshToken = jwtProvider.generateRefreshToken(jwtMemberInfo);
-        saveRefreshToken(refreshToken, member.getId().toString());
+        redisService.saveRefreshToken(member.getId(), refreshToken);
 
-        stringRedisTemplate.delete(VERIFIED_EMAIL_KEY_PREFIX + email);
+        redisService.deleteVerifiedEmail(email);
 
         return LoginInfoResponse.success(member, accessToken, refreshToken);
     }
@@ -124,17 +122,18 @@ public class AuthService {
     public void sendEmailVerificationCode(SendEmailVerificationCommand command) {
         jwtProvider.validateTokenType(command.temporaryToken(), TokenType.TEMPORARY);
         String verificationCode = generateVerificationCode();
-        saveVerificationCode(command.email(), verificationCode);
+        redisService.saveVerificationCode(command.email(), verificationCode);
         SimpleMailMessage mailMessage = createMailMessage(command.email(), verificationCode);
         mailSender.send(mailMessage);
     }
 
     public void verifyEmail(VerifyEmailCommand command) {
-        if (!verifyCode(command.email(), command.verificationCode())) {
+        String stored = redisService.getVerificationCode(command.email());
+        if (!command.verificationCode().equals(stored)) {
             throw new AuthException(AuthErrorCode.EMAIL_CODE_MISMATCH);
         }
-        markVerified(command.email());
-        stringRedisTemplate.delete(EMAIL_VERIFY_CODE_KEY_PREFIX + command.email());
+        redisService.markVerifiedEmail(command.email());
+        redisService.deleteVerificationCode(command.email());
     }
 
     public TokenResponse refreshToken(RefreshTokenCommand command) {
@@ -152,18 +151,22 @@ public class AuthService {
         Member member = memberRepository.findByIdAndDeletedAtIsNull(memberUuid)
                 .orElseThrow(() -> new AuthException(AuthErrorCode.MEMBER_NOT_FOUND));
 
-        compareRefreshToken(refreshToken, member.getId().toString());
+        String storedRefreshToken = redisService.getRefreshToken(member.getId());
+
+        if (!refreshToken.equals(storedRefreshToken)) {
+            throw new AuthException(AuthErrorCode.REFRESH_TOKEN_NOT_MATCH);
+        }
 
         JwtMemberInfo jwtMemberInfo = JwtMemberInfo.from(member);
         String accessToken = jwtProvider.generateAccessToken(jwtMemberInfo);
         String newRefreshToken = jwtProvider.generateRefreshToken(jwtMemberInfo);
-        saveRefreshToken(newRefreshToken, member.getId().toString());
+        redisService.saveRefreshToken(member.getId(), newRefreshToken);
 
         return new TokenResponse(accessToken, newRefreshToken);
     }
 
     public void logout(UUID memberId) {
-        stringRedisTemplate.delete(REFRESH_TOKEN_KEY_PREFIX + memberId);
+        redisService.deleteRefreshToken(memberId);
     }
 
     private SimpleMailMessage createMailMessage(String to, String verificationCode) {
@@ -179,37 +182,5 @@ public class AuthService {
         SecureRandom random = new SecureRandom();
         int code = random.nextInt(1_000_000); // 0 ~ 999999
         return String.format("%06d", code);   // 항상 6자리로 패딩
-    }
-
-    private void saveRefreshToken(String refreshToken, String memberId) {
-        String key = REFRESH_TOKEN_KEY_PREFIX + memberId;
-        stringRedisTemplate.opsForValue().set(key, refreshToken, jwtProvider.getRefreshTokenExpiration(), TimeUnit.MILLISECONDS);
-    }
-
-    private void compareRefreshToken(String refreshToken, String memberId) {
-        String key = REFRESH_TOKEN_KEY_PREFIX + memberId;
-        String storedRefreshToken = stringRedisTemplate.opsForValue().get(key);
-        if (!refreshToken.equals(storedRefreshToken)) {
-            throw new AuthException(AuthErrorCode.REFRESH_TOKEN_NOT_MATCH);
-        }
-    }
-
-    private void saveVerificationCode(String email, String code) {
-        stringRedisTemplate.opsForValue().set(EMAIL_VERIFY_CODE_KEY_PREFIX + email, code, Duration.ofMinutes(10));
-    }
-
-    private boolean verifyCode(String email, String code) {
-        String stored = stringRedisTemplate.opsForValue().get(EMAIL_VERIFY_CODE_KEY_PREFIX + email);
-        return code.equals(stored);
-    }
-
-    private void markVerified(String email) {
-        stringRedisTemplate.opsForValue()
-                .set(VERIFIED_EMAIL_KEY_PREFIX + email, "true", Duration.ofMinutes(10));
-    }
-
-    private boolean isVerified(String email) {
-        return "true".equals(stringRedisTemplate.opsForValue()
-                .get(VERIFIED_EMAIL_KEY_PREFIX + email));
     }
 }
