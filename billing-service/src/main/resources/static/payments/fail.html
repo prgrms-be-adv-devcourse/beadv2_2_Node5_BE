@@ -17,6 +17,7 @@
     const params = new URLSearchParams(window.location.search);
     const info = {};
     params.forEach((value, key) => info[key] = value);
+    const memberId = info.memberId;
     const payload = {
         orderId: info.orderId,
         paymentKey: info.paymentKey,
@@ -31,7 +32,10 @@
         try {
             const response = await fetch('/api/v1/payments/failure', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Member-Id': memberId
+                },
                 body: JSON.stringify(payload)
             });
             const data = await response.json();
