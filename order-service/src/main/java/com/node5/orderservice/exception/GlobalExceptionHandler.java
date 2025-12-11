@@ -1,6 +1,6 @@
 package com.node5.orderservice.exception;
 
-import com.node5.common.exception.ErrorResponse;
+import com.node5.common.exception.ExceptionResponseDto;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
@@ -17,20 +17,18 @@ import java.util.stream.Collectors;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException e, HttpServletRequest request) {
-
+    public ResponseEntity<ExceptionResponseDto> handleValidation(MethodArgumentNotValidException e, HttpServletRequest request) {
         String message = e.getBindingResult().getFieldErrors().stream()
                 .map(error -> error.getField() + ": " + error.getDefaultMessage())
                 .collect(Collectors.joining(", "));
 
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(ErrorResponse.of(400, "VALIDATION_ERROR", message, request.getRequestURI()));
+                .body(new ExceptionResponseDto("VALIDATION_ERROR", message));
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<ErrorResponse> handleValidation(ConstraintViolationException e, HttpServletRequest request) {
-
+    public ResponseEntity<ExceptionResponseDto> handleValidation(ConstraintViolationException e, HttpServletRequest request) {
         String message = e.getConstraintViolations().stream()
                 .map(violation -> {
                     String propertyPath = violation.getPropertyPath().toString();
@@ -41,28 +39,28 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(ErrorResponse.of(400, "VALIDATION_ERROR", message, request.getRequestURI()));
+                .body(new ExceptionResponseDto("VALIDATION_ERROR", message));
     }
 
     @ExceptionHandler(OrderNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleOrderNotFound(OrderNotFoundException e, HttpServletRequest request) {
+    public ResponseEntity<ExceptionResponseDto> handleOrderNotFound(OrderNotFoundException e, HttpServletRequest request) {
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
-                .body(ErrorResponse.of(404, "ORDER_NOT_FOUND", e.getMessage(), request.getRequestURI()));
+                .body(new ExceptionResponseDto("ORDER_NOT_FOUND", e.getMessage()));
     }
 
     @ExceptionHandler(OrderAccessDeniedException.class)
-    public ResponseEntity<ErrorResponse> handleOrderAccessDenied(OrderAccessDeniedException e, HttpServletRequest request) {
+    public ResponseEntity<ExceptionResponseDto> handleOrderAccessDenied(OrderAccessDeniedException e, HttpServletRequest request) {
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
-                .body(ErrorResponse.of(403, "ORDER_ACCESS_DENIED", e.getMessage(), request.getRequestURI()));
+                .body(new ExceptionResponseDto("ORDER_ACCESS_DENIED", e.getMessage()));
     }
 
     @ExceptionHandler(OrderRequestNotAllowedException.class)
-    public ResponseEntity<ErrorResponse> handleOrderRequestNotAllowed(OrderRequestNotAllowedException e, HttpServletRequest request) {
+    public ResponseEntity<ExceptionResponseDto> handleOrderRequestNotAllowed(OrderRequestNotAllowedException e, HttpServletRequest request) {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(ErrorResponse.of(400, "ORDER_REQUEST_NOT_ALLOWED", e.getMessage(), request.getRequestURI()));
+                .body(new ExceptionResponseDto("ORDER_REQUEST_NOT_ALLOWED", e.getMessage()));
     }
 
 }
