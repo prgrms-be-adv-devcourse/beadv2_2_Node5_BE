@@ -29,7 +29,7 @@ spring:
             enable: true
   data:
     redis:
-      host: localhost
+      host: ${REDIS_HOST}
       port: 6379
 
 api:

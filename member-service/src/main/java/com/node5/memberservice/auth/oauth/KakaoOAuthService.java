@@ -1,5 +1,7 @@
 package com.node5.memberservice.auth.oauth;
 
+import com.node5.memberservice.auth.exception.AuthErrorCode;
+import com.node5.memberservice.auth.exception.AuthException;
 import com.node5.memberservice.auth.oauth.dto.KakaoTokenResponse;
 import com.node5.memberservice.auth.oauth.dto.OAuthUserInfo;
 import lombok.RequiredArgsConstructor;
@@ -13,8 +15,6 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.HashMap;
-
 @Service
 @RequiredArgsConstructor
 public class KakaoOAuthService implements OAuthProviderService {
@@ -22,7 +22,7 @@ public class KakaoOAuthService implements OAuthProviderService {
     private final String KAKAO_TOKEN_REQUEST_URL = "https://kauth.kakao.com/oauth/token";
     private final String KAKAO_USER_REQUEST_URL = "https://kapi.kakao.com/v2/user/me";
 
-    @Value( "${kakao.redirect.url}")
+    @Value("${kakao.redirect.url}")
     private String KAKAO_REDIRECT_URL;
 
     @Value("${kakao.api.key}")
@@ -55,9 +55,12 @@ public class KakaoOAuthService implements OAuthProviderService {
 
         try {
             KakaoTokenResponse response = restTemplate.postForObject(KAKAO_TOKEN_REQUEST_URL, entity, KakaoTokenResponse.class);
+            if (response == null || response.accessToken() == null) {
+                throw new AuthException(AuthErrorCode.OAUTH_RESPONSE_INVALID);
+            }
             return response.accessToken();
         } catch (HttpStatusCodeException ex) {
-            throw new IllegalStateException("Token error: " + ex.getResponseBodyAsString(), ex);
+            throw new AuthException(AuthErrorCode.OAUTH_TOKEN_ERROR);
         }
     }
 
@@ -69,12 +72,19 @@ public class KakaoOAuthService implements OAuthProviderService {
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
         try {
-            HashMap<String, Object> result = restTemplate.postForObject(KAKAO_USER_REQUEST_URL, entity, HashMap.class);
-            Number id = (Number) result.get("id");
-            if (id == null) throw new IllegalStateException("No id in kakao response");
-            return new OAuthUserInfo(getProviderName(), id.toString());
+            KakaoUserResponse result = restTemplate.postForObject(KAKAO_USER_REQUEST_URL, entity, KakaoUserResponse.class);
+            if (result == null || result.id() == null) {
+                throw new AuthException(AuthErrorCode.OAUTH_RESPONSE_INVALID);
+            }
+
+            return new OAuthUserInfo(getProviderName(), result.id().toString());
         } catch (HttpStatusCodeException ex) {
-            throw new IllegalStateException("User info error: " + ex.getResponseBodyAsString(), ex);
+            throw new AuthException(AuthErrorCode.OAUTH_USERINFO_ERROR);
         }
+    }
+
+    private record KakaoUserResponse(
+            Long id
+    ) {
     }
 }

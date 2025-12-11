@@ -3,13 +3,15 @@ package com.node5.memberservice.member.domain;
 import com.node5.common.domain.BaseEntity;
 import com.node5.memberservice.auth.application.dto.OAuthRegisterCommand;
 import com.node5.memberservice.member.application.dto.MemberModifyCommand;
-import com.node5.memberservice.member.presentation.dto.RoleAction;
+import com.node5.memberservice.member.exception.MemberErrorCode;
+import com.node5.memberservice.member.exception.MemberException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -64,12 +66,12 @@ public class Member extends BaseEntity {
         return new Member(id, command.email(), command.name(), command.phoneNumber(), command.address(), role, status);
     }
 
-    public void modifyRoles(String role, RoleAction action) {
-        if (action == RoleAction.ADD) {
-            this.roles.add(MemberRole.valueOf(role));
-        } else if (action == RoleAction.REMOVE) {
-            this.roles.remove(MemberRole.valueOf(role));
-        }
+    public void addRole(MemberRole role) {
+        this.roles.add(role);
+    }
+
+    public void deleteRole(MemberRole role) {
+        this.roles.remove(role);
     }
 
     public void modifyInfo(MemberModifyCommand command) {
