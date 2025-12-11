@@ -16,9 +16,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.node5.catalogservice.product.application.ProductImageService;
 import com.node5.catalogservice.product.application.ProductService;
+import com.node5.catalogservice.product.application.dto.PresignedUrlInfo;
 import com.node5.catalogservice.product.application.dto.ProductInfo;
 import com.node5.catalogservice.product.domain.ProductStatus;
+import com.node5.catalogservice.product.presentation.dto.PresignedUrlRequest;
+import com.node5.catalogservice.product.presentation.dto.PresignedUrlResponse;
 import com.node5.catalogservice.product.presentation.dto.ProductRequest;
 import com.node5.catalogservice.product.presentation.dto.StatusRequest;
 import com.node5.common.domain.ApiResponseDto;
@@ -39,6 +43,7 @@ import lombok.RequiredArgsConstructor;
 public class ProductController {
 
 	private final ProductService productService;
+	private final ProductImageService productImageService;
 
 	@GetMapping
 	@Operation(summary = "판매 중인 상품 목록 조회", description = "판매 중인 상품 목록을 페이징으로 조회합니다.")
@@ -172,5 +177,20 @@ public class ProductController {
 	public ResponseEntity<Void> discontinue(@Parameter(description = "상품 ID") @PathVariable UUID id) {
 		productService.discontinueProduct(id);
 		return ResponseEntity.noContent().build();
+	}
+
+	@PostMapping("/presigned-url")
+	public ResponseEntity<PresignedUrlResponse> createPresignedUrl(
+		@RequestBody PresignedUrlRequest request
+	) {
+		PresignedUrlInfo info =
+			productImageService.createUploadUrl(request.fileName(), request.contentType());
+
+		PresignedUrlResponse response = new PresignedUrlResponse(
+			info.url(),
+			info.key()
+		);
+
+		return ResponseEntity.ok(response);
 	}
 }
