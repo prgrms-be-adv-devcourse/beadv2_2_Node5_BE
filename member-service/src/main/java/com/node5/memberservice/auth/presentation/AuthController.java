@@ -2,20 +2,16 @@ package com.node5.memberservice.auth.presentation;
 
 import com.node5.memberservice.auth.application.AuthService;
 import com.node5.memberservice.auth.application.dto.LoginInfo;
-import com.node5.memberservice.auth.presentation.dto.OAuthLoginRequest;
-import com.node5.memberservice.auth.presentation.dto.OAuthRegisterRequest;
-import com.node5.memberservice.auth.presentation.dto.SendEmailVerificationRequest;
-import com.node5.memberservice.auth.presentation.dto.VerifyEmailRequest;
+import com.node5.memberservice.auth.application.dto.TokenResponse;
+import com.node5.memberservice.auth.presentation.dto.*;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @Tag(name = "Auth", description = "인증 관련 API")
 @RestController
@@ -51,4 +47,14 @@ public class AuthController {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/refresh-token")
+    public ResponseEntity<TokenResponse> refreshToken(@RequestBody RefreshTokenRequest request) {
+        return ResponseEntity.ok(authService.refreshToken(request.toCommand()));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(@RequestHeader("Member-Id") UUID memberId) {
+        authService.logout(memberId);
+        return ResponseEntity.ok().build();
+    }
 }

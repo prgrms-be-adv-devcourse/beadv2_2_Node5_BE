@@ -7,6 +7,7 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -19,6 +20,7 @@ public class JwtProvider {
 
     private final SecretKey secretKey;
     private final long accessTokenExpiration;
+    @Getter
     private final long refreshTokenExpiration;
 
     public JwtProvider(
@@ -89,13 +91,15 @@ public class JwtProvider {
         }
     }
 
-    public void validateTemporaryToken(String token) {
+    public Claims validateTokenType(String token, TokenType expectedType) {
         Claims claims = parseClaims(token);
 
-        String type = claims.get("type", String.class);
-        if (!TokenType.TEMPORARY.name().equals(type)) {
-            throw new JwtException("임시 토큰이 아닙니다.");
+        String actualType = claims.get("type", String.class);
+
+        if (!expectedType.name().equals(actualType)) {
+            throw new JwtException("토큰 타입 불일치: expected=" + expectedType + ", actual=" + actualType);
         }
+        return claims;
     }
 
     public OAuthUserInfo getOAuthUserInfo(String token) {

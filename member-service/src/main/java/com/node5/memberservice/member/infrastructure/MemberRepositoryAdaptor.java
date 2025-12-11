@@ -20,8 +20,8 @@ public class MemberRepositoryAdaptor implements MemberRepository {
     }
 
     @Override
-    public Optional<Member> findByEmail(String email) {
-        return memberJpaRepository.findByEmail(email);
+    public Optional<Member> findByEmailAndDeletedAtIsNull(String email) {
+        return memberJpaRepository.findByEmailAndDeletedAtIsNull(email);
     }
 
     @Override

@@ -6,8 +6,10 @@ import com.node5.memberservice.auth.domain.OAuthRepository;
 import com.node5.memberservice.auth.oauth.OAuthProviderService;
 import com.node5.memberservice.auth.oauth.dto.OAuthUserInfo;
 import com.node5.memberservice.auth.util.JwtProvider;
+import com.node5.memberservice.auth.util.TokenType;
 import com.node5.memberservice.member.domain.Member;
 import com.node5.memberservice.member.domain.MemberRepository;
+import io.jsonwebtoken.Claims;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.mail.SimpleMailMessage;
@@ -20,6 +22,8 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
@@ -34,16 +38,19 @@ public class AuthService {
     private final StringRedisTemplate stringRedisTemplate;
 
     @Value("${spring.mail.username}")
-    private String emailSender;
+    private String sender;
 
     private final String EMAIL_VERIFY_CODE_KEY_PREFIX = "email:verify:";
     private final String VERIFIED_EMAIL_KEY_PREFIX = "email:verified:";
+    private final String REFRESH_TOKEN_KEY_PREFIX = "refresh:";
 
 
     public AuthService(
             OAuthRepository oAuthRepository, MemberRepository memberRepository,
             List<OAuthProviderService> providerList,
-            JwtProvider jwtProvider, JavaMailSender mailSender, StringRedisTemplate stringRedisTemplate
+            JwtProvider jwtProvider,
+            JavaMailSender mailSender,
+            StringRedisTemplate stringRedisTemplate
     ) {
         this.oAuthRepository = oAuthRepository;
         this.memberRepository = memberRepository;
@@ -70,6 +77,7 @@ public class AuthService {
             JwtMemberInfo jwtMemberInfo = JwtMemberInfo.from(member);
             String accessToken = jwtProvider.generateAccessToken(jwtMemberInfo);
             String refreshToken = jwtProvider.generateRefreshToken(jwtMemberInfo);
+            saveRefreshToken(refreshToken, member.getId().toString());
             return LoginInfo.success(member, accessToken, refreshToken);
         }
 
@@ -84,7 +92,7 @@ public class AuthService {
             throw new IllegalArgumentException("인증되지 않은 이메일입니다.");
         }
         OAuthUserInfo oAuthUserInfo = jwtProvider.getOAuthUserInfo(command.temporaryToken());
-        Optional<Member> existMember = memberRepository.findByEmail(email);
+        Optional<Member> existMember = memberRepository.findByEmailAndDeletedAtIsNull(email);
 
         Member member = existMember.orElseGet(() -> memberRepository.save(Member.create(command)));
 
@@ -98,9 +106,12 @@ public class AuthService {
             oAuthRepository.save(oAuth);
         }
 
+        // Todo - POST /billing-service/intenal/wallets/{memberId}
+
         JwtMemberInfo jwtMemberInfo = JwtMemberInfo.from(member);
         String accessToken = jwtProvider.generateAccessToken(jwtMemberInfo);
         String refreshToken = jwtProvider.generateRefreshToken(jwtMemberInfo);
+        saveRefreshToken(refreshToken, member.getId().toString());
 
         stringRedisTemplate.delete(VERIFIED_EMAIL_KEY_PREFIX + email);
 
@@ -108,7 +119,7 @@ public class AuthService {
     }
 
     public void sendEmailVerificationCode(SendEmailVerificationCommand command) {
-        jwtProvider.validateTemporaryToken(command.temporaryToken());
+        jwtProvider.validateTokenType(command.temporaryToken(), TokenType.TEMPORARY);
         String verificationCode = generateVerificationCode();
         saveVerificationCode(command.email(), verificationCode);
         SimpleMailMessage mailMessage = createMailMessage(command.email(), verificationCode);
@@ -123,12 +134,42 @@ public class AuthService {
         stringRedisTemplate.delete(EMAIL_VERIFY_CODE_KEY_PREFIX + command.email());
     }
 
+    public TokenResponse refreshToken(RefreshTokenCommand command) {
+        String refreshToken = command.refreshToken();
+        Claims claims = jwtProvider.validateTokenType(refreshToken, TokenType.REFRESH);
+        String memberId = claims.getSubject();
+
+        UUID memberUuid;
+        try {
+            memberUuid = UUID.fromString(memberId);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("잘못된 형식입니다.");
+        }
+
+        Member member = memberRepository.findByIdAndDeletedAtIsNull(memberUuid).orElseThrow(
+                () -> new IllegalArgumentException("존재하지 않는 회원id: " + memberUuid)
+        );
+
+        compareRefreshToken(refreshToken, member.getId().toString());
+
+        JwtMemberInfo jwtMemberInfo = JwtMemberInfo.from(member);
+        String accessToken = jwtProvider.generateAccessToken(jwtMemberInfo);
+        String newRefreshToken = jwtProvider.generateRefreshToken(jwtMemberInfo);
+        saveRefreshToken(newRefreshToken, member.getId().toString());
+
+        return new TokenResponse(accessToken, newRefreshToken);
+    }
+
+    public void logout(UUID memberId) {
+        stringRedisTemplate.delete(REFRESH_TOKEN_KEY_PREFIX + memberId);
+    }
+
     private SimpleMailMessage createMailMessage(String to, String verificationCode) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(to);
         message.setSubject("[MyRoutine] 이메일 인증 코드");
         message.setText("인증 코드: " + verificationCode);
-        message.setFrom(emailSender);
+        message.setFrom(sender);
         return message;
     }
 
@@ -136,6 +177,19 @@ public class AuthService {
         SecureRandom random = new SecureRandom();
         int code = random.nextInt(1_000_000); // 0 ~ 999999
         return String.format("%06d", code);   // 항상 6자리로 패딩
+    }
+
+    private void saveRefreshToken(String refreshToken, String memberId) {
+        String key = REFRESH_TOKEN_KEY_PREFIX + memberId;
+        stringRedisTemplate.opsForValue().set(key, refreshToken, jwtProvider.getRefreshTokenExpiration(), TimeUnit.MILLISECONDS);
+    }
+
+    private void compareRefreshToken(String refreshToken, String memberId) {
+        String key = REFRESH_TOKEN_KEY_PREFIX + memberId;
+        String storedRefreshToken = stringRedisTemplate.opsForValue().get(key);
+        if (!refreshToken.equals(storedRefreshToken)) {
+            throw new IllegalArgumentException("토큰이 일치하지 않습니다.");
+        }
     }
 
     private void saveVerificationCode(String email, String code) {
