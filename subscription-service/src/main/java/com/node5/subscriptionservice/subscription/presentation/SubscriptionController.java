@@ -1,13 +1,12 @@
 package com.node5.subscriptionservice.subscription.presentation;
 
-import com.node5.common.domain.ApiResponseDto;
-import com.node5.common.domain.PagedResponseDto;
 import com.node5.subscriptionservice.subscription.application.SubscriptionService;
 import com.node5.subscriptionservice.subscription.application.dto.SubscriptionInfo;
 import com.node5.subscriptionservice.subscription.presentation.dto.SubscriptionCreateRequest;
 import com.node5.subscriptionservice.subscription.presentation.dto.SubscriptionUpdateRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,7 +14,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
 @Tag(name = "Subscription", description = "구독 API")
@@ -41,13 +39,13 @@ public class SubscriptionController {
 
     @Operation(summary = "구독 생성", description = "새로운 구독을 생성합니다")
     @PostMapping
-    public ResponseEntity<SubscriptionInfo> create(@RequestBody SubscriptionCreateRequest request) {
+    public ResponseEntity<SubscriptionInfo> create(@RequestBody @Valid SubscriptionCreateRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(subscriptionService.create(request.toCommand()));
     }
 
     @Operation(summary = "구독 수정", description = "구독 정보를 수정합니다.")
     @PutMapping("{id}")
-    public ResponseEntity<SubscriptionInfo> update(@RequestBody SubscriptionUpdateRequest request, @PathVariable UUID id) {
+    public ResponseEntity<SubscriptionInfo> update(@RequestBody @Valid SubscriptionUpdateRequest request, @PathVariable UUID id) {
         return ResponseEntity.ok(subscriptionService.update(request.toCommand(), id));
     }
 

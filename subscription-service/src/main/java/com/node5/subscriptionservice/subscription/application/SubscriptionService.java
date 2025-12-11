@@ -1,18 +1,13 @@
 package com.node5.subscriptionservice.subscription.application;
 
-import com.node5.common.domain.ApiResponseDto;
-import com.node5.common.domain.PageInfoDto;
-import com.node5.common.domain.PagedResponseDto;
 import com.node5.subscriptionservice.subscription.application.dto.SubscriptionCreateCommand;
 import com.node5.subscriptionservice.subscription.application.dto.SubscriptionInfo;
 import com.node5.subscriptionservice.subscription.application.dto.SubscriptionUpdateCommand;
 import com.node5.subscriptionservice.subscription.domain.*;
-import jakarta.persistence.EntityNotFoundException;
+import com.node5.subscriptionservice.subscription.exception.SubscriptionException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +15,8 @@ import java.time.DayOfWeek;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+
+import static com.node5.subscriptionservice.subscription.exception.SubscriptionErrorCode.*;
 
 @Service
 @RequiredArgsConstructor
@@ -30,7 +27,7 @@ public class SubscriptionService {
 
     public SubscriptionInfo findById(UUID id) {
         Subscription subscription = subscriptionRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Subscription not found: " + id));
+                .orElseThrow(() -> new SubscriptionException(SUBSCRIPTION_NOT_FOUND));
         return toSubscriptionInfo(subscription);
     }
 
@@ -57,7 +54,7 @@ public class SubscriptionService {
         );
 
         if (rules.isEmpty()) {
-            throw new IllegalArgumentException("No recurrence rules created");
+            throw new SubscriptionException(SUBSCRIPTION_RULE_NOT_FOUND);
         }
 
         subscription.calculateNextRunDate(rules);
@@ -71,7 +68,7 @@ public class SubscriptionService {
     @Transactional
     public SubscriptionInfo update(SubscriptionUpdateCommand command, UUID id) {
         Subscription subscription = subscriptionRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Subscription not found: " + id));
+                .orElseThrow(() -> new SubscriptionException(SUBSCRIPTION_NOT_FOUND));
 
         subscription.update(
                 command.pricePerItem(),
@@ -101,7 +98,7 @@ public class SubscriptionService {
     @Transactional
     public SubscriptionInfo pause(UUID id) {
         Subscription subscription = subscriptionRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Subscription not found: " + id));
+                .orElseThrow(() -> new SubscriptionException(SUBSCRIPTION_NOT_FOUND));
 
         subscription.pause();
         Subscription updatedSubscription = subscriptionRepository.save(subscription);
@@ -112,7 +109,7 @@ public class SubscriptionService {
     @Transactional
     public SubscriptionInfo resume(UUID id) {
         Subscription subscription = subscriptionRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Subscription not found: " + id));
+                .orElseThrow(() -> new SubscriptionException(SUBSCRIPTION_NOT_FOUND));
 
         subscription.resume();
         Subscription updatedSubscription = subscriptionRepository.save(subscription);
@@ -123,7 +120,7 @@ public class SubscriptionService {
     @Transactional
     public SubscriptionInfo delete(UUID id) {
         Subscription subscription = subscriptionRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Subscription not found: " + id));
+                .orElseThrow(() -> new SubscriptionException(SUBSCRIPTION_NOT_FOUND));
 
         subscription.delete();
         Subscription saved = subscriptionRepository.save(subscription);
@@ -133,10 +130,6 @@ public class SubscriptionService {
 
     private List<SubscriptionRecurrenceRule> createSubscriptionRecurrenceRule(UUID subscriptionId, RecurrenceType recurrenceType, List<DayOfWeek> dayOfWeek, Integer dayOfMonth) {
         if (recurrenceType == RecurrenceType.WEEKLY) {
-            if (dayOfWeek == null || dayOfWeek.isEmpty()) {
-                throw new IllegalArgumentException("DayOfWeek not included");
-            }
-
             return dayOfWeek.stream()
                     .map(day -> SubscriptionRecurrenceRule.create(
                             subscriptionId,
@@ -145,12 +138,6 @@ public class SubscriptionService {
                             dayOfMonth))
                     .toList();
         }  else if (recurrenceType ==  RecurrenceType.MONTHLY) {
-            if (dayOfMonth == null) {
-                throw new IllegalArgumentException("dayOfMonth not included");
-            }
-            if (dayOfMonth < 1 || dayOfMonth > 31) {
-                throw new IllegalArgumentException("dayOfMonth must be between 1 and 31");
-            }
             return List.of(SubscriptionRecurrenceRule.create(
                     subscriptionId,
                     recurrenceType,
@@ -166,7 +153,7 @@ public class SubscriptionService {
                 subscriptionRecurrenceRuleRepository.findBySubscriptionId(subscription.getId());
 
         if (rules.isEmpty()) {
-            throw new EntityNotFoundException("Recurrence rules not found for subscription: " + subscription.getId());
+            throw new SubscriptionException(SUBSCRIPTION_RULE_NOT_FOUND);
         }
 
         RecurrenceType ruleType = rules.get(0).getRecurrenceType();

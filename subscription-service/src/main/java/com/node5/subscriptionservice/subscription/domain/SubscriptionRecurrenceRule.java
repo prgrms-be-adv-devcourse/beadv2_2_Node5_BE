@@ -1,6 +1,7 @@
 package com.node5.subscriptionservice.subscription.domain;
 
 import com.node5.common.domain.BaseEntity;
+import com.node5.subscriptionservice.subscription.exception.SubscriptionException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -10,6 +11,8 @@ import lombok.NoArgsConstructor;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.UUID;
+
+import static com.node5.subscriptionservice.subscription.exception.SubscriptionErrorCode.*;
 
 @Entity
 @Getter
@@ -47,11 +50,10 @@ public class SubscriptionRecurrenceRule extends BaseEntity {
     public LocalDate calculateNextRunDate(LocalDate baseDate) {
         if (this.recurrenceType == RecurrenceType.WEEKLY) {
             return calculateWeekly(baseDate);
-        }
-        if (this.recurrenceType == RecurrenceType.MONTHLY) {
+        } else if (this.recurrenceType == RecurrenceType.MONTHLY) {
             return calculateMonthly(baseDate);
         }
-        throw new IllegalStateException("Not valid recurrence type: " + recurrenceType);
+        throw new SubscriptionException(INVALID_RECURRENCE_TYPE);
     }
 
     private LocalDate calculateWeekly(LocalDate base) {

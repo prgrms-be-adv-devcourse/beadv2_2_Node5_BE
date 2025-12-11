@@ -1,10 +1,10 @@
 package com.node5.subscriptionservice.subscription.batch;
 
-import com.node5.common.domain.ApiResponseDto;
 import com.node5.subscriptionservice.subscription.client.OrderClient;
 import com.node5.subscriptionservice.subscription.client.dto.OrderCreateInfo;
 import com.node5.subscriptionservice.subscription.client.dto.OrderCreateRequest;
 import com.node5.subscriptionservice.subscription.domain.*;
+import com.node5.subscriptionservice.subscription.exception.SubscriptionException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
@@ -23,6 +23,8 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import static com.node5.subscriptionservice.subscription.exception.SubscriptionErrorCode.*;
 
 @Slf4j
 @Configuration
@@ -58,7 +60,7 @@ public class SubscriptionOrderBatchConfig {
                     LocalDate runDate = LocalDate.parse(runDateParam);
 
                     Subscription subscription = subscriptionRepository.findById(subscriptionId)
-                            .orElseThrow(() -> new RuntimeException("subscription not found"));
+                            .orElseThrow(() -> new SubscriptionException(SUBSCRIPTION_NOT_FOUND));
 
                     requestOrder(subscription);
 
@@ -96,7 +98,7 @@ public class SubscriptionOrderBatchConfig {
         try {
             ResponseEntity<OrderCreateInfo> response = orderClient.create(request);
             if (!response.getStatusCode().is2xxSuccessful()) {
-                throw new IllegalStateException("Order service responded with status " + response.getStatusCode());
+                throw new SubscriptionException(SUBSCRIPTION_ORDER_REQUEST_FAILED);
             }
 
             Optional<OrderCreateInfo> responseBody = Optional.ofNullable(response.getBody());
@@ -105,7 +107,7 @@ public class SubscriptionOrderBatchConfig {
                     responseBody.map(OrderCreateInfo::orderId).orElse(null));
         } catch (Exception ex) {
             log.error("Failed to request order for subscription {}: {}", subscription.getId(), ex.getMessage(), ex);
-            throw new RuntimeException("Order request failed", ex);
+            throw new SubscriptionException(SUBSCRIPTION_ORDER_REQUEST_FAILED);
         }
     }
 }
