@@ -48,8 +48,7 @@ public class AuthService {
             List<OAuthProviderService> providerList,
             JwtProvider jwtProvider,
             JavaMailSender mailSender,
-            RedisService redisService,
-            StringRedisTemplate stringRedisTemplate
+            RedisService redisService
     ) {
         this.oAuthRepository = oAuthRepository;
         this.memberRepository = memberRepository;
@@ -57,7 +56,6 @@ public class AuthService {
         this.jwtProvider = jwtProvider;
         this.mailSender = mailSender;
         this.redisService = redisService;
-        this.stringRedisTemplate = stringRedisTemplate;
     }
 
     public LoginInfoResponse login(OAuthLoginCommand command) {
