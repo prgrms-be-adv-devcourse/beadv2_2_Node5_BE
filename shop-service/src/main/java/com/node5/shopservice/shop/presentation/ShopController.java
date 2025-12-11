@@ -9,9 +9,11 @@ import com.node5.shopservice.shop.presentation.dto.ShopModifyRequest;
 import com.node5.shopservice.shop.presentation.dto.ShopRegisterRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -30,7 +32,7 @@ public class ShopController {
     @GetMapping
     public ResponseEntity<Page<ShopListResponse>> findMyShopList(
             @RequestHeader("Member-Id") UUID memberId,
-            Pageable pageable
+            @PageableDefault(size = 10, page = 0, sort = "createdAt") Pageable pageable
     ) {
         return ResponseEntity.ok(shopService.findMyShopList(memberId, pageable));
     }
@@ -48,7 +50,7 @@ public class ShopController {
     @PostMapping
     public ResponseEntity<ShopRegisterResponse> registerShop(
             @RequestHeader("Member-Id") UUID memberId,
-            @RequestBody ShopRegisterRequest request
+            @Valid @RequestBody ShopRegisterRequest request
     ) {
         return ResponseEntity.status(HttpStatus.CREATED).body(shopService.registerShop(memberId, request.toCommand()));
     }
@@ -58,7 +60,7 @@ public class ShopController {
     public ResponseEntity<ShopInfoResponse> modifyMyShopInfo(
             @RequestHeader("Member-Id") UUID memberId,
             @PathVariable UUID shopId,
-            @RequestBody ShopModifyRequest request
+            @Valid @RequestBody ShopModifyRequest request
     ) {
         return ResponseEntity.ok(shopService.modifyMyShopInfo(memberId, shopId, request.toCommand()));
     }
