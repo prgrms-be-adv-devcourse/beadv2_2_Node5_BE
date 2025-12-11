@@ -4,7 +4,6 @@ import com.node5.subscriptionservice.subscription.application.dto.SubscriptionCr
 import com.node5.subscriptionservice.subscription.domain.RecurrenceType;
 import jakarta.validation.constraints.*;
 
-import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.util.List;
 import java.util.UUID;
@@ -15,10 +14,6 @@ public record SubscriptionCreateRequest(
 
         @NotNull(message = "상품 ID는 필수 입력값입니다.")
         UUID productId,
-
-        @NotNull(message = "상품 단가는 필수 입력값입니다.")
-        @DecimalMin(value = "0.0", inclusive = false, message = "주문 단가는 0보다 커야 합니다.")
-        BigDecimal pricePerItem,
 
         @NotNull(message = "수량은 필수 입력값입니다.")
         @Positive(message = "수량은 1개 이상이어야 합니다.")
@@ -74,7 +69,6 @@ public record SubscriptionCreateRequest(
         return new SubscriptionCreateCommand(
                 memberId,
                 productId,
-                pricePerItem,
                 quantity,
                 deliveryAddress,
                 type,

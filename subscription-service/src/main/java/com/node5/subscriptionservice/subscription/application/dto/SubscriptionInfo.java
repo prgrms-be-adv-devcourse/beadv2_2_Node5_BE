@@ -13,6 +13,9 @@ import java.util.UUID;
 
 public record SubscriptionInfo(
         UUID id,
+        UUID productId,
+        String productName,
+        String thumbnailUrl,
         String subscriptionStatus,
         BigDecimal pricePerItem,
         Integer quantity,
@@ -33,6 +36,9 @@ public record SubscriptionInfo(
 
         return new SubscriptionInfo(
                 subscription.getId(),
+                subscription.getProductId(),
+                subscription.getProductName(),
+                subscription.getThumbnailUrl(),
                 subscription.getSubscriptionStatus().toString(),
                 subscription.getPricePerItem(),
                 subscription.getQuantity(),

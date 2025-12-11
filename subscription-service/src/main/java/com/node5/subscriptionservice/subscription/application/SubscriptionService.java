@@ -1,10 +1,14 @@
 package com.node5.subscriptionservice.subscription.application;
 
+import com.node5.common.domain.ApiResponseDto;
 import com.node5.subscriptionservice.subscription.application.dto.SubscriptionCreateCommand;
 import com.node5.subscriptionservice.subscription.application.dto.SubscriptionInfo;
 import com.node5.subscriptionservice.subscription.application.dto.SubscriptionUpdateCommand;
+import com.node5.subscriptionservice.subscription.client.ProductClient;
+import com.node5.subscriptionservice.subscription.client.dto.ProductInfoResponse;
 import com.node5.subscriptionservice.subscription.domain.*;
 import com.node5.subscriptionservice.subscription.exception.SubscriptionException;
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,6 +28,7 @@ public class SubscriptionService {
 
     private final SubscriptionRepository subscriptionRepository;
     private final SubscriptionRecurrenceRuleRepository subscriptionRecurrenceRuleRepository;
+    private final ProductClient productClient;
 
     public SubscriptionInfo findById(UUID id) {
         Subscription subscription = subscriptionRepository.findById(id)
@@ -38,10 +43,14 @@ public class SubscriptionService {
 
     @Transactional
     public SubscriptionInfo create(SubscriptionCreateCommand command) {
+        ProductInfoResponse productInfo = getProductInfo(command.productId());
+
         Subscription subscription = Subscription.create(
                 command.memberId(),
-                command.productId(),
-                command.pricePerItem(),
+                productInfo.id(),
+                productInfo.name(),
+                productInfo.thumbnailUrl(),
+                productInfo.price(),
                 command.quantity(),
                 command.deliveryAddress()
         );
@@ -126,6 +135,27 @@ public class SubscriptionService {
         Subscription saved = subscriptionRepository.save(subscription);
 
         return toSubscriptionInfo(saved);
+    }
+
+    private ProductInfoResponse getProductInfo(UUID productId) {
+        try {
+            ApiResponseDto<ProductInfoResponse> response = productClient.findById(productId).getBody();
+            if (response == null || response.data() == null) {
+                throw new SubscriptionException(SUBSCRIPTION_PRODUCT_NOT_FOUND);
+            }
+            if (response.data().id() == null || response.data().name() == null || response.data().price() == null) {
+                throw new SubscriptionException(SUBSCRIPTION_PRODUCT_REQUEST_FAILED);
+            }
+            return response.data();
+        } catch (SubscriptionException exception) {
+            throw exception;
+        } catch (FeignException.NotFound ex) {
+            throw new SubscriptionException(SUBSCRIPTION_PRODUCT_NOT_FOUND);
+        } catch (FeignException ex) {
+            throw new SubscriptionException(SUBSCRIPTION_PRODUCT_REQUEST_FAILED);
+        } catch (Exception ex) {
+            throw new SubscriptionException(SUBSCRIPTION_PRODUCT_REQUEST_FAILED);
+        }
     }
 
     private List<SubscriptionRecurrenceRule> createSubscriptionRecurrenceRule(UUID subscriptionId, RecurrenceType recurrenceType, List<DayOfWeek> dayOfWeek, Integer dayOfMonth) {

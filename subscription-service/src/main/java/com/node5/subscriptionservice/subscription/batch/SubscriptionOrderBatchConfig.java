@@ -86,8 +86,8 @@ public class SubscriptionOrderBatchConfig {
                 List.of(
                         new OrderCreateRequest.OrderItemRequest(
                                 subscription.getProductId(),
-                                "",
-                                "",
+                                subscription.getProductName(),
+                                subscription.getThumbnailUrl(),
                                 subscription.getPricePerItem(),
                                 subscription.getQuantity(),
                                 subscription.getTotalPrice()
