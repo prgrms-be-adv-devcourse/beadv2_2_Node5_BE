@@ -1,7 +1,10 @@
 package com.node5.memberservice.global.exception;
 
+import com.node5.common.exception.BaseErrorCode;
+import com.node5.common.exception.BaseException;
 import com.node5.common.exception.ExceptionResponseDto;
 import com.node5.memberservice.auth.exception.AuthException;
+import com.node5.memberservice.member.exception.MemberException;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -13,10 +16,10 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(AuthException.class)
-    public ResponseEntity<ExceptionResponseDto> handleException(AuthException e) {
-        var errorCode = e.getErrorCode();
-        ExceptionResponseDto responseDto = new ExceptionResponseDto( errorCode.getCode(), errorCode.getMessage());
+    @ExceptionHandler(BaseException.class)
+    public ResponseEntity<ExceptionResponseDto> handleBaseException(BaseException e) {
+        BaseErrorCode errorCode = e.getErrorCode();
+        ExceptionResponseDto responseDto = new ExceptionResponseDto(errorCode.getCode(), errorCode.getMessage());
         return ResponseEntity.status(errorCode.getStatus()).body(responseDto);
     }
 

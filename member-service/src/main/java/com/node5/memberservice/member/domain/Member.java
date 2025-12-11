@@ -64,11 +64,11 @@ public class Member extends BaseEntity {
         return new Member(id, command.email(), command.name(), command.phoneNumber(), command.address(), role, status);
     }
 
-    public void modifyRoles(String role, RoleAction action) {
+    public void modifyRoles(MemberRole role, RoleAction action) {
         if (action == RoleAction.ADD) {
-            this.roles.add(MemberRole.valueOf(role));
+            this.roles.add(role);
         } else if (action == RoleAction.REMOVE) {
-            this.roles.remove(MemberRole.valueOf(role));
+            this.roles.remove(role);
         }
     }
 
