@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import com.node5.catalogservice.kafka.producer.ProductIndexProducer;
 import com.node5.catalogservice.product.application.dto.ProductCommand;
 import com.node5.catalogservice.product.application.dto.ProductInfo;
 import com.node5.catalogservice.product.application.dto.ProductUpdateCommand;
@@ -13,6 +14,7 @@ import com.node5.catalogservice.product.domain.Product;
 import com.node5.catalogservice.product.domain.ProductRepository;
 import com.node5.catalogservice.product.domain.ProductStatus;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -20,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 public class ProductService {
 
 	private final ProductRepository productRepository;
+	private final ProductIndexProducer productIndexProducer;
 
 	public Page<ProductInfo> getOnSaleProducts(Pageable pageable) {
 		Page<Product> page = productRepository.findByStatus(ProductStatus.ON_SALE, pageable);
@@ -38,6 +41,7 @@ public class ProductService {
 		return page.map(ProductInfo::from);
 	}
 
+	@Transactional
 	public ProductInfo createProduct(ProductCommand command) {
 		Product product = Product.create(
 			command.shopId(),
@@ -49,10 +53,15 @@ public class ProductService {
 			command.category(),
 			command.thumbnailUrl()
 		);
+
 		Product saved = productRepository.save(product);
+
+		productIndexProducer.sendProductIndexEvent(saved);
+
 		return ProductInfo.from(saved);
 	}
 
+	@Transactional
 	public ProductInfo updateProduct(UUID id, ProductUpdateCommand command) {
 		Product product = productRepository.findById(id)
 			.orElseThrow(() -> new IllegalArgumentException("Product not found. id=" + id));
@@ -67,6 +76,9 @@ public class ProductService {
 		);
 
 		Product saved = productRepository.save(product);
+
+		productIndexProducer.sendProductUpdateEvent(saved);
+
 		return ProductInfo.from(saved);
 	}
 
@@ -76,6 +88,9 @@ public class ProductService {
 
 		product.changeStatus(status);
 		Product saved = productRepository.save(product);
+
+		productIndexProducer.sendProductUpdateEvent(saved);
+
 		return ProductInfo.from(saved);
 	}
 
