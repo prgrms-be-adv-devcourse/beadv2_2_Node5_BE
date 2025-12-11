@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -23,12 +24,14 @@ import static com.node5.orderservice.domain.OrderStatus.*;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class OrderService {
 
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final OrderTransactionService orderTransactionService;
 
+    @Transactional
     public OrderCreateInfo create(OrderCommand command) {
         // 주문번호 생성, 총 주문 금액 계산하여 Order 생성
         String orderNum = generateNewOrderNum();
@@ -108,6 +111,7 @@ public class OrderService {
         return OrderDetailInfo.from(order, orderItemInfos);
     }
 
+    @Transactional
     public OrderStatusInfo cancel(UUID orderId, UUID memberId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException(orderId));
@@ -133,7 +137,7 @@ public class OrderService {
         return OrderStatusInfo.from(order);
     }
 
-
+    @Transactional
     public OrderStatusInfo refund(UUID orderId, UUID memberId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException(orderId));
