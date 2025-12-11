@@ -66,7 +66,7 @@ public class PaymentService {
     @Transactional
     public PaymentInfo confirm(UUID memberId, PaymentConfirmCommand command) {
 
-        Wallet wallet = walletRepositoryAdapter.findByMemberId(memberId)
+        Wallet wallet = walletRepositoryAdapter.findByMemberIdForUpdate(memberId)
                 .orElseThrow(() -> new WalletException(WALLET_NOT_FOUND));
 
         Payment payment = paymentRepositoryAdapter.findByOrderId(command.orderId())
