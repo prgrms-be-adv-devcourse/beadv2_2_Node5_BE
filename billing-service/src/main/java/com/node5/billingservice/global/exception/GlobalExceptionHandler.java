@@ -1,5 +1,6 @@
 package com.node5.billingservice.global.exception;
 
+import com.node5.billingservice.payment.exception.PaymentException;
 import com.node5.billingservice.wallet.exception.WalletException;
 import com.node5.common.exception.ExceptionResponseDto;
 import lombok.extern.slf4j.Slf4j;
@@ -12,7 +13,14 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(WalletException.class)
-    public ResponseEntity<ExceptionResponseDto> handleException(WalletException e) {
+    public ResponseEntity<ExceptionResponseDto> walletHandleException(WalletException e) {
+        var ex = e.getErrorCode();
+        ExceptionResponseDto responseDto = new ExceptionResponseDto( ex.getCode(), ex.getMessage());
+        return ResponseEntity.status(ex.getStatus()).body(responseDto);
+    }
+
+    @ExceptionHandler(PaymentException.class)
+    public ResponseEntity<ExceptionResponseDto> paymentHandleException(PaymentException e) {
         var ex = e.getErrorCode();
         ExceptionResponseDto responseDto = new ExceptionResponseDto( ex.getCode(), ex.getMessage());
         return ResponseEntity.status(ex.getStatus()).body(responseDto);
