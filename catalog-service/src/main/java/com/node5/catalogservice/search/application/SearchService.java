@@ -84,6 +84,7 @@ public class SearchService {
 				doc.getProductId(),
 				doc.getName(),
 				doc.getCategory(),
+				doc.getThumbnailUrl(),
 				doc.getPrice(),
 				doc.getStatus(),
 				doc.getCreatedAt()

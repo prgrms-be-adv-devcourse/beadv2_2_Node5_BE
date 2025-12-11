@@ -70,14 +70,34 @@ public class SearchServiceTest {
 		LocalDateTime base = LocalDateTime.of(2025, 1, 1, 0, 0);
 
 		productSearchRepository.save(new ProductDocument(
-			"1", "테스트 상품", "TEST", 1000L, "ON_SALE", base.plusDays(1))
-		);
+			"1",
+			"테스트 상품",
+			"TEST",
+			"product/test-thumb-1.png",
+			1000L,
+			"ON_SALE",
+			base.plusDays(1)
+		));
+
 		productSearchRepository.save(new ProductDocument(
-			"2", "사과 상품", "FOOD", 2000L, "ON_SALE", base.plusDays(2))
-		);
+			"2",
+			"사과 상품",
+			"FOOD",
+			"product/apple-thumb.png",
+			2000L,
+			"ON_SALE",
+			base.plusDays(2)
+		));
+
 		productSearchRepository.save(new ProductDocument(
-			"3", "숨긴 상품", "TEST", 5000L, "HIDDEN", base.plusDays(3))
-		);
+			"3",
+			"숨긴 상품",
+			"TEST",
+			"product/hidden-thumb.png",
+			5000L,
+			"HIDDEN",
+			base.plusDays(3)
+		));
 	}
 
 

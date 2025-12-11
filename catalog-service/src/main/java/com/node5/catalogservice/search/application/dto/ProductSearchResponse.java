@@ -12,6 +12,8 @@ public record ProductSearchResponse(
 	String name,
 	@Schema(description = "카테고리 코드", example = "TOP")
 	String category,
+	@Schema(description = "썸네일 경로 (S3 Key)", example = "product/72cb3062-c897-45bd-9670-bdeac58e6a11-thumbnail.png")
+	String thumbnailUrl,
 	@Schema(description = "가격", example = "19900")
 	Long price,
 	@Schema(description = "상품 상태", example = "ON_SALE")
