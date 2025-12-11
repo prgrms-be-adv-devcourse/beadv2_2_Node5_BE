@@ -22,6 +22,9 @@ public class KakaoOAuthService implements OAuthProviderService {
     private final String KAKAO_TOKEN_REQUEST_URL = "https://kauth.kakao.com/oauth/token";
     private final String KAKAO_USER_REQUEST_URL = "https://kapi.kakao.com/v2/user/me";
 
+    @Value( "${kakao.redirect.url}")
+    private String KAKAO_REDIRECT_URL;
+
     @Value("${kakao.api.key}")
     private String apiKey;
 
@@ -45,7 +48,7 @@ public class KakaoOAuthService implements OAuthProviderService {
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         body.add("grant_type", "authorization_code");
         body.add("client_id", apiKey);
-        body.add("redirect_uri", "http://localhost:5500/index.html");
+        body.add("redirect_uri", KAKAO_REDIRECT_URL);
         body.add("code", providerCode);
 
         HttpEntity<MultiValueMap<String, Object>> entity = new HttpEntity<>(body, headers);

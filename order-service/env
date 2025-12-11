@@ -1,0 +1,3 @@
+SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/my-routine?currentSchema=public&options=-c%20TimeZone=Asia/Seoul
+SPRING_DATASOURCE_USERNAME=postgres
+SPRING_DATASOURCE_PASSWORD=yjyj1118

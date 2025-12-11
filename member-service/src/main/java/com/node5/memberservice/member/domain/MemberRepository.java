@@ -5,7 +5,7 @@ import java.util.UUID;
 
 public interface MemberRepository {
     Optional<Member> findByIdAndDeletedAtIsNull(UUID id);
-    Optional<Member> findByEmail(String email);
+    Optional<Member> findByEmailAndDeletedAtIsNull(String email);
 
     Member save(Member member);
 }

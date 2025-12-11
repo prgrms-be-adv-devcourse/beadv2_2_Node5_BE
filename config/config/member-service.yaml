@@ -45,7 +45,6 @@ server:
   port: 8081
 
 token:
-  secret: ${TOKEN_SECRET}
   expiration:
     access: 3600000
     refresh: 604800000
@@ -53,3 +52,5 @@ token:
 kakao:
   api:
     key: ${KAKAO_API_KEY}
+  redirect:
+    url: ${KAKAO_REDIRECT_URL}
