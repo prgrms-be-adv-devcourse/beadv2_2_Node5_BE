@@ -8,12 +8,14 @@ import com.node5.memberservice.member.application.dto.MemberModifyCommand;
 import com.node5.memberservice.member.application.dto.RoleModifyCommand;
 import com.node5.memberservice.member.domain.Member;
 import com.node5.memberservice.member.domain.MemberRepository;
+import com.node5.memberservice.member.domain.MemberRole;
 import com.node5.memberservice.member.exception.MemberErrorCode;
 import com.node5.memberservice.member.exception.MemberException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
 import java.util.UUID;
 
 @Service
@@ -45,9 +47,22 @@ public class MemberService {
     }
 
     @Transactional
-    public String modifyMemberRoles(UUID memberId, RoleModifyCommand command) {
+    public String addMemberRole(UUID memberId, RoleModifyCommand command) {
         Member member = getMemberOrThrow(memberId);
-        member.modifyRoles(command.role(), command.action());
+        member.addRole(command.role());
+
+        JwtMemberInfo jwtMemberInfo = JwtMemberInfo.from(member);
+        return jwtProvider.generateAccessToken(jwtMemberInfo);
+    }
+
+    @Transactional
+    public String deleteMemberRole(UUID memberId, String role) {
+        Member member = getMemberOrThrow(memberId);
+        MemberRole roleEnum = Arrays.stream(MemberRole.values())
+                .filter(r -> r.name().equalsIgnoreCase(role))
+                .findFirst()
+                .orElseThrow(() -> new MemberException(MemberErrorCode.INVALID_ROLE));
+        member.deleteRole(roleEnum);
 
         JwtMemberInfo jwtMemberInfo = JwtMemberInfo.from(member);
         return jwtProvider.generateAccessToken(jwtMemberInfo);
