@@ -9,6 +9,8 @@ import com.node5.catalogservice.product.domain.ProductCategory;
 import com.node5.catalogservice.search.application.dto.ProductSearchResponse;
 import com.node5.catalogservice.search.domain.ProductDocument;
 import com.node5.catalogservice.search.domain.ProductSearchSort;
+import com.node5.catalogservice.search.exception.SearchInvalidPriceRangeException;
+import com.node5.catalogservice.search.exception.SearchPriceRangeIncompleteException;
 import com.node5.catalogservice.search.infrastructure.ProductSearchRepository;
 import com.node5.catalogservice.search.presentation.dto.ProductSearchRequest;
 
@@ -28,6 +30,9 @@ public class SearchService {
 
 		Integer minPrice = request.minPrice();
 		Integer maxPrice = request.maxPrice();
+
+		validatePriceRange(minPrice, maxPrice);
+
 		ProductSearchSort sort = request.sort();
 
 		boolean hasKeyword = keyword != null && !keyword.isBlank();
@@ -93,5 +98,17 @@ public class SearchService {
 				doc.getCreatedAt()
 			)
 		);
+	}
+
+	private void validatePriceRange(Integer minPrice, Integer maxPrice) {
+		boolean minPresent = minPrice != null;
+		boolean maxPresent = maxPrice != null;
+
+		if (minPresent ^ maxPresent) { // 한쪽만 있는 경우
+			throw new SearchPriceRangeIncompleteException();
+		}
+		if (minPresent && maxPresent && minPrice > maxPrice) {
+			throw new SearchInvalidPriceRangeException();
+		}
 	}
 }
