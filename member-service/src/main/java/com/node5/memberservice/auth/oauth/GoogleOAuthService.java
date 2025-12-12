@@ -1,7 +1,9 @@
 package com.node5.memberservice.auth.oauth;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.node5.memberservice.auth.exception.AuthErrorCode;
 import com.node5.memberservice.auth.exception.AuthException;
+import com.node5.memberservice.auth.oauth.dto.GoogleTokenResponse;
 import com.node5.memberservice.auth.oauth.dto.KakaoTokenResponse;
 import com.node5.memberservice.auth.oauth.dto.OAuthUserInfo;
 import lombok.RequiredArgsConstructor;
@@ -15,30 +17,37 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Base64;
+import java.util.Map;
+
 @Service
 @RequiredArgsConstructor
-public class KakaoOAuthService implements OAuthProviderService {
+public class GoogleOAuthService implements OAuthProviderService {
 
-    private static final String KAKAO_TOKEN_REQUEST_URL = "https://kauth.kakao.com/oauth/token";
-    private static final String KAKAO_USER_REQUEST_URL = "https://kapi.kakao.com/v2/user/me";
+    private static final String GOOGLE_TOKEN_REQUEST_URL = "https://oauth2.googleapis.com/token";
 
     @Value("${oauth.redirect.url}")
     private String OAUTH_REDIRECT_URL;
 
-    @Value("${kakao.api.key}")
-    private String apiKey;
+    @Value("${google.client.id}")
+    private String clientId;
+
+    @Value("${google.client.secret}")
+    private String clientSecret;
+
 
     private final RestTemplate restTemplate;
+    private final ObjectMapper mapper;
 
     @Override
     public String getProviderName() {
-        return "kakao";
+        return "google";
     }
 
     @Override
     public OAuthUserInfo getUserInfo(String providerCode) {
-        String accessToken = getAccessToken(providerCode);
-        return requestUserInfo(accessToken);
+        String idToken = getAccessToken(providerCode);
+        return parseIdToken(idToken);
     }
 
     private String getAccessToken(String providerCode) {
@@ -46,45 +55,37 @@ public class KakaoOAuthService implements OAuthProviderService {
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
         MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
-        body.add("grant_type", "authorization_code");
-        body.add("client_id", apiKey);
-        body.add("redirect_uri", OAUTH_REDIRECT_URL);
+        body.add("client_id", clientId);
+        body.add("client_secret", clientSecret);
         body.add("code", providerCode);
+        body.add("grant_type", "authorization_code");
+        body.add("redirect_uri", OAUTH_REDIRECT_URL);
 
         HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(body, headers);
 
         try {
-            KakaoTokenResponse response = restTemplate.postForObject(KAKAO_TOKEN_REQUEST_URL, entity, KakaoTokenResponse.class);
-            if (response == null || response.accessToken() == null) {
+            GoogleTokenResponse response = restTemplate.postForObject(GOOGLE_TOKEN_REQUEST_URL, entity, GoogleTokenResponse.class);
+            if (response == null || response.idToken() == null) {
                 throw new AuthException(AuthErrorCode.OAUTH_RESPONSE_INVALID);
             }
-            return response.accessToken();
+            return response.idToken();
         } catch (HttpStatusCodeException ex) {
             throw new AuthException(AuthErrorCode.OAUTH_TOKEN_ERROR);
         }
     }
 
-    public OAuthUserInfo requestUserInfo(String accessToken) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        headers.setBearerAuth(accessToken);
-
-        HttpEntity<Void> entity = new HttpEntity<>(headers);
-
+    private OAuthUserInfo parseIdToken(String idToken) {
         try {
-            KakaoUserResponse result = restTemplate.postForObject(KAKAO_USER_REQUEST_URL, entity, KakaoUserResponse.class);
-            if (result == null || result.id() == null) {
-                throw new AuthException(AuthErrorCode.OAUTH_RESPONSE_INVALID);
-            }
+            String[] chunks = idToken.split("\\.");
+            Base64.Decoder decoder = Base64.getUrlDecoder();
+            String payload = new String(decoder.decode(chunks[1]));
 
-            return new OAuthUserInfo(getProviderName(), result.id().toString());
-        } catch (HttpStatusCodeException ex) {
+            Map<String, String> payloadMap = mapper.readValue(payload, Map.class);
+            String providerId = payloadMap.get("sub");
+
+            return new OAuthUserInfo(getProviderName(), providerId);
+        } catch (Exception e) {
             throw new AuthException(AuthErrorCode.OAUTH_USERINFO_ERROR);
         }
-    }
-
-    private record KakaoUserResponse(
-            Long id
-    ) {
     }
 }

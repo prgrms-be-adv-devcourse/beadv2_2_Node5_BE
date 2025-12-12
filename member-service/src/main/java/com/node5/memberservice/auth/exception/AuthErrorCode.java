@@ -15,9 +15,9 @@ public enum AuthErrorCode implements BaseErrorCode {
     INVALID_MEMBER_ID(HttpStatus.BAD_REQUEST.value(), "AUTH_007", "잘못된 memberId 형식입니다."),
     OAUTH_ALREADY_CONNECTED(HttpStatus.CONFLICT.value(), "AUTH_008", "이미 연결된 OAuth 정보입니다."),
 
-    OAUTH_TOKEN_ERROR(HttpStatus.BAD_GATEWAY.value(), "AUTH_009", "카카오 OAuth 토큰 발급 실패"),
+    OAUTH_TOKEN_ERROR(HttpStatus.BAD_GATEWAY.value(), "AUTH_009", "OAuth 토큰 발급 실패"),
     OAUTH_USERINFO_ERROR(HttpStatus.BAD_GATEWAY.value(), "AUTH_010", "소셜 로그인 사용자 정보 조회 실패"),
-    OAUTH_RESPONSE_INVALID(HttpStatus.BAD_GATEWAY.value(), "AUTH_011", "카카오 OAuth 응답이 유효하지 않습니다.");
+    OAUTH_RESPONSE_INVALID(HttpStatus.BAD_GATEWAY.value(), "AUTH_011", "OAuth 응답이 유효하지 않습니다.");
 
     private final int status;
     private final String code;

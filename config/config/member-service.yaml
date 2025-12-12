@@ -52,5 +52,12 @@ token:
 kakao:
   api:
     key: ${KAKAO_API_KEY}
+
+google:
+  client:
+    id: ${GOOGLE_CLIENT_ID}
+    secret: ${GOOGLE_CLIENT_SECRET}
+
+oauth:
   redirect:
-    url: ${KAKAO_REDIRECT_URL}
+    url: ${OAUTH_REDIRECT_URL}
