@@ -42,11 +42,11 @@ public class SubscriptionService {
     }
 
     @Transactional
-    public SubscriptionInfo create(SubscriptionCreateCommand command) {
+    public SubscriptionInfo create(SubscriptionCreateCommand command, UUID memberId) {
         ProductInfoResponse productInfo = getProductInfo(command.productId());
 
         Subscription subscription = Subscription.create(
-                command.memberId(),
+                memberId,
                 productInfo.id(),
                 productInfo.name(),
                 productInfo.thumbnailUrl(),

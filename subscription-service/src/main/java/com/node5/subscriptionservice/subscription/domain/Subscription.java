@@ -19,7 +19,7 @@ import static com.node5.subscriptionservice.subscription.exception.SubscriptionE
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "\"subscription\"", schema = "public")
+@Table(name = "\"subscription\"", schema = "subscription")
 public class Subscription extends BaseEntity {
 
     @Id
