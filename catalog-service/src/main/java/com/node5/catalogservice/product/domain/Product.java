@@ -3,6 +3,8 @@ package com.node5.catalogservice.product.domain;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+import com.node5.catalogservice.product.exception.ProductInvalidStockException;
+import com.node5.catalogservice.product.exception.ProductStatusChangeNotAllowedException;
 import com.node5.common.domain.BaseEntity;
 
 import jakarta.persistence.Column;
@@ -102,6 +104,8 @@ public class Product extends BaseEntity {
 		if (id == null) id = UUID.randomUUID();
 		if (status == null) status = ProductStatus.ON_SALE;
 		if (stock == null) stock = 0;
+
+		validateStockNonNegative(stock);
 	}
 
 	public void applyPatch(
@@ -116,14 +120,19 @@ public class Product extends BaseEntity {
 		if (name != null) this.name = name;
 		if (description != null) this.description = description;
 		if (price != null) this.price = price;
-		if (stock != null) this.stock = stock;
+
+		if (stock != null) {
+			validateStockNonNegative(stock);
+			this.stock = stock;
+		}
+
 		if (category != null) this.category = category;
 		if (thumbnailUrl != null) this.thumbnailUrl = thumbnailUrl;
 	}
 
 	public void changeStatus(ProductStatus newStatus) {
 		if (this.status == ProductStatus.DISCONTINUED) {
-			throw new IllegalStateException("이미 중단된 상품은 상태를 변경할 수 없습니다.");
+			throw new ProductStatusChangeNotAllowedException();
 		}
 		this.status = newStatus;
 	}
@@ -133,5 +142,11 @@ public class Product extends BaseEntity {
 			return;
 		}
 		this.status = ProductStatus.DISCONTINUED;
+	}
+
+	private void validateStockNonNegative(int stock) {
+		if (stock < 0) {
+			throw new ProductInvalidStockException(stock);
+		}
 	}
 }
