@@ -11,6 +11,7 @@ import com.node5.memberservice.member.domain.MemberRepository;
 import com.node5.memberservice.member.domain.MemberRole;
 import com.node5.memberservice.member.exception.MemberErrorCode;
 import com.node5.memberservice.member.exception.MemberException;
+import com.node5.memberservice.redis.application.RedisService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +27,7 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final OAuthRepository oAuthRepository;
     private final JwtProvider jwtProvider;
+    private final RedisService redisService;
 
     public MemberInfoResponse findById(UUID memberId) {
         Member member = getMemberOrThrow(memberId);
@@ -43,6 +45,7 @@ public class MemberService {
     public void deleteMember(UUID memberId) {
         Member member = getMemberOrThrow(memberId);
         member.delete();
+        redisService.deleteRefreshToken(member.getId());
         oAuthRepository.deleteByMember(member);
     }
 

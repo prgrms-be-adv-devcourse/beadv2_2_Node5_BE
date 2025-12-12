@@ -81,6 +81,7 @@ public class Member extends BaseEntity {
     }
 
     public void delete() {
+        this.status = MemberStatus.DELETED;
         this.deletedAt = LocalDateTime.now();
     }
 }
