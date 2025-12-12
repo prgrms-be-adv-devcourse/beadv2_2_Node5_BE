@@ -32,6 +32,11 @@ public class WalletService {
     // memberId로 예치금 생성
     @Transactional
     public WalletInfo createWallet(UUID memberId) {
+
+        if (walletRepository.findByMemberId(memberId).isPresent()) {
+            throw new WalletException(WALLET_ALREADY_EXISTS);
+        }
+
         Wallet wallet = Wallet.builder()
                 .memberId(memberId)
                 .build();
