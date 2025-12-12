@@ -15,7 +15,8 @@ import com.node5.catalogservice.product.domain.ProductRepository;
 import com.node5.catalogservice.product.domain.ProductStatus;
 import com.node5.catalogservice.product.exception.OnSaleProductNotFoundException;
 import com.node5.catalogservice.product.exception.ProductNotFoundException;
-import com.node5.catalogservice.product.exception.ShopNotOwnedException;
+import com.node5.catalogservice.product.exception.ShopForbiddenException;
+import com.node5.catalogservice.product.exception.ShopNotFoundException;
 import com.node5.catalogservice.shop.client.ShopServiceClient;
 
 import feign.FeignException;
@@ -80,7 +81,8 @@ public class ProductService {
 	 * @param memberId 요청자(판매자) ID
 	 * @param command  상품 생성 커맨드
 	 * @return 생성된 상품 정보
-	 * @throws ShopNotOwnedException 상점이 존재하지 않거나 요청자 소유가 아닌 경우
+	 * @throws ShopNotFoundException   상점이 존재하지 않는 경우
+	 * @throws ShopForbiddenException 요청자가 해당 상점의 소유자가 아닌 경우
 	 */
 	@Transactional
 	public ProductInfo createProduct(UUID memberId, ProductCommand command) {
@@ -114,7 +116,8 @@ public class ProductService {
 	 * @param command   상품 수정 커맨드
 	 * @return 수정된 상품 정보
 	 * @throws ProductNotFoundException 상품이 존재하지 않는 경우
-	 * @throws ShopNotOwnedException    상점이 존재하지 않거나 요청자 소유가 아닌 경우
+	 * @throws ShopNotFoundException    상점이 존재하지 않는 경우
+	 * @throws ShopForbiddenException  요청자가 해당 상점의 소유자가 아닌 경우
 	 */
 	@Transactional
 	public ProductInfo updateProduct(UUID memberId, UUID productId, ProductUpdateCommand command) {
@@ -194,20 +197,25 @@ public class ProductService {
 	}
 
 	/**
-	 * Shop-Service 연동을 통해 상점 소유권을 검증합니다.
-	 * <p>
-	 * Shop-Service에서 404(NotFound)가 내려오는 경우,
-	 * 상점이 없거나 요청자가 소유자가 아닌 케이스로 간주합니다.
+	 * Shop-Service를 통해 상점 존재 여부 및 소유권을 검증합니다.
+	 *
+	 * <ul>
+	 *   <li>404 Not Found : 상점이 존재하지 않음</li>
+	 *   <li>403 Forbidden : 요청자가 해당 상점의 소유자가 아님</li>
+	 * </ul>
 	 *
 	 * @param memberId 요청자 ID
 	 * @param shopId   상점 ID
-	 * @throws ShopNotOwnedException 상점이 존재하지 않거나 요청자 소유가 아닌 경우
+	 * @throws ShopNotFoundException   상점이 존재하지 않는 경우
+	 * @throws ShopForbiddenException 요청자가 해당 상점의 소유자가 아닌 경우
 	 */
 	private void validateShopOwnership(UUID memberId, UUID shopId) {
 		try {
 			shopServiceClient.getShopInfo(memberId, shopId);
 		} catch (FeignException.NotFound e) {
-			throw new IllegalArgumentException("상점이 존재하지 않거나, 내 상점이 아닙니다. shopId=" + shopId);
+			throw new ShopNotFoundException();
+		} catch (FeignException.Forbidden e) {
+			throw new ShopForbiddenException();
 		}
 	}
 }
