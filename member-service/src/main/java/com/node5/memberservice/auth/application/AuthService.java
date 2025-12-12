@@ -17,6 +17,7 @@ import io.jsonwebtoken.Claims;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -122,10 +123,10 @@ public class AuthService {
 
     public void sendEmailVerificationCode(SendEmailVerificationCommand command) {
         jwtProvider.validateTokenType(command.temporaryToken(), TokenType.TEMPORARY);
+
         String verificationCode = generateVerificationCode();
         redisService.saveVerificationCode(command.email(), verificationCode);
-        SimpleMailMessage mailMessage = createMailMessage(command.email(), verificationCode);
-        mailSender.send(mailMessage);
+        sendVerificationMail(command.email(), verificationCode);
     }
 
     public void verifyEmail(VerifyEmailCommand command) {
@@ -177,6 +178,12 @@ public class AuthService {
         message.setText("인증 코드: " + verificationCode);
         message.setFrom(sender);
         return message;
+    }
+
+    @Async
+    public void sendVerificationMail(String email, String verificationCode) {
+        SimpleMailMessage mailMessage = createMailMessage(email, verificationCode);
+        mailSender.send(mailMessage);
     }
 
     private String generateVerificationCode() {
