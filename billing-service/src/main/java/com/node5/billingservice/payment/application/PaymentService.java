@@ -72,7 +72,11 @@ public class PaymentService {
         Payment payment = paymentRepositoryAdapter.findByOrderId(command.orderId())
                 .orElseThrow(() -> new PaymentException(PAYMENT_NOT_FOUND));
 
-        // 결제 키와 금액 검증
+        // 결제 금액 검증
+        if (!Objects.equals(payment.getAmount(), command.amount())) {
+            throw new PaymentException(PAYMENT_AMOUNT_MISMATCH);
+        }
+
         TossPaymentResponse tossPayment = tossPaymentClient.confirm(command);
         payment.confirm(tossPayment);
         paymentRepositoryAdapter.save(payment);
@@ -85,21 +89,21 @@ public class PaymentService {
     // 결제 실패 기록
     @Transactional
     public PaymentFailureInfo failure(UUID memberId, PaymentFailureCommand command) {
-        Wallet wallet = walletRepositoryAdapter.findByMemberId(memberId)
+        Wallet wallet = walletRepositoryAdapter.findByMemberIdForUpdate(memberId)
                 .orElseThrow(() -> new WalletException(WALLET_NOT_FOUND));
 
         Payment payment = paymentRepositoryAdapter.findByOrderId(command.orderId())
                 .orElseThrow(() -> new PaymentException(PAYMENT_NOT_FOUND));
 
-        // 결제 키와 금액 검증
-        payment.validateValue(payment, command.paymentKey(), command.amount());
-
+        // 결제 금액 검증
+        if (!Objects.equals(payment.getAmount(), command.amount())) {
+            throw new PaymentException(PAYMENT_AMOUNT_MISMATCH);
+        }
         payment.failure(command.errorMessage());
 
         PaymentFailure failure = PaymentFailure.builder()
                 .walletId(wallet.getId())
                 .orderId(payment.getOrderId())
-                .paymentKey(payment.getPaymentKey())
                 .errorCode(command.errorCode())
                 .errorMessage(command.errorMessage())
                 .amount(payment.getAmount())
@@ -111,7 +115,7 @@ public class PaymentService {
 
     @Transactional
     public PaymentInfo cancel(UUID memberId, PaymentCancelCommand command) {
-        Wallet wallet = walletRepositoryAdapter.findByMemberId(memberId)
+        Wallet wallet = walletRepositoryAdapter.findByMemberIdForUpdate(memberId)
                 .orElseThrow(() -> new WalletException(WALLET_NOT_FOUND));
 
         Payment payment = paymentRepositoryAdapter.findByOrderId(command.orderId())
