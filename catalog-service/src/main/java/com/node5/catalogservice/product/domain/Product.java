@@ -38,11 +38,12 @@ public class Product extends BaseEntity {
 	private Integer stock;
 
 	@Enumerated(EnumType.STRING)
-	@Column(nullable = false, length = 20)
-	private ProductStatus status; // ON_SALE / HIDDEN / DISCONTINUED
+	@Column(nullable = false)
+	private ProductStatus status;
 
-	@Column(length = 50)
-	private String category;
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false)
+	private ProductCategory category;
 
 	@Column(name = "thumbnail_url")
 	private String thumbnailUrl;
@@ -58,7 +59,7 @@ public class Product extends BaseEntity {
 		BigDecimal price,
 		Integer stock,
 		ProductStatus status,
-		String category,
+		ProductCategory category,
 		String thumbnailUrl
 	) {
 		this.id = id;
@@ -79,7 +80,7 @@ public class Product extends BaseEntity {
 		BigDecimal price,
 		Integer stock,
 		ProductStatus status,
-		String category,
+		ProductCategory category,
 		String thumbnailUrl
 	) {
 
@@ -108,7 +109,7 @@ public class Product extends BaseEntity {
 		String description,
 		BigDecimal price,
 		Integer stock,
-		String category,
+		ProductCategory category,
 		String thumbnailUrl
 	) {
 

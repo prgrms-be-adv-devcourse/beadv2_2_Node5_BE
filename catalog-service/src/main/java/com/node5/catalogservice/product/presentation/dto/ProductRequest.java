@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 import com.node5.catalogservice.product.application.dto.ProductCommand;
-import com.node5.catalogservice.product.application.dto.ProductUpdateCommand;
+import com.node5.catalogservice.product.domain.ProductCategory;
 import com.node5.catalogservice.product.domain.ProductStatus;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -24,7 +24,7 @@ public record ProductRequest(
 	@Schema(description = "상품 상태", example = "ON_SALE")
 	ProductStatus status,
 	@Schema(description = "카테고리", example = "전자기기")
-	String category,
+	ProductCategory category,
 	@Schema(description = "대표 이미지 URL", example = "https://cdn.example.com/product/thumbnail.jpg")
 	String thumbnailUrl
 ) {

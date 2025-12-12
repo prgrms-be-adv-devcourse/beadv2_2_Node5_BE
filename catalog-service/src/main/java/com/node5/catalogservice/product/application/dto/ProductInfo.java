@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 import com.node5.catalogservice.product.domain.Product;
+import com.node5.catalogservice.product.domain.ProductCategory;
 import com.node5.catalogservice.product.domain.ProductStatus;
 
 public record ProductInfo(
@@ -15,7 +16,7 @@ public record ProductInfo(
 	BigDecimal price,
 	Integer stock,
 	ProductStatus status,
-	String category,
+	ProductCategory category,
 	String thumbnailUrl,
 	LocalDateTime createdAt,
 	LocalDateTime modifiedAt

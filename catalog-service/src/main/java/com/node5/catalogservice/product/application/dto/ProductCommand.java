@@ -3,6 +3,7 @@ package com.node5.catalogservice.product.application.dto;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+import com.node5.catalogservice.product.domain.ProductCategory;
 import com.node5.catalogservice.product.domain.ProductStatus;
 
 public record ProductCommand(
@@ -12,7 +13,7 @@ public record ProductCommand(
 	BigDecimal price,
 	Integer stock,
 	ProductStatus status,
-	String category,
+	ProductCategory category,
 	String thumbnailUrl
 ) {
 }
