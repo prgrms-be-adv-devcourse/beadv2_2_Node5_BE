@@ -120,14 +120,17 @@ public class ProductController {
 	@Operation(summary = "상품 상태 변경", description = "상품 상태를 판매 중/일시 중단 등으로 변경합니다.")
 	@ApiResponses({
 		@ApiResponse(responseCode = "200", description = "상품 상태 변경 성공"),
-		@ApiResponse(responseCode = "404", description = "해당 ID의 상품이 없습니다.")
+		@ApiResponse(responseCode = "404", description = "해당 ID의 상품이 없습니다."),
+		@ApiResponse(responseCode = "403", description = "해당 상점에 대한 권한이 없습니다.")
 	})
 	public ResponseEntity<ProductInfo> updateProductStatus(
+		@Parameter(description = "회원 ID") @RequestHeader("Member-Id") UUID memberId,
 		@Parameter(description = "상품 ID") @PathVariable UUID id,
 		@Valid @RequestBody StatusRequest request
 	) {
-		ProductStatus status = request.status();
-		return ResponseEntity.ok(productService.updateStatus(id, status));
+		return ResponseEntity.ok(
+			productService.updateStatus(memberId, id, request.status())
+		);
 	}
 
 	@DeleteMapping("/{id}")

@@ -143,17 +143,28 @@ public class ProductService {
 	/**
 	 * 상품 상태를 변경합니다. (예: ON_SALE, HIDDEN, DISCONTINUED)
 	 *
-	 * @param id     상품 ID
-	 * @param status 변경할 상태
-	 * @return 변경된 상품 정보
+	 * <p>
+	 * 요청자(memberId)가 해당 상품이 속한 상점의 소유자인지 검증한 후,
+	 * 상품 상태를 변경합니다.
+	 * </p>
+	 *
+	 * @param memberId  요청자(판매자) ID
+	 * @param productId 상품 ID
+	 * @param status    변경할 상태
+	 * @return 상태가 변경된 상품 정보
 	 * @throws ProductNotFoundException 상품이 존재하지 않는 경우
+	 * @throws ShopNotFoundException  상점이 존재하지 않는 경우
+	 * @throws ShopForbiddenException 상점 소유자가 아닌 경우
 	 */
-	public ProductInfo updateStatus(UUID id, ProductStatus status) {
-		Product product = getProductOrThrow(id);
+	@Transactional
+	public ProductInfo updateStatus(UUID memberId, UUID productId, ProductStatus status) {
+		Product product = getProductOrThrow(productId);
+
+		validateShopOwnership(memberId, product.getShopId());
 
 		product.changeStatus(status);
-		Product saved = productRepository.save(product);
 
+		Product saved = productRepository.save(product);
 		productIndexProducer.sendProductUpdateEvent(saved);
 
 		return ProductInfo.from(saved);
