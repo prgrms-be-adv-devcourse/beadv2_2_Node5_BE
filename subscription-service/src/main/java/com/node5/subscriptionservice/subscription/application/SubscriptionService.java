@@ -1,18 +1,17 @@
 package com.node5.subscriptionservice.subscription.application;
 
 import com.node5.common.domain.ApiResponseDto;
-import com.node5.common.domain.PageInfoDto;
-import com.node5.common.domain.PagedResponseDto;
 import com.node5.subscriptionservice.subscription.application.dto.SubscriptionCreateCommand;
 import com.node5.subscriptionservice.subscription.application.dto.SubscriptionInfo;
 import com.node5.subscriptionservice.subscription.application.dto.SubscriptionUpdateCommand;
+import com.node5.subscriptionservice.subscription.client.ProductClient;
+import com.node5.subscriptionservice.subscription.client.dto.ProductInfoResponse;
 import com.node5.subscriptionservice.subscription.domain.*;
-import jakarta.persistence.EntityNotFoundException;
+import com.node5.subscriptionservice.subscription.exception.SubscriptionException;
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,52 +20,37 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
+import static com.node5.subscriptionservice.subscription.exception.SubscriptionErrorCode.*;
+
 @Service
 @RequiredArgsConstructor
 public class SubscriptionService {
 
     private final SubscriptionRepository subscriptionRepository;
     private final SubscriptionRecurrenceRuleRepository subscriptionRecurrenceRuleRepository;
+    private final ProductClient productClient;
 
-    public ResponseEntity<ApiResponseDto<SubscriptionInfo>> findById(UUID id) {
+    public SubscriptionInfo findById(UUID id) {
         Subscription subscription = subscriptionRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Subscription not found: " + id));
-
-        SubscriptionInfo subscriptionInfo = toSubscriptionInfo(subscription);
-
-        ApiResponseDto<SubscriptionInfo> responseDto = new ApiResponseDto<>(HttpStatus.OK.value(), "구독 조회 성공", subscriptionInfo);
-        return ResponseEntity.ok(responseDto);
+                .orElseThrow(() -> new SubscriptionException(SUBSCRIPTION_NOT_FOUND));
+        return toSubscriptionInfo(subscription);
     }
 
-    public ResponseEntity<ApiResponseDto<PagedResponseDto<SubscriptionInfo>>> findAllByMemberId(UUID memberId, Pageable pageable) {
-        Page<Subscription> page = subscriptionRepository.findAllByMemberId(memberId, pageable);
-
-        List<SubscriptionInfo> subscriptionInfos = page.getContent().stream()
-                .map(subscription -> toSubscriptionInfo(subscription))
-                .toList();
-
-        PageInfoDto pageInfo = new PageInfoDto(
-                page.getNumber(),
-                page.getSize(),
-                page.getTotalElements(),
-                page.getTotalPages()
-        );
-
-        PagedResponseDto<SubscriptionInfo> pagedResponse =
-                new PagedResponseDto<>(subscriptionInfos, pageInfo);
-
-        ApiResponseDto<PagedResponseDto<SubscriptionInfo>> response =
-                new ApiResponseDto<>(HttpStatus.OK.value(), "구독 목록 조회 성공", pagedResponse);
-
-        return ResponseEntity.ok(response);
+    public Page<SubscriptionInfo> findAllByMemberId(UUID memberId, Pageable pageable) {
+        Page<Subscription> subscriptions = subscriptionRepository.findAllByMemberId(memberId, pageable);
+        return subscriptions.map(this::toSubscriptionInfo);
     }
 
     @Transactional
-    public ResponseEntity<ApiResponseDto<SubscriptionInfo>> create(SubscriptionCreateCommand command) {
+    public SubscriptionInfo create(SubscriptionCreateCommand command) {
+        ProductInfoResponse productInfo = getProductInfo(command.productId());
+
         Subscription subscription = Subscription.create(
                 command.memberId(),
-                command.productId(),
-                command.pricePerItem(),
+                productInfo.id(),
+                productInfo.name(),
+                productInfo.thumbnailUrl(),
+                productInfo.price(),
                 command.quantity(),
                 command.deliveryAddress()
         );
@@ -79,7 +63,7 @@ public class SubscriptionService {
         );
 
         if (rules.isEmpty()) {
-            throw new IllegalArgumentException("No recurrence rules created");
+            throw new SubscriptionException(SUBSCRIPTION_RULE_NOT_FOUND);
         }
 
         subscription.calculateNextRunDate(rules);
@@ -87,16 +71,13 @@ public class SubscriptionService {
         Subscription savedSubscription = subscriptionRepository.save(subscription);
         subscriptionRecurrenceRuleRepository.saveAll(rules);
 
-        SubscriptionInfo subscriptionInfo = toSubscriptionInfo(savedSubscription);
-
-        ApiResponseDto<SubscriptionInfo> responseDto = new ApiResponseDto<>(HttpStatus.CREATED.value(), "구독 생성 성공", subscriptionInfo);
-        return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
+        return toSubscriptionInfo(savedSubscription);
     }
 
     @Transactional
-    public ResponseEntity<ApiResponseDto<SubscriptionInfo>> update(SubscriptionUpdateCommand command, UUID id) {
+    public SubscriptionInfo update(SubscriptionUpdateCommand command, UUID id) {
         Subscription subscription = subscriptionRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Subscription not found: " + id));
+                .orElseThrow(() -> new SubscriptionException(SUBSCRIPTION_NOT_FOUND));
 
         subscription.update(
                 command.pricePerItem(),
@@ -120,58 +101,65 @@ public class SubscriptionService {
             subscriptionRecurrenceRuleRepository.saveAll(newRules);
         }
 
-        SubscriptionInfo subscriptionInfo = toSubscriptionInfo(updatedSubscription);
-
-        ApiResponseDto<SubscriptionInfo> responseDto = new ApiResponseDto<>(HttpStatus.OK.value(), "구독 수정 성공", subscriptionInfo);
-        return ResponseEntity.ok(responseDto);
+        return toSubscriptionInfo(updatedSubscription);
     }
 
     @Transactional
-    public ResponseEntity<ApiResponseDto<SubscriptionInfo>> pause(UUID id) {
+    public SubscriptionInfo pause(UUID id) {
         Subscription subscription = subscriptionRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Subscription not found: " + id));
+                .orElseThrow(() -> new SubscriptionException(SUBSCRIPTION_NOT_FOUND));
 
         subscription.pause();
         Subscription updatedSubscription = subscriptionRepository.save(subscription);
 
-        SubscriptionInfo subscriptionInfo = toSubscriptionInfo(updatedSubscription);
-
-        ApiResponseDto<SubscriptionInfo> responseDto = new ApiResponseDto<>(HttpStatus.OK.value(), "구독 일시정지 성공", subscriptionInfo);
-        return ResponseEntity.ok(responseDto);
+        return toSubscriptionInfo(updatedSubscription);
     }
 
     @Transactional
-    public ResponseEntity<ApiResponseDto<SubscriptionInfo>> resume(UUID id) {
+    public SubscriptionInfo resume(UUID id) {
         Subscription subscription = subscriptionRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Subscription not found: " + id));
+                .orElseThrow(() -> new SubscriptionException(SUBSCRIPTION_NOT_FOUND));
 
         subscription.resume();
         Subscription updatedSubscription = subscriptionRepository.save(subscription);
 
-        SubscriptionInfo subscriptionInfo = toSubscriptionInfo(updatedSubscription);
-
-        ApiResponseDto<SubscriptionInfo> responseDto = new ApiResponseDto<>(HttpStatus.OK.value(), "구독 재개 성공", subscriptionInfo);
-        return ResponseEntity.ok(responseDto);
+        return toSubscriptionInfo(updatedSubscription);
     }
 
     @Transactional
-    public ResponseEntity<ApiResponseDto<SubscriptionInfo>> delete(UUID id) {
+    public SubscriptionInfo delete(UUID id) {
         Subscription subscription = subscriptionRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Subscription not found: " + id));
+                .orElseThrow(() -> new SubscriptionException(SUBSCRIPTION_NOT_FOUND));
 
         subscription.delete();
-        subscriptionRepository.save(subscription);
+        Subscription saved = subscriptionRepository.save(subscription);
 
-        ApiResponseDto<SubscriptionInfo> responseDto = new ApiResponseDto<>(HttpStatus.NO_CONTENT.value(), "구독 삭제 성공", null);
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(responseDto);
+        return toSubscriptionInfo(saved);
+    }
+
+    private ProductInfoResponse getProductInfo(UUID productId) {
+        try {
+            ApiResponseDto<ProductInfoResponse> response = productClient.findById(productId).getBody();
+            if (response == null || response.data() == null) {
+                throw new SubscriptionException(SUBSCRIPTION_PRODUCT_NOT_FOUND);
+            }
+            if (response.data().id() == null || response.data().name() == null || response.data().price() == null) {
+                throw new SubscriptionException(SUBSCRIPTION_PRODUCT_REQUEST_FAILED);
+            }
+            return response.data();
+        } catch (SubscriptionException exception) {
+            throw exception;
+        } catch (FeignException.NotFound ex) {
+            throw new SubscriptionException(SUBSCRIPTION_PRODUCT_NOT_FOUND);
+        } catch (FeignException ex) {
+            throw new SubscriptionException(SUBSCRIPTION_PRODUCT_REQUEST_FAILED);
+        } catch (Exception ex) {
+            throw new SubscriptionException(SUBSCRIPTION_PRODUCT_REQUEST_FAILED);
+        }
     }
 
     private List<SubscriptionRecurrenceRule> createSubscriptionRecurrenceRule(UUID subscriptionId, RecurrenceType recurrenceType, List<DayOfWeek> dayOfWeek, Integer dayOfMonth) {
         if (recurrenceType == RecurrenceType.WEEKLY) {
-            if (dayOfWeek == null || dayOfWeek.isEmpty()) {
-                throw new IllegalArgumentException("DayOfWeek not included");
-            }
-
             return dayOfWeek.stream()
                     .map(day -> SubscriptionRecurrenceRule.create(
                             subscriptionId,
@@ -180,12 +168,6 @@ public class SubscriptionService {
                             dayOfMonth))
                     .toList();
         }  else if (recurrenceType ==  RecurrenceType.MONTHLY) {
-            if (dayOfMonth == null) {
-                throw new IllegalArgumentException("dayOfMonth not included");
-            }
-            if (dayOfMonth < 1 || dayOfMonth > 31) {
-                throw new IllegalArgumentException("dayOfMonth must be between 1 and 31");
-            }
             return List.of(SubscriptionRecurrenceRule.create(
                     subscriptionId,
                     recurrenceType,
@@ -201,7 +183,7 @@ public class SubscriptionService {
                 subscriptionRecurrenceRuleRepository.findBySubscriptionId(subscription.getId());
 
         if (rules.isEmpty()) {
-            throw new EntityNotFoundException("Recurrence rules not found for subscription: " + subscription.getId());
+            throw new SubscriptionException(SUBSCRIPTION_RULE_NOT_FOUND);
         }
 
         RecurrenceType ruleType = rules.get(0).getRecurrenceType();
@@ -211,6 +193,6 @@ public class SubscriptionService {
                 .toList();
         Integer dayOfMonth = rules.get(0).getDayOfMonth();
 
-        return SubscriptionInfo.from(subscription, ruleType, dayOfWeek, dayOfMonth);
+        return SubscriptionInfo.of(subscription, ruleType, dayOfWeek, dayOfMonth);
     }
 }

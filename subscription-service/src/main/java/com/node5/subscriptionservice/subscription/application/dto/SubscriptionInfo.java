@@ -13,6 +13,9 @@ import java.util.UUID;
 
 public record SubscriptionInfo(
         UUID id,
+        UUID productId,
+        String productName,
+        String thumbnailUrl,
         String subscriptionStatus,
         BigDecimal pricePerItem,
         Integer quantity,
@@ -25,7 +28,7 @@ public record SubscriptionInfo(
         List<Integer> dayOfWeek,
         Integer dayOfMonth
 ) {
-    public static SubscriptionInfo from(Subscription subscription, RecurrenceType recurrenceType, List<DayOfWeek> dayOfWeek, Integer dayOfMonth) {
+    public static SubscriptionInfo of(Subscription subscription, RecurrenceType recurrenceType, List<DayOfWeek> dayOfWeek, Integer dayOfMonth) {
         List<Integer> dayOfWeekList =
                 dayOfWeek == null
                         ? List.of()
@@ -33,6 +36,9 @@ public record SubscriptionInfo(
 
         return new SubscriptionInfo(
                 subscription.getId(),
+                subscription.getProductId(),
+                subscription.getProductName(),
+                subscription.getThumbnailUrl(),
                 subscription.getSubscriptionStatus().toString(),
                 subscription.getPricePerItem(),
                 subscription.getQuantity(),

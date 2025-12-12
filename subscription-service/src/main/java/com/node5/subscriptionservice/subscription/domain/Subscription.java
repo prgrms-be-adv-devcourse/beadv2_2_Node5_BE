@@ -1,6 +1,7 @@
 package com.node5.subscriptionservice.subscription.domain;
 
 import com.node5.common.domain.BaseEntity;
+import com.node5.subscriptionservice.subscription.exception.SubscriptionException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -11,6 +12,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+
+import static com.node5.subscriptionservice.subscription.exception.SubscriptionErrorCode.SUBSCRIPTION_INVALID_STATE;
+import static com.node5.subscriptionservice.subscription.exception.SubscriptionErrorCode.SUBSCRIPTION_RULE_NOT_FOUND;
 
 @Entity
 @Getter
@@ -27,6 +31,12 @@ public class Subscription extends BaseEntity {
 
     @Column(name = "product_id", nullable = false)
     private UUID productId;
+
+    @Column(nullable = false, length = 100)
+    private String productName;
+
+    @Column(name = "thumbnail_url")
+    private String thumbnailUrl;
 
     @Column(name = "price_per_item", nullable = false)
     private BigDecimal pricePerItem;
@@ -53,6 +63,8 @@ public class Subscription extends BaseEntity {
     private Subscription(UUID id,
                         UUID memberId,
                         UUID productId,
+                        String productName,
+                        String thumbnailUrl,
                         BigDecimal pricePerItem,
                         Integer quantity,
                         BigDecimal totalPrice,
@@ -62,6 +74,8 @@ public class Subscription extends BaseEntity {
         this.id = id;
         this.memberId = memberId;
         this.productId = productId;
+        this.productName = productName;
+        this.thumbnailUrl = thumbnailUrl;
         this.pricePerItem = pricePerItem;
         this.quantity = quantity;
         this.totalPrice = totalPrice;
@@ -73,15 +87,18 @@ public class Subscription extends BaseEntity {
 
     public static Subscription create(UUID memberId,
                                 UUID productId,
+                                String productName,
+                                String thumbnailUrl,
                                 BigDecimal pricePerItem,
                                 Integer quantity,
                                 String deliveryAddress){
-        validatePriceAndQuantity(pricePerItem, quantity);
         BigDecimal totalPrice = pricePerItem.multiply(BigDecimal.valueOf(quantity));
         return new Subscription(
                 UUID.randomUUID(),
                 memberId,
                 productId,
+                productName,
+                thumbnailUrl,
                 pricePerItem,
                 quantity,
                 totalPrice,
@@ -98,10 +115,8 @@ public class Subscription extends BaseEntity {
         // ACTIVE, PAUSED, FAILED 일때 수정 가능
         if (currentStatus == SubscriptionStatus.CANCELLED
                 || currentStatus == SubscriptionStatus.UNAVAILABLE) {
-            throw new IllegalStateException("Invalid state for update: " + currentStatus);
+            throw new SubscriptionException(SUBSCRIPTION_INVALID_STATE);
         }
-
-        validatePriceAndQuantity(pricePerItem, quantity);
 
         BigDecimal totalPrice = pricePerItem.multiply(BigDecimal.valueOf(quantity));
         this.pricePerItem = pricePerItem;
@@ -116,7 +131,7 @@ public class Subscription extends BaseEntity {
         this.nextRunDate = rules.stream()
                 .map(rule -> rule.calculateNextRunDate(today))
                 .min(LocalDate::compareTo)
-                .orElseThrow(() -> new IllegalStateException("No recurrence rules found"));
+                .orElseThrow(() -> new SubscriptionException(SUBSCRIPTION_RULE_NOT_FOUND));
     }
 
     public void pause(){
@@ -125,7 +140,7 @@ public class Subscription extends BaseEntity {
         if (currentStatus == SubscriptionStatus.PAUSED
                 || currentStatus == SubscriptionStatus.CANCELLED
                 || currentStatus == SubscriptionStatus.UNAVAILABLE) {
-            throw new IllegalStateException("Invalid state for pause: " + currentStatus);
+            throw new SubscriptionException(SUBSCRIPTION_INVALID_STATE);
         }
         this.subscriptionStatus = SubscriptionStatus.PAUSED;
     }
@@ -137,7 +152,7 @@ public class Subscription extends BaseEntity {
                 || currentStatus == SubscriptionStatus.FAILED
                 || currentStatus == SubscriptionStatus.CANCELLED
                 || currentStatus == SubscriptionStatus.UNAVAILABLE) {
-            throw new IllegalStateException("Invalid state for resume: " + currentStatus);
+            throw new SubscriptionException(SUBSCRIPTION_INVALID_STATE);
         }
         this.subscriptionStatus = SubscriptionStatus.ACTIVE;
     }
@@ -147,17 +162,8 @@ public class Subscription extends BaseEntity {
         // ACTIVE, PAUSED, FAILED 일때 해지 가능
         if (currentStatus == SubscriptionStatus.CANCELLED
                 || currentStatus == SubscriptionStatus.UNAVAILABLE) {
-            throw new IllegalStateException("Invalid state for resume: " + currentStatus);
+            throw new SubscriptionException(SUBSCRIPTION_INVALID_STATE);
         }
         this.subscriptionStatus = SubscriptionStatus.CANCELLED;
-    }
-
-    private static void validatePriceAndQuantity(BigDecimal pricePerItem, Integer quantity) {
-        if (pricePerItem == null || quantity == null) {
-            throw new IllegalArgumentException("pricePerItem and quantity not included");
-        }
-        if (pricePerItem.signum() <= 0 || quantity <= 0) {
-            throw new IllegalArgumentException("pricePerItem and quantity must more than 0");
-        }
     }
 }
