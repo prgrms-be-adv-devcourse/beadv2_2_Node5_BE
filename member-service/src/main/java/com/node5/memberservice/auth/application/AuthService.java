@@ -1,6 +1,7 @@
 package com.node5.memberservice.auth.application;
 
 import com.node5.memberservice.auth.application.dto.*;
+import com.node5.memberservice.auth.client.BillingClient;
 import com.node5.memberservice.auth.domain.OAuth;
 import com.node5.memberservice.auth.domain.OAuthRepository;
 import com.node5.memberservice.auth.exception.AuthErrorCode;
@@ -36,6 +37,7 @@ public class AuthService {
     private final JwtProvider jwtProvider;
     private final JavaMailSender mailSender;
     private final RedisService redisService;
+    private final BillingClient billingClient;
 
     @Value("${spring.mail.username}")
     private String sender;
@@ -47,7 +49,8 @@ public class AuthService {
             List<OAuthProviderService> providerList,
             JwtProvider jwtProvider,
             JavaMailSender mailSender,
-            RedisService redisService
+            RedisService redisService,
+            BillingClient billingClient
     ) {
         this.oAuthRepository = oAuthRepository;
         this.memberRepository = memberRepository;
@@ -55,6 +58,7 @@ public class AuthService {
         this.jwtProvider = jwtProvider;
         this.mailSender = mailSender;
         this.redisService = redisService;
+        this.billingClient = billingClient;
     }
 
     public LoginInfoResponse login(OAuthLoginCommand command) {
@@ -104,7 +108,7 @@ public class AuthService {
             oAuthRepository.save(oAuth);
         }
 
-        // Todo - POST /billing-service/intenal/wallets/{memberId}
+        billingClient.createWallet(member.getId());
 
         JwtMemberInfo jwtMemberInfo = JwtMemberInfo.from(member);
         String accessToken = jwtProvider.generateAccessToken(jwtMemberInfo);
