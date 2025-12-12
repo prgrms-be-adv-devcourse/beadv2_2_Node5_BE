@@ -21,15 +21,13 @@ import com.node5.catalogservice.cart.application.CartService;
 import com.node5.catalogservice.cart.application.dto.CartItemInfo;
 import com.node5.catalogservice.cart.presentation.dto.CartItemRequest;
 import com.node5.catalogservice.cart.presentation.dto.CartItemUpdateRequest;
-import com.node5.common.domain.ApiResponseDto;
-import com.node5.common.domain.PageInfoDto;
-import com.node5.common.domain.PagedResponseDto;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -45,27 +43,11 @@ public class CartController {
 	@ApiResponses({
 		@ApiResponse(responseCode = "200", description = "장바구니 조회 성공")
 	})
-	public ResponseEntity<ApiResponseDto<PagedResponseDto<CartItemInfo>>> getCartItems(
-		@Parameter(description = "회원 ID (UUID 문자열)") @RequestParam("memberId") String memberId,
+	public ResponseEntity<Page<CartItemInfo>> getCartItems(
+		@Parameter(description = "회원 ID") @RequestParam("memberId") UUID memberId,
 		@ParameterObject Pageable pageable
 	) {
-		UUID memberUuid = UUID.fromString(memberId);
-
-		Page<CartItemInfo> page = cartService.getCartItems(memberUuid, pageable);
-
-		PagedResponseDto<CartItemInfo> paged = new PagedResponseDto<>(
-			page.getContent(),
-			new PageInfoDto(
-				page.getNumber(),
-				page.getSize(),
-				page.getTotalElements(),
-				page.getTotalPages()
-			)
-		);
-
-		return ResponseEntity.ok(
-			new ApiResponseDto<>(HttpStatus.OK.value(), "장바구니 조회 성공", paged)
-		);
+		return ResponseEntity.ok(cartService.getCartItems(memberId, pageable));
 	}
 
 	@PostMapping
@@ -74,12 +56,11 @@ public class CartController {
 		@ApiResponse(responseCode = "201", description = "상품 장바구니 추가 성공"),
 		@ApiResponse(responseCode = "400", description = "요청 값이 유효하지 않습니다.")
 	})
-	public ResponseEntity<ApiResponseDto<CartItemInfo>> addCartItem(@RequestBody CartItemRequest request) {
+	public ResponseEntity<CartItemInfo> addCartItem(
+		@Valid @RequestBody CartItemRequest request
+	) {
 		CartItemInfo result = cartService.addItem(request.toCommand());
-
-		return ResponseEntity.status(HttpStatus.CREATED.value()).body(
-			new ApiResponseDto<>(HttpStatus.CREATED.value(), "상품 장바구니 추가 성공", result)
-		);
+		return ResponseEntity.status(HttpStatus.CREATED).body(result);
 	}
 
 	@PatchMapping("/{id}")
@@ -88,15 +69,11 @@ public class CartController {
 		@ApiResponse(responseCode = "200", description = "장바구니 수량 변경 성공"),
 		@ApiResponse(responseCode = "404", description = "해당 ID의 장바구니 항목이 없습니다.")
 	})
-	public ResponseEntity<ApiResponseDto<CartItemInfo>> updateCartItem(
+	public ResponseEntity<CartItemInfo> updateCartItem(
 		@Parameter(description = "장바구니 항목 ID") @PathVariable("id") UUID id,
-		@RequestBody CartItemUpdateRequest request
+		@Valid @RequestBody CartItemUpdateRequest request
 	) {
-		CartItemInfo result = cartService.updateItem(id, request.toCommand());
-
-		return ResponseEntity.ok(
-			new ApiResponseDto<>(HttpStatus.OK.value(), "장바구니 수량 변경 성공", result)
-		);
+		return ResponseEntity.ok(cartService.updateItem(id, request.toCommand()));
 	}
 
 	@DeleteMapping("/{id}")
@@ -105,7 +82,9 @@ public class CartController {
 		@ApiResponse(responseCode = "204", description = "장바구니 상품 삭제 성공"),
 		@ApiResponse(responseCode = "404", description = "해당 ID의 장바구니 항목이 없습니다.")
 	})
-	public ResponseEntity<Void> removeItem(@Parameter(description = "장바구니 항목 ID") @PathVariable("id") UUID id) {
+	public ResponseEntity<Void> removeItem(
+		@Parameter(description = "장바구니 항목 ID") @PathVariable("id") UUID id
+	) {
 		cartService.removeItem(id);
 		return ResponseEntity.noContent().build();
 	}
@@ -116,9 +95,9 @@ public class CartController {
 		@ApiResponse(responseCode = "204", description = "장바구니 비우기 성공")
 	})
 	public ResponseEntity<Void> clearCart(
-		@Parameter(description = "회원 ID (UUID 문자열)") @RequestParam("memberId") String memberId
+		@Parameter(description = "회원 ID") @RequestParam("memberId") UUID memberId
 	) {
-		cartService.clearCart(UUID.fromString(memberId));
+		cartService.clearCart(memberId);
 		return ResponseEntity.noContent().build();
 	}
 }

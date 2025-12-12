@@ -30,15 +30,13 @@ import com.node5.catalogservice.product.presentation.dto.PresignedUrlResponse;
 import com.node5.catalogservice.product.presentation.dto.ProductRequest;
 import com.node5.catalogservice.product.presentation.dto.ProductUpdateRequest;
 import com.node5.catalogservice.product.presentation.dto.StatusRequest;
-import com.node5.common.domain.ApiResponseDto;
-import com.node5.common.domain.PageInfoDto;
-import com.node5.common.domain.PagedResponseDto;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -55,25 +53,10 @@ public class ProductController {
 	@ApiResponses({
 		@ApiResponse(responseCode = "200", description = "판매 중인 상품 목록 조회 성공")
 	})
-	public ResponseEntity<ApiResponseDto<PagedResponseDto<ProductInfo>>> getProducts(
+	public ResponseEntity<Page<ProductInfo>> getProducts(
 		@ParameterObject Pageable pageable
 	) {
-		Page<ProductInfo> page = productService.getOnSaleProducts(pageable);
-
-		PagedResponseDto<ProductInfo> paged = new PagedResponseDto<>(
-			page.getContent(),
-			new PageInfoDto(
-				page.getNumber(),
-				page.getSize(),
-				page.getTotalElements(),
-				page.getTotalPages()
-			)
-		);
-
-		ApiResponseDto<PagedResponseDto<ProductInfo>> response =
-			new ApiResponseDto<>(HttpStatus.OK.value(), "판매 중인 상품 목록 조회 성공", paged);
-
-		return ResponseEntity.ok(response);
+		return ResponseEntity.ok(productService.getOnSaleProducts(pageable));
 	}
 
 	@GetMapping("/{id}")
@@ -82,15 +65,10 @@ public class ProductController {
 		@ApiResponse(responseCode = "200", description = "판매 중 상품 조회 성공"),
 		@ApiResponse(responseCode = "404", description = "해당 ID의 판매 중인 상품이 없습니다.")
 	})
-	public ResponseEntity<ApiResponseDto<ProductInfo>> getProduct(
+	public ResponseEntity<ProductInfo> getProduct(
 		@Parameter(description = "상품 ID") @PathVariable UUID id
 	) {
-		ProductInfo result = productService.getOnSaleProduct(id);
-
-		ApiResponseDto<ProductInfo> response =
-			new ApiResponseDto<>(HttpStatus.OK.value(), "판매 중 상품 조회 성공", result);
-
-		return ResponseEntity.ok(response);
+		return ResponseEntity.ok(productService.getOnSaleProduct(id));
 	}
 
 	@GetMapping("/all")
@@ -98,31 +76,21 @@ public class ProductController {
 	@ApiResponses({
 		@ApiResponse(responseCode = "200", description = "전체 상품 목록 조회 성공")
 	})
-	public ResponseEntity<ApiResponseDto<PagedResponseDto<ProductInfo>>> getAllProducts(
+	public ResponseEntity<Page<ProductInfo>> getAllProducts(
 		@ParameterObject Pageable pageable
 	) {
-		Page<ProductInfo> page = productService.getProducts(pageable);
-
-		PagedResponseDto<ProductInfo> paged = new PagedResponseDto<>(
-			page.getContent(),
-			new PageInfoDto(
-				page.getNumber(),
-				page.getSize(),
-				page.getTotalElements(),
-				page.getTotalPages()
-			)
-		);
-
-		ApiResponseDto<PagedResponseDto<ProductInfo>> response =
-			new ApiResponseDto<>(HttpStatus.OK.value(), "전체 상품 목록 조회 성공", paged);
-
-		return ResponseEntity.ok(response);
+		return ResponseEntity.ok(productService.getProducts(pageable));
 	}
 
 	@PostMapping
+	@Operation(summary = "상품 생성", description = "회원 ID 헤더를 통해 새로운 상품을 등록합니다.")
+	@ApiResponses({
+		@ApiResponse(responseCode = "201", description = "상품 생성 성공"),
+		@ApiResponse(responseCode = "400", description = "요청 값이 유효하지 않습니다.")
+	})
 	public ResponseEntity<ProductInfo> createProduct(
-		@RequestHeader("Member-Id") UUID memberId,
-		@RequestBody ProductRequest request
+		@Parameter(description = "회원 ID") @RequestHeader("Member-Id") UUID memberId,
+		@Valid @RequestBody ProductRequest request
 	) {
 		ProductCommand command = request.toCommand();
 		ProductInfo info = productService.createProduct(memberId, command);
@@ -131,15 +99,21 @@ public class ProductController {
 	}
 
 	@PutMapping("/{productId}")
+	@Operation(summary = "상품 수정", description = "상품 기본 정보를 수정합니다.")
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "상품 수정 성공"),
+		@ApiResponse(responseCode = "400", description = "요청 값이 유효하지 않습니다."),
+		@ApiResponse(responseCode = "404", description = "상품이 존재하지 않음")
+	})
 	public ResponseEntity<ProductInfo> updateProduct(
-		@RequestHeader("Member-Id") UUID memberId,
-		@PathVariable UUID productId,
-		@RequestBody ProductUpdateRequest request
+		@Parameter(description = "회원 ID") @RequestHeader("Member-Id") UUID memberId,
+		@Parameter(description = "상품 ID") @PathVariable UUID productId,
+		@Valid @RequestBody ProductUpdateRequest request
 	) {
 		ProductUpdateCommand command = request.toCommand();
-		ProductInfo response = productService.updateProduct(memberId, productId, command);
-
-		return ResponseEntity.ok(response);
+		return ResponseEntity.ok(
+			productService.updateProduct(memberId, productId, command)
+		);
 	}
 
 	@PatchMapping("/{id}/status")
@@ -148,17 +122,12 @@ public class ProductController {
 		@ApiResponse(responseCode = "200", description = "상품 상태 변경 성공"),
 		@ApiResponse(responseCode = "404", description = "해당 ID의 상품이 없습니다.")
 	})
-	public ResponseEntity<ApiResponseDto<ProductInfo>> updateProductStatus(
+	public ResponseEntity<ProductInfo> updateProductStatus(
 		@Parameter(description = "상품 ID") @PathVariable UUID id,
-		@RequestBody StatusRequest request
+		@Valid @RequestBody StatusRequest request
 	) {
 		ProductStatus status = request.status();
-		ProductInfo result = productService.updateStatus(id, status);
-
-		ApiResponseDto<ProductInfo> response =
-			new ApiResponseDto<>(HttpStatus.OK.value(), "상품 상태 변경 성공", result);
-
-		return ResponseEntity.ok(response);
+		return ResponseEntity.ok(productService.updateStatus(id, status));
 	}
 
 	@DeleteMapping("/{id}")
@@ -167,23 +136,25 @@ public class ProductController {
 		@ApiResponse(responseCode = "204", description = "상품 판매 중단 성공"),
 		@ApiResponse(responseCode = "404", description = "해당 ID의 상품이 없습니다.")
 	})
-	public ResponseEntity<Void> discontinue(@Parameter(description = "상품 ID") @PathVariable UUID id) {
+	public ResponseEntity<Void> discontinue(
+		@Parameter(description = "상품 ID") @PathVariable UUID id
+	) {
 		productService.discontinueProduct(id);
 		return ResponseEntity.noContent().build();
 	}
 
 	@PostMapping("/presigned-url")
+	@Operation(summary = "상품 이미지 업로드 URL 발급", description = "상품 이미지 업로드용 presigned URL을 발급합니다.")
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "presigned URL 발급 성공"),
+		@ApiResponse(responseCode = "400", description = "요청 값이 유효하지 않습니다.")
+	})
 	public ResponseEntity<PresignedUrlResponse> createPresignedUrl(
-		@RequestBody PresignedUrlRequest request
+		@Valid @RequestBody PresignedUrlRequest request
 	) {
 		PresignedUrlInfo info =
 			productImageService.createUploadUrl(request.fileName(), request.contentType());
 
-		PresignedUrlResponse response = new PresignedUrlResponse(
-			info.url(),
-			info.key()
-		);
-
-		return ResponseEntity.ok(response);
+		return ResponseEntity.ok(new PresignedUrlResponse(info.url(), info.key()));
 	}
 }
