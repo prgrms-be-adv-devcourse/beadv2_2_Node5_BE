@@ -9,9 +9,6 @@ import java.util.List;
 import java.util.UUID;
 
 public record SubscriptionCreateRequest(
-        @NotNull(message = "회원 ID는 필수 입력값입니다.")
-        UUID memberId,  // TODO: 회원ID를 내부에서 확인하도록 수정
-
         @NotNull(message = "상품 ID는 필수 입력값입니다.")
         UUID productId,
 
@@ -67,7 +64,6 @@ public record SubscriptionCreateRequest(
         }
 
         return new SubscriptionCreateCommand(
-                memberId,
                 productId,
                 quantity,
                 deliveryAddress,

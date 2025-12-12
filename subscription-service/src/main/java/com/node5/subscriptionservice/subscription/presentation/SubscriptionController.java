@@ -30,17 +30,16 @@ public class SubscriptionController {
         return ResponseEntity.ok(subscriptionService.findById(id));
     }
 
-    // TODO: 회원ID를 내부에서 확인하도록 수정
     @Operation(summary = "구독 전체 조회", description = "회원의 전체 구독 리스트를 조회합니다.")
     @GetMapping
-    public ResponseEntity<Page<SubscriptionInfo>> findAllByMemberId(@RequestParam UUID memberId, Pageable pageable) {
+    public ResponseEntity<Page<SubscriptionInfo>> findAllByMemberId(@RequestHeader("Member-Id") UUID memberId, Pageable pageable) {
         return ResponseEntity.ok(subscriptionService.findAllByMemberId(memberId, pageable));
     }
 
     @Operation(summary = "구독 생성", description = "새로운 구독을 생성합니다")
     @PostMapping
-    public ResponseEntity<SubscriptionInfo> create(@RequestBody @Valid SubscriptionCreateRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(subscriptionService.create(request.toCommand()));
+    public ResponseEntity<SubscriptionInfo> create(@RequestBody @Valid SubscriptionCreateRequest request, @RequestHeader("Member-Id") UUID memberId) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(subscriptionService.create(request.toCommand(), memberId));
     }
 
     @Operation(summary = "구독 수정", description = "구독 정보를 수정합니다.")
