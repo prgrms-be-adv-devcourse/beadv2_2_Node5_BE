@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.node5.catalogservice.cart.application.CartService;
@@ -44,7 +44,7 @@ public class CartController {
 		@ApiResponse(responseCode = "200", description = "장바구니 조회 성공")
 	})
 	public ResponseEntity<Page<CartItemInfo>> getCartItems(
-		@Parameter(description = "회원 ID") @RequestParam("memberId") UUID memberId,
+		@Parameter(description = "회원 ID", required = true) @RequestHeader("Member-Id") UUID memberId,
 		@ParameterObject Pageable pageable
 	) {
 		return ResponseEntity.ok(cartService.getCartItems(memberId, pageable));
@@ -57,9 +57,10 @@ public class CartController {
 		@ApiResponse(responseCode = "400", description = "요청 값이 유효하지 않습니다.")
 	})
 	public ResponseEntity<CartItemInfo> addCartItem(
+		@RequestHeader("Member-Id") UUID memberId,
 		@Valid @RequestBody CartItemRequest request
 	) {
-		CartItemInfo result = cartService.addItem(request.toCommand());
+		CartItemInfo result = cartService.addItem(request.toCommand(memberId));
 		return ResponseEntity.status(HttpStatus.CREATED).body(result);
 	}
 
@@ -70,10 +71,11 @@ public class CartController {
 		@ApiResponse(responseCode = "404", description = "해당 ID의 장바구니 항목이 없습니다.")
 	})
 	public ResponseEntity<CartItemInfo> updateCartItem(
-		@Parameter(description = "장바구니 항목 ID") @PathVariable("id") UUID id,
+		@RequestHeader("Member-Id") UUID memberId,
+		@PathVariable UUID id,
 		@Valid @RequestBody CartItemUpdateRequest request
 	) {
-		return ResponseEntity.ok(cartService.updateItem(id, request.toCommand()));
+		return ResponseEntity.ok(cartService.updateItem(memberId, id, request.toCommand()));
 	}
 
 	@DeleteMapping("/{id}")
@@ -83,9 +85,10 @@ public class CartController {
 		@ApiResponse(responseCode = "404", description = "해당 ID의 장바구니 항목이 없습니다.")
 	})
 	public ResponseEntity<Void> removeItem(
-		@Parameter(description = "장바구니 항목 ID") @PathVariable("id") UUID id
+		@RequestHeader("Member-Id") UUID memberId,
+		@PathVariable UUID id
 	) {
-		cartService.removeItem(id);
+		cartService.removeItem(memberId, id);
 		return ResponseEntity.noContent().build();
 	}
 
@@ -95,7 +98,7 @@ public class CartController {
 		@ApiResponse(responseCode = "204", description = "장바구니 비우기 성공")
 	})
 	public ResponseEntity<Void> clearCart(
-		@Parameter(description = "회원 ID") @RequestParam("memberId") UUID memberId
+		@Parameter(description = "회원 ID", required = true) @RequestHeader("Member-Id") UUID memberId
 	) {
 		cartService.clearCart(memberId);
 		return ResponseEntity.noContent().build();
