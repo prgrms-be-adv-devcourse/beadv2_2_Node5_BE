@@ -12,18 +12,23 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.node5.catalogservice.product.application.ProductImageService;
 import com.node5.catalogservice.product.application.ProductService;
 import com.node5.catalogservice.product.application.dto.PresignedUrlInfo;
+import com.node5.catalogservice.product.application.dto.ProductCommand;
 import com.node5.catalogservice.product.application.dto.ProductInfo;
+import com.node5.catalogservice.product.application.dto.ProductUpdateCommand;
 import com.node5.catalogservice.product.domain.ProductStatus;
 import com.node5.catalogservice.product.presentation.dto.PresignedUrlRequest;
 import com.node5.catalogservice.product.presentation.dto.PresignedUrlResponse;
 import com.node5.catalogservice.product.presentation.dto.ProductRequest;
+import com.node5.catalogservice.product.presentation.dto.ProductUpdateRequest;
 import com.node5.catalogservice.product.presentation.dto.StatusRequest;
 import com.node5.common.domain.ApiResponseDto;
 import com.node5.common.domain.PageInfoDto;
@@ -115,36 +120,24 @@ public class ProductController {
 	}
 
 	@PostMapping
-	@Operation(summary = "상품 등록", description = "판매할 상품을 신규로 등록합니다.")
-	@ApiResponses({
-		@ApiResponse(responseCode = "201", description = "상품 등록 성공"),
-		@ApiResponse(responseCode = "400", description = "요청 값이 유효하지 않습니다.")
-	})
-	public ResponseEntity<ApiResponseDto<ProductInfo>> createProduct(
+	public ResponseEntity<ProductInfo> createProduct(
+		@RequestHeader("Member-Id") UUID memberId,
 		@RequestBody ProductRequest request
 	) {
-		ProductInfo result = productService.createProduct(request.toCreateCommand());
+		ProductCommand command = request.toCommand();
+		ProductInfo info = productService.createProduct(memberId, command);
 
-		ApiResponseDto<ProductInfo> response =
-			new ApiResponseDto<>(HttpStatus.CREATED.value(), "상품 등록 성공", result);
-
-		return ResponseEntity.status(HttpStatus.CREATED).body(response);
+		return ResponseEntity.status(HttpStatus.CREATED).body(info);
 	}
 
-	@PatchMapping("/{id}")
-	@Operation(summary = "상품 정보 수정", description = "상품 ID로 기존 상품 정보를 수정합니다.")
-	@ApiResponses({
-		@ApiResponse(responseCode = "200", description = "상품 정보 수정 성공"),
-		@ApiResponse(responseCode = "404", description = "해당 ID의 상품이 없습니다.")
-	})
-	public ResponseEntity<ApiResponseDto<ProductInfo>> updateProduct(
-		@Parameter(description = "상품 ID") @PathVariable UUID id,
-		@RequestBody ProductRequest request
+	@PutMapping("/{productId}")
+	public ResponseEntity<ProductInfo> updateProduct(
+		@RequestHeader("Member-Id") UUID memberId,
+		@PathVariable UUID productId,
+		@RequestBody ProductUpdateRequest request
 	) {
-		ProductInfo result = productService.updateProduct(id, request.toUpdateCommand());
-
-		ApiResponseDto<ProductInfo> response =
-			new ApiResponseDto<>(HttpStatus.OK.value(), "상품 정보 수정 성공", result);
+		ProductUpdateCommand command = request.toCommand();
+		ProductInfo response = productService.updateProduct(memberId, productId, command);
 
 		return ResponseEntity.ok(response);
 	}

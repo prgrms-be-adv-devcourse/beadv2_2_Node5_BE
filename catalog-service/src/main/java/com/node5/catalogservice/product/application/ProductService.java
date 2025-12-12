@@ -13,7 +13,9 @@ import com.node5.catalogservice.product.application.dto.ProductUpdateCommand;
 import com.node5.catalogservice.product.domain.Product;
 import com.node5.catalogservice.product.domain.ProductRepository;
 import com.node5.catalogservice.product.domain.ProductStatus;
+import com.node5.catalogservice.shop.client.ShopServiceClient;
 
+import feign.FeignException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
@@ -23,6 +25,7 @@ public class ProductService {
 
 	private final ProductRepository productRepository;
 	private final ProductIndexProducer productIndexProducer;
+	private final ShopServiceClient shopServiceClient;
 
 	public Page<ProductInfo> getOnSaleProducts(Pageable pageable) {
 		Page<Product> page = productRepository.findByStatus(ProductStatus.ON_SALE, pageable);
@@ -42,7 +45,11 @@ public class ProductService {
 	}
 
 	@Transactional
-	public ProductInfo createProduct(ProductCommand command) {
+	public ProductInfo createProduct(UUID memberId, ProductCommand command) {
+		UUID shopId = command.shopId();
+
+		validateShopOwnership(memberId, shopId);
+
 		Product product = Product.create(
 			command.shopId(),
 			command.name(),
@@ -55,16 +62,17 @@ public class ProductService {
 		);
 
 		Product saved = productRepository.save(product);
-
 		productIndexProducer.sendProductIndexEvent(saved);
 
 		return ProductInfo.from(saved);
 	}
 
 	@Transactional
-	public ProductInfo updateProduct(UUID id, ProductUpdateCommand command) {
-		Product product = productRepository.findById(id)
-			.orElseThrow(() -> new IllegalArgumentException("Product not found. id=" + id));
+	public ProductInfo updateProduct(UUID memberId, UUID productId, ProductUpdateCommand command) {
+		Product product = productRepository.findById(productId)
+			.orElseThrow(() -> new IllegalArgumentException("Product not found. id=" + productId));
+
+		validateShopOwnership(memberId, product.getShopId());
 
 		product.applyPatch(
 			command.name(),
@@ -76,7 +84,6 @@ public class ProductService {
 		);
 
 		Product saved = productRepository.save(product);
-
 		productIndexProducer.sendProductUpdateEvent(saved);
 
 		return ProductInfo.from(saved);
@@ -100,5 +107,13 @@ public class ProductService {
 
 		product.discontinue();
 		productRepository.save(product);
+	}
+
+	private void validateShopOwnership(UUID memberId, UUID shopId) {
+		try {
+			shopServiceClient.getShopInfo(memberId, shopId);
+		} catch (FeignException.NotFound e) {
+			throw new IllegalArgumentException("상점이 존재하지 않거나, 내 상점이 아닙니다. shopId=" + shopId);
+		}
 	}
 }

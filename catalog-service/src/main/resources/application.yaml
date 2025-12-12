@@ -36,6 +36,9 @@ management:
 apigateway:
   host: http://localhost:8000
 
+shop-service:
+  url: http://localhost:8085
+
 app:
   search:
     product-index-name: products
