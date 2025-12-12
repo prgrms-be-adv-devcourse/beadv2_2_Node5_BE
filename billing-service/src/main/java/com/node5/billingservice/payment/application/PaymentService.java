@@ -72,8 +72,10 @@ public class PaymentService {
         Payment payment = paymentRepositoryAdapter.findByOrderId(command.orderId())
                 .orElseThrow(() -> new PaymentException(PAYMENT_NOT_FOUND));
 
-        // 결제 키와 금액 검증
-        payment.validateValue(payment, command.paymentKey(), command.amount());
+        // 결제 금액 검증
+        if (!Objects.equals(payment.getAmount(), command.amount())) {
+            throw new PaymentException(PAYMENT_AMOUNT_MISMATCH);
+        }
 
         TossPaymentResponse tossPayment = tossPaymentClient.confirm(command);
         payment.confirm(tossPayment);

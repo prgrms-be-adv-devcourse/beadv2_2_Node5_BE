@@ -134,6 +134,7 @@ public class PaymentServiceTest extends IntegrationTestSupport {
     @DisplayName("결제 실패를 처리한다. 실패가 성공적으로 처리되면 결제 실패 정보를 반환한다.")
     void processPaymentFailure() {
         UUID memberId = UUID.randomUUID();
+        String paymentKey = "paymentKey";
         Wallet wallet = Wallet.builder()
                 .memberId(memberId)
                 .build();
@@ -149,6 +150,7 @@ public class PaymentServiceTest extends IntegrationTestSupport {
                 .thenReturn(Optional.of(payment));
         PaymentFailureCommand command = new PaymentFailureCommand(
         orderId,
+        paymentKey,
         "ERROR_CODE",
         "Error occurred",
         1000L,
