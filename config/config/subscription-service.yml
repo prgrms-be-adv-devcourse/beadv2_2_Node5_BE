@@ -9,10 +9,11 @@ spring:
     time-zone: Asia/Seoul
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: true
     properties:
       hibernate:
+        default_schema: subscription
         format_sql: true
         jdbc:
           time_zone: Asia/Seoul

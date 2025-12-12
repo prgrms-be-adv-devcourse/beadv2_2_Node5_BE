@@ -12,6 +12,7 @@ spring:
     show-sql: true
     properties:
       hibernate:
+        default_schema: shop
         format_sql: true
         jdbc:
           time_zone: Asia/Seoul
