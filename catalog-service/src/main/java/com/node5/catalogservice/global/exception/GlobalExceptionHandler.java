@@ -20,9 +20,6 @@ import com.node5.common.exception.ExceptionResponseDto;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-	/**
-	 * 도메인 예외(BaseException)를 공통 에러 응답으로 변환합니다.
-	 */
 	@ExceptionHandler(BaseException.class)
 	public ResponseEntity<ExceptionResponseDto> handleBaseException(BaseException e) {
 		BaseErrorCode errorCode = e.getErrorCode();
@@ -32,9 +29,6 @@ public class GlobalExceptionHandler {
 		);
 	}
 
-	/**
-	 * @Valid 검증 실패 시 400 에러로 응답합니다.
-	 */
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	public ResponseEntity<ExceptionResponseDto> handleValidationException(
 		MethodArgumentNotValidException e
@@ -51,9 +45,6 @@ public class GlobalExceptionHandler {
 		);
 	}
 
-	/**
-	 * 요청 파라미터 타입 변환 실패(UUID, Enum 등) 처리.
-	 */
 	@ExceptionHandler(ConversionFailedException.class)
 	public ResponseEntity<ExceptionResponseDto> handleConversionFailed(
 		ConversionFailedException e
@@ -66,9 +57,6 @@ public class GlobalExceptionHandler {
 		);
 	}
 
-	/**
-	 * 요청 본문(JSON) 파싱 실패 처리.
-	 */
 	@ExceptionHandler(HttpMessageNotReadableException.class)
 	public ResponseEntity<ExceptionResponseDto> handleNotReadable(
 		HttpMessageNotReadableException e
