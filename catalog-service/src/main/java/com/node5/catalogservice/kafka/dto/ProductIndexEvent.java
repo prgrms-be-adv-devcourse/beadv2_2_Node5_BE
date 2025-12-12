@@ -24,7 +24,7 @@ public record ProductIndexEvent(
 		return new ProductIndexEvent(
 			product.getId(),
 			product.getName(),
-			product.getCategory(),
+			product.getCategory().name(),
 			product.getThumbnailUrl(),
 			product.getPrice().longValue(),
 			product.getStatus().name(),
@@ -37,7 +37,7 @@ public record ProductIndexEvent(
 		return new ProductIndexEvent(
 			product.getId(),
 			product.getName(),
-			product.getCategory(),
+			product.getCategory().name(),
 			product.getThumbnailUrl(),
 			product.getPrice().longValue(),
 			product.getStatus().name(),

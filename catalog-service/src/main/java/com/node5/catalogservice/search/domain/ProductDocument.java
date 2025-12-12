@@ -61,7 +61,7 @@ public class ProductDocument {
 		return new ProductDocument(
 			product.getId().toString(),
 			product.getName(),
-			product.getCategory(),
+			product.getCategory().name(),
 			product.getThumbnailUrl(),
 			product.getPrice().longValue(),
 			product.getStatus().name(),

@@ -5,6 +5,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import com.node5.catalogservice.product.domain.ProductCategory;
 import com.node5.catalogservice.search.application.dto.ProductSearchResponse;
 import com.node5.catalogservice.search.domain.ProductDocument;
 import com.node5.catalogservice.search.domain.ProductSearchSort;
@@ -22,7 +23,9 @@ public class SearchService {
 	public Page<ProductSearchResponse> search(ProductSearchRequest request, Pageable pageable) {
 
 		String keyword = request.keyword();
-		String category = request.category();
+		ProductCategory categoryEnum = request.category();
+		String category = (categoryEnum != null) ? categoryEnum.name() : null;
+
 		Integer minPrice = request.minPrice();
 		Integer maxPrice = request.maxPrice();
 		ProductSearchSort sort = request.sort();
