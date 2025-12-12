@@ -24,6 +24,7 @@ import static com.node5.subscriptionservice.subscription.exception.SubscriptionE
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class SubscriptionService {
 
     private final SubscriptionRepository subscriptionRepository;
