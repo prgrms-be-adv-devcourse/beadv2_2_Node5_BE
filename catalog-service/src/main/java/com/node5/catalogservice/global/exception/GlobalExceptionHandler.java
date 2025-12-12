@@ -1,6 +1,8 @@
 package com.node5.catalogservice.global.exception;
 
+import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -9,52 +11,73 @@ import com.node5.common.exception.BaseErrorCode;
 import com.node5.common.exception.BaseException;
 import com.node5.common.exception.ExceptionResponseDto;
 
-import jakarta.servlet.http.HttpServletRequest;
-
 /**
- * BaseException 기반 도메인 예외와 validation 예외를 처리하는 전역 핸들러.
- * ErrorCode에 정의된 상태 코드와 메시지를 JSON 응답으로 반환합니다.
+ * 전역 예외 처리 핸들러.
+ * <p>
+ * - 도메인 예외(BaseException)는 ErrorCode 기준으로 응답<br>
+ * - Validation / 요청 파싱 오류는 공통 400 응답으로 처리
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
 	/**
-	 * 도메인 계층에서 발생하는 BaseException을 처리하여
-	 * ErrorCode 기반의 일관된 에러 응답을 반환합니다.
+	 * 도메인 예외(BaseException)를 공통 에러 응답으로 변환합니다.
 	 */
 	@ExceptionHandler(BaseException.class)
-	public ResponseEntity<ExceptionResponseDto> handleBaseException(
-		BaseException e,
-		HttpServletRequest request
-	) {
+	public ResponseEntity<ExceptionResponseDto> handleBaseException(BaseException e) {
 		BaseErrorCode errorCode = e.getErrorCode();
 
-		ExceptionResponseDto body = new ExceptionResponseDto(
-			errorCode.getCode(),
-			errorCode.getMessage()
+		return ResponseEntity.status(errorCode.getStatus()).body(
+			new ExceptionResponseDto(errorCode.getCode(), errorCode.getMessage())
 		);
-
-		return ResponseEntity.status(errorCode.getStatus()).body(body);
 	}
 
 	/**
-	 * @Valid 요청 본문 검증 실패(MethodArgumentNotValidException)를 처리합니다.
+	 * @Valid 검증 실패 시 400 에러로 응답합니다.
 	 */
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	public ResponseEntity<ExceptionResponseDto> handleValidationException(
 		MethodArgumentNotValidException e
 	) {
 		String message = e.getBindingResult()
-			.getAllErrors()
+			.getFieldErrors()
 			.stream()
 			.findFirst()
-			.map(error -> error.getDefaultMessage())
-			.orElse("잘못된 요청입니다.");
+			.map(error -> error.getField() + ": " + error.getDefaultMessage())
+			.orElse("요청 값이 유효하지 않습니다.");
 
-		ExceptionResponseDto body = new ExceptionResponseDto(
-			"VALIDATION_ERROR", message
+		return ResponseEntity.badRequest().body(
+			new ExceptionResponseDto("VALIDATION_ERROR", message)
 		);
+	}
 
-		return ResponseEntity.badRequest().body(body);
+	/**
+	 * 요청 파라미터 타입 변환 실패(UUID, Enum 등) 처리.
+	 */
+	@ExceptionHandler(ConversionFailedException.class)
+	public ResponseEntity<ExceptionResponseDto> handleConversionFailed(
+		ConversionFailedException e
+	) {
+		return ResponseEntity.badRequest().body(
+			new ExceptionResponseDto(
+				"TYPE_MISMATCH",
+				"요청 파라미터 형식이 올바르지 않습니다."
+			)
+		);
+	}
+
+	/**
+	 * 요청 본문(JSON) 파싱 실패 처리.
+	 */
+	@ExceptionHandler(HttpMessageNotReadableException.class)
+	public ResponseEntity<ExceptionResponseDto> handleNotReadable(
+		HttpMessageNotReadableException e
+	) {
+		return ResponseEntity.badRequest().body(
+			new ExceptionResponseDto(
+				"INVALID_REQUEST_BODY",
+				"요청 본문 형식이 올바르지 않습니다."
+			)
+		);
 	}
 }
