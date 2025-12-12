@@ -24,12 +24,11 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 /**
- * 상품 도메인의 핵심 비즈니스 로직을 담당하는 서비스 계층.
- * <p>
- * - 판매중 상품 조회/전체 조회 제공<br>
- * - 상품 생성/수정/상태 변경/판매 중단 처리<br>
- * - Shop-Service 연동을 통한 상점 소유권 검증 수행<br>
- * - Kafka 이벤트 발행을 통해 Elasticsearch 색인(동기화) 트리거
+ * 상품(Product) 도메인의 비즈니스 로직을 담당합니다.
+ *
+ * - 상품 조회 / 생성 / 수정 / 상태 변경
+ * - 판매자 소유권 검증 (Shop-Service 연동)
+ * - 상품 변경 시 검색 색인을 위한 Kafka 이벤트 발행
  */
 @Service
 @RequiredArgsConstructor
@@ -42,8 +41,8 @@ public class ProductService {
 	/**
 	 * 판매 중(ON_SALE) 상품 목록을 페이징 조회합니다.
 	 *
-	 * @param pageable 페이징/정렬 정보
-	 * @return 판매 중 상품 목록(Page)
+	 * @param pageable 페이징 및 정렬 정보
+	 * @return 판매 중 상품 목록
 	 */
 	public Page<ProductInfo> getOnSaleProducts(Pageable pageable) {
 		return productRepository.findByStatus(ProductStatus.ON_SALE, pageable)
@@ -51,21 +50,20 @@ public class ProductService {
 	}
 
 	/**
-	 * 판매 중(ON_SALE) 상품 단건을 조회합니다.
+	 * 판매 중(ON_SALE) 상품을 단건 조회합니다.
 	 *
 	 * @param id 상품 ID
 	 * @return 판매 중 상품 정보
-	 * @throws OnSaleProductNotFoundException 판매 중 상품이 아니거나 존재하지 않는 경우
 	 */
 	public ProductInfo getOnSaleProduct(UUID id) {
 		return ProductInfo.from(getOnSaleProductOrThrow(id));
 	}
 
 	/**
-	 * 전체 상품을 페이징 조회합니다. (운영/관리자 성격의 조회에 사용)
+	 * 전체 상품 목록을 페이징 조회합니다.
 	 *
-	 * @param pageable 페이징/정렬 정보
-	 * @return 전체 상품 목록(Page)
+	 * @param pageable 페이징 및 정렬 정보
+	 * @return 전체 상품 목록
 	 */
 	public Page<ProductInfo> getProducts(Pageable pageable) {
 		return productRepository.findAll(pageable)
@@ -74,15 +72,13 @@ public class ProductService {
 
 	/**
 	 * 상품을 생성합니다.
-	 * <p>
-	 * 생성 전 Shop-Service를 통해 요청자(memberId)가 해당 shopId의 소유자인지 검증합니다.
-	 * 생성 성공 시 Elasticsearch 색인을 위해 Kafka 색인 이벤트를 발행합니다.
 	 *
-	 * @param memberId 요청자(판매자) ID
-	 * @param command  상품 생성 커맨드
+	 * - 요청자가 해당 상점의 소유자인지 검증합니다.
+	 * - 생성 후 검색 색인을 위한 Kafka 이벤트를 발행합니다.
+	 *
+	 * @param memberId 요청자 ID
+	 * @param command 상품 생성 정보
 	 * @return 생성된 상품 정보
-	 * @throws ShopNotFoundException   상점이 존재하지 않는 경우
-	 * @throws ShopForbiddenException 요청자가 해당 상점의 소유자가 아닌 경우
 	 */
 	@Transactional
 	public ProductInfo createProduct(UUID memberId, ProductCommand command) {
@@ -107,17 +103,15 @@ public class ProductService {
 
 	/**
 	 * 상품 정보를 수정합니다.
-	 * <p>
-	 * 수정 전 상품 존재 여부를 확인하고, Shop-Service를 통해 소유권을 검증합니다.
-	 * 수정 성공 시 Elasticsearch 색인 동기화를 위해 Kafka 업데이트 이벤트를 발행합니다.
 	 *
-	 * @param memberId  요청자(판매자) ID
-	 * @param productId 수정 대상 상품 ID
-	 * @param command   상품 수정 커맨드
+	 * - 상품 존재 여부 확인
+	 * - 상점 소유권 검증
+	 * - 수정 후 Kafka 업데이트 이벤트 발행
+	 *
+	 * @param memberId 요청자 ID
+	 * @param productId 상품 ID
+	 * @param command 수정 정보
 	 * @return 수정된 상품 정보
-	 * @throws ProductNotFoundException 상품이 존재하지 않는 경우
-	 * @throws ShopNotFoundException    상점이 존재하지 않는 경우
-	 * @throws ShopForbiddenException  요청자가 해당 상점의 소유자가 아닌 경우
 	 */
 	@Transactional
 	public ProductInfo updateProduct(UUID memberId, UUID productId, ProductUpdateCommand command) {
@@ -141,20 +135,14 @@ public class ProductService {
 	}
 
 	/**
-	 * 상품 상태를 변경합니다. (예: ON_SALE, HIDDEN, DISCONTINUED)
+	 * 상품의 판매 상태를 변경합니다.
 	 *
-	 * <p>
-	 * 요청자(memberId)가 해당 상품이 속한 상점의 소유자인지 검증한 후,
-	 * 상품 상태를 변경합니다.
-	 * </p>
+	 * 요청자는 상품이 속한 상점의 소유자여야 합니다.
 	 *
-	 * @param memberId  요청자(판매자) ID
+	 * @param memberId 요청자 ID
 	 * @param productId 상품 ID
-	 * @param status    변경할 상태
+	 * @param status 변경할 상태
 	 * @return 상태가 변경된 상품 정보
-	 * @throws ProductNotFoundException 상품이 존재하지 않는 경우
-	 * @throws ShopNotFoundException  상점이 존재하지 않는 경우
-	 * @throws ShopForbiddenException 상점 소유자가 아닌 경우
 	 */
 	@Transactional
 	public ProductInfo updateStatus(UUID memberId, UUID productId, ProductStatus status) {
@@ -174,7 +162,6 @@ public class ProductService {
 	 * 상품을 판매 중단(DISCONTINUED) 처리합니다.
 	 *
 	 * @param id 상품 ID
-	 * @throws ProductNotFoundException 상품이 존재하지 않는 경우
 	 */
 	public void discontinueProduct(UUID id) {
 		Product product = getProductOrThrow(id);
@@ -183,43 +170,16 @@ public class ProductService {
 		productRepository.save(product);
 	}
 
-	/**
-	 * 상품을 ID로 조회하고, 존재하지 않으면 예외를 발생시킵니다.
-	 *
-	 * @param productId 상품 ID
-	 * @return 조회된 상품 엔티티
-	 * @throws ProductNotFoundException 상품이 존재하지 않는 경우
-	 */
 	private Product getProductOrThrow(UUID productId) {
 		return productRepository.findById(productId)
 			.orElseThrow(ProductNotFoundException::new);
 	}
 
-	/**
-	 * 판매 중(ON_SALE) 상품을 ID로 조회하고, 존재하지 않으면 예외를 발생시킵니다.
-	 *
-	 * @param productId 상품 ID
-	 * @return 판매 중 상태의 상품 엔티티
-	 * @throws OnSaleProductNotFoundException 판매 중 상품이 아니거나 존재하지 않는 경우
-	 */
 	private Product getOnSaleProductOrThrow(UUID productId) {
 		return productRepository.findByIdAndStatus(productId, ProductStatus.ON_SALE)
 			.orElseThrow(OnSaleProductNotFoundException::new);
 	}
 
-	/**
-	 * Shop-Service를 통해 상점 존재 여부 및 소유권을 검증합니다.
-	 *
-	 * <ul>
-	 *   <li>404 Not Found : 상점이 존재하지 않음</li>
-	 *   <li>403 Forbidden : 요청자가 해당 상점의 소유자가 아님</li>
-	 * </ul>
-	 *
-	 * @param memberId 요청자 ID
-	 * @param shopId   상점 ID
-	 * @throws ShopNotFoundException   상점이 존재하지 않는 경우
-	 * @throws ShopForbiddenException 요청자가 해당 상점의 소유자가 아닌 경우
-	 */
 	private void validateShopOwnership(UUID memberId, UUID shopId) {
 		try {
 			shopServiceClient.getShopInfo(memberId, shopId);

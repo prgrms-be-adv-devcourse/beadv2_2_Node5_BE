@@ -24,7 +24,6 @@ import com.node5.catalogservice.product.application.dto.PresignedUrlInfo;
 import com.node5.catalogservice.product.application.dto.ProductCommand;
 import com.node5.catalogservice.product.application.dto.ProductInfo;
 import com.node5.catalogservice.product.application.dto.ProductUpdateCommand;
-import com.node5.catalogservice.product.domain.ProductStatus;
 import com.node5.catalogservice.product.presentation.dto.PresignedUrlRequest;
 import com.node5.catalogservice.product.presentation.dto.PresignedUrlResponse;
 import com.node5.catalogservice.product.presentation.dto.ProductRequest;
