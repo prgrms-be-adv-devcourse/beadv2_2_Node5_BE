@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.node5.catalogservice.product.domain.ProductCategory;
 import com.node5.catalogservice.search.application.SearchService;
 import com.node5.catalogservice.search.application.dto.ProductSearchResponse;
 import com.node5.catalogservice.search.domain.ProductSearchSort;
@@ -20,6 +21,7 @@ import com.node5.common.domain.PagedResponseDto;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -41,8 +43,12 @@ public class ProductSearchController {
 	public ResponseEntity<ApiResponseDto<PagedResponseDto<ProductSearchResponse>>> searchProducts(
 		@Parameter(description = "검색 키워드", required = false)
 		@RequestParam(required = false) String keyword,
-		@Parameter(description = "카테고리", required = false)
-		@RequestParam(required = false) String category,
+		@Parameter(
+			description = "카테고리",
+			required = false,
+			schema = @Schema(implementation =ProductCategory.class)
+		)
+		@RequestParam(required = false) ProductCategory category,
 		@Parameter(description = "최소 가격", required = false)
 		@RequestParam(required = false) Integer minPrice,
 		@Parameter(description = "최대 가격", required = false)
