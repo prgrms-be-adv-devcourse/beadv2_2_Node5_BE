@@ -1,5 +1,7 @@
 package com.node5.settlementservice.presentation;
 
+import com.node5.settlementservice.application.SettlementService;
+import com.node5.settlementservice.application.dto.JobExecutionInfo;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +23,7 @@ public class SettlementController {
 
     private final JobLauncher jobLauncher;
     private final Job shopSettlementJob;
+    private final SettlementService settlementService;
 
     @Operation(summary = "전체 판매자 월별 정산 배치 실행", description = "지정 연도/월 또는 지난달(default) 기준 모든 판매자(Shop)에 대해 정산 배치 Job을 실행한다.")
     @PostMapping("/internal/settlements/run-all")
@@ -48,6 +51,14 @@ public class SettlementController {
         JobExecution jobExecution = jobLauncher.run(shopSettlementJob, params);
 
         return ResponseEntity.ok(String.format("Settlement job started for shop(%s) - BatchId: %s", shopId, jobExecution.getId()));
+    }
+
+    @Operation(summary = "단일 배치 실행 상태 조회", description = "배치 ID(jobExecutionId)를 통해 해당 Job의 상세 상태를 조회한다.")
+    @GetMapping("/internal/settlements/status/{jobExecutionId}")
+    public ResponseEntity<JobExecutionInfo> getSettlementStatus(
+            @PathVariable Long jobExecutionId
+    ) {
+        return ResponseEntity.ok(settlementService.getStatusByJobExecutionId(jobExecutionId));
     }
 
     private JobParametersBuilder getDefaultSettlementParamsBuilder(String yearMonth){
