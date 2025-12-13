@@ -28,6 +28,10 @@ spring:
       schema: public
     job:
       names: '*'
+  task:
+    scheduling:
+      cron:
+        settlement: ${SETTLEMENT_SCHEDULING_CRON}
 
 management:
   endpoints:
