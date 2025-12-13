@@ -98,7 +98,16 @@ public class AuthService {
         OAuthUserInfo oAuthUserInfo = redisService.getOAuthTempUser(tempId);
 
         Optional<Member> existMember = memberRepository.findByEmailAndDeletedAtIsNull(email);
-        Member member = existMember.orElseGet(() -> memberRepository.save(Member.create(command)));
+
+        Member member = existMember.orElseGet(() -> {
+            Member newMember = memberRepository.save(Member.create(command));
+            try {
+                billingClient.createWallet(newMember.getId());
+            } catch (Exception e) {
+                throw new AuthException(AuthErrorCode.WALLET_CREATE_FAILED);
+            }
+            return newMember;
+        });
 
         Optional<OAuth> existOAuth = oAuthRepository.findByProviderAndMember(oAuthUserInfo.provider(), member);
 
@@ -109,8 +118,6 @@ public class AuthService {
             OAuth oAuth = OAuth.create(member, oAuthUserInfo);
             oAuthRepository.save(oAuth);
         }
-
-        billingClient.createWallet(member.getId());
 
         JwtMemberInfo jwtMemberInfo = JwtMemberInfo.from(member);
         String accessToken = jwtProvider.generateAccessToken(jwtMemberInfo);
