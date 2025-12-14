@@ -1,9 +1,9 @@
-package com.node5.settlementservice.application;
+package com.node5.settlementservice.settlement.application;
 
 import com.node5.common.domain.PageInfoDto;
-import com.node5.settlementservice.application.dto.SettlementListInfo;
-import com.node5.settlementservice.domain.SettlementResult;
-import com.node5.settlementservice.domain.SettlementResultRepository;
+import com.node5.settlementservice.settlement.application.dto.SettlementListInfo;
+import com.node5.settlementservice.settlement.domain.SettlementResult;
+import com.node5.settlementservice.settlement.domain.SettlementResultRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;

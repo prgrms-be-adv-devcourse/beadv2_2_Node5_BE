@@ -1,6 +1,6 @@
-package com.node5.settlementservice.infrastructure;
+package com.node5.settlementservice.settlement.infrastructure;
 
-import com.node5.settlementservice.domain.SettlementResult;
+import com.node5.settlementservice.settlement.domain.SettlementResult;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

@@ -1,6 +1,6 @@
-package com.node5.settlementservice.application;
+package com.node5.settlementservice.settlement.application;
 
-import com.node5.settlementservice.application.dto.JobExecutionInfo;
+import com.node5.settlementservice.settlement.application.dto.JobExecutionInfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobParameters;

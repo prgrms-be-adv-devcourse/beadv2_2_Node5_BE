@@ -1,4 +1,4 @@
-package com.node5.settlementservice.application.dto;
+package com.node5.settlementservice.settlement.application.dto;
 
 import org.springframework.batch.core.JobExecution;
 

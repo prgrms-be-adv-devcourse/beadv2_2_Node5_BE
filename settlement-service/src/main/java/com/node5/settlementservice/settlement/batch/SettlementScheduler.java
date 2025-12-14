@@ -1,6 +1,6 @@
-package com.node5.settlementservice.batch;
+package com.node5.settlementservice.settlement.batch;
 
-import com.node5.settlementservice.domain.SettlementSourceRepository;
+import com.node5.settlementservice.settlement.domain.SettlementSourceRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;

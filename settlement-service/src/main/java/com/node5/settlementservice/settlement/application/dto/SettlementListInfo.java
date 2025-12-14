@@ -1,7 +1,7 @@
-package com.node5.settlementservice.application.dto;
+package com.node5.settlementservice.settlement.application.dto;
 
 import com.node5.common.domain.PageInfoDto;
-import com.node5.settlementservice.domain.SettlementResult;
+import com.node5.settlementservice.settlement.domain.SettlementResult;
 
 import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;

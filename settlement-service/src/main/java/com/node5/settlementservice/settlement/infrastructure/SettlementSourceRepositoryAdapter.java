@@ -1,7 +1,7 @@
-package com.node5.settlementservice.infrastructure;
+package com.node5.settlementservice.settlement.infrastructure;
 
-import com.node5.settlementservice.domain.SettlementSource;
-import com.node5.settlementservice.domain.SettlementSourceRepository;
+import com.node5.settlementservice.settlement.domain.SettlementSource;
+import com.node5.settlementservice.settlement.domain.SettlementSourceRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 

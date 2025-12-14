@@ -43,6 +43,5 @@ openapi:
   server:
     url: http://localhost:${server.port}
 
-
 api:
   v1: /api/v1

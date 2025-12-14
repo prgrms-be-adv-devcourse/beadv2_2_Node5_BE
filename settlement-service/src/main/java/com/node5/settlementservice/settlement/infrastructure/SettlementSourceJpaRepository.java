@@ -1,6 +1,6 @@
-package com.node5.settlementservice.infrastructure;
+package com.node5.settlementservice.settlement.infrastructure;
 
-import com.node5.settlementservice.domain.SettlementSource;
+import com.node5.settlementservice.settlement.domain.SettlementSource;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

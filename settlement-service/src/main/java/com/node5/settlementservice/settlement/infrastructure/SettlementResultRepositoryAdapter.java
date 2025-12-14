@@ -1,7 +1,7 @@
-package com.node5.settlementservice.infrastructure;
+package com.node5.settlementservice.settlement.infrastructure;
 
-import com.node5.settlementservice.domain.SettlementResult;
-import com.node5.settlementservice.domain.SettlementResultRepository;
+import com.node5.settlementservice.settlement.domain.SettlementResult;
+import com.node5.settlementservice.settlement.domain.SettlementResultRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

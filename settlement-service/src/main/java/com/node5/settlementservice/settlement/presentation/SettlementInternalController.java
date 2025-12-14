@@ -1,7 +1,7 @@
-package com.node5.settlementservice.presentation;
+package com.node5.settlementservice.settlement.presentation;
 
-import com.node5.settlementservice.application.SettlementInternalService;
-import com.node5.settlementservice.application.dto.JobExecutionInfo;
+import com.node5.settlementservice.settlement.application.SettlementInternalService;
+import com.node5.settlementservice.settlement.application.dto.JobExecutionInfo;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

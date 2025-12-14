@@ -1,4 +1,4 @@
-package com.node5.settlementservice.domain;
+package com.node5.settlementservice.settlement.domain;
 
 import jakarta.persistence.*;
 import lombok.Builder;

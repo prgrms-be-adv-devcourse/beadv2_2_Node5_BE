@@ -1,7 +1,7 @@
-package com.node5.settlementservice.client;
+package com.node5.settlementservice.settlement.client;
 
-import com.node5.settlementservice.client.dto.WalletSettleRequest;
-import com.node5.settlementservice.client.dto.WalletInfo;
+import com.node5.settlementservice.settlement.client.dto.WalletSettleRequest;
+import com.node5.settlementservice.settlement.client.dto.WalletInfo;
 import jakarta.validation.Valid;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;

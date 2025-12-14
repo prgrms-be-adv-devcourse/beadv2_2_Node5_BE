@@ -1,9 +1,9 @@
-package com.node5.settlementservice.batch;
+package com.node5.settlementservice.settlement.batch;
 
-import com.node5.settlementservice.client.BillingClient;
-import com.node5.settlementservice.client.dto.WalletInfo;
-import com.node5.settlementservice.client.dto.WalletSettleRequest;
-import com.node5.settlementservice.domain.*;
+import com.node5.settlementservice.settlement.client.BillingClient;
+import com.node5.settlementservice.settlement.client.dto.WalletInfo;
+import com.node5.settlementservice.settlement.client.dto.WalletSettleRequest;
+import com.node5.settlementservice.settlement.domain.*;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +16,6 @@ import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.PlatformTransactionManager;
 
