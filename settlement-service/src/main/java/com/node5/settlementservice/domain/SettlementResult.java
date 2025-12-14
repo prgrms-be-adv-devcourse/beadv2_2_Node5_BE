@@ -92,4 +92,12 @@ public class SettlementResult {
                 .build();
     }
 
+    public void markPaid() {
+        this.status = SettlementPayoutStatus.PAID;
+    }
+
+    public void markFailed(String errorMsg) {
+        this.status = SettlementPayoutStatus.FAILED;
+        this.errorMsg = errorMsg;
+    }
 }

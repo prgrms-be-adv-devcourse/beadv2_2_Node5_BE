@@ -1,6 +1,10 @@
 package com.node5.settlementservice.batch;
 
+import com.node5.settlementservice.client.BillingClient;
+import com.node5.settlementservice.client.dto.WalletInfo;
+import com.node5.settlementservice.client.dto.WalletSettleRequest;
 import com.node5.settlementservice.domain.*;
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
@@ -12,6 +16,8 @@ import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import java.math.BigDecimal;
@@ -30,6 +36,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class SettlementBatchConfig {
     private static final BigDecimal FEE_RATE = new BigDecimal("0.05"); // 수수료율 5% 고정
+    private final BillingClient billingClient;
 
     // Job: 전체 정산 작업 정의
     @Bean
@@ -120,18 +127,40 @@ public class SettlementBatchConfig {
                     resultRepository.saveAll(resultList);
 
                     // [5] 정산금 지급
+                    List<SettlementResult> failedResults = new ArrayList<>();
+
                     resultList.forEach(result -> {
                         try {
-                            // TODO 에치금 정산 API 요청
-                            // - 성공 시 result의 status PAID로 변경
-                            //result.markPaid();
+                            // 에치금 정산 API 요청
+                            BigDecimal roundedAmount = result.getPayoutAmount().setScale(0, RoundingMode.HALF_UP);
+                            ResponseEntity<WalletInfo> response = billingClient.settle(new WalletSettleRequest(result.getId(), roundedAmount.longValue()));
+
+                            if (response.getStatusCode().is2xxSuccessful()) {
+                                result.markPaid();
+                            }
+                        } catch(FeignException e) {
+                            String msg = "FeignException: " + e.getMessage();
+                            result.markFailed(msg);
+                            failedResults.add(result);
                         } catch(Exception e) {
-                            // - 실패 시 result의 status FAILED로 변경, errorMsg 업데이트
-                            //result.markFailed(e.getMessage());
-                            //log.error("정산금 지급 실패 - Shop: {}", result.getShopId(), e);
+                            String msg = "Exception: " + e.getMessage();
+                            result.markFailed(msg);
+                            failedResults.add(result);
                         }
                     });
+
+                    // [6] 정산금 지급 결과 저장
                     resultRepository.saveAll(resultList);
+
+                    if (!failedResults.isEmpty()) {
+                        log.error("=== [정산금 지급] 총 성공: {}건, 총 실패: {}건 ===",
+                                resultList.size() - failedResults.size(), failedResults.size());
+                        failedResults.forEach(r -> {
+                            log.error("  - Settlement Id: {}, Shop Id: {}, errorMsg: {}", r.getId(), r.getShopId(), r.getErrorMsg());
+                        });
+                    } else {
+                        log.info("=== [정산금 지급] 전체 {}건 모두 성공 ===", resultList.size());
+                    }
 
                     return RepeatStatus.FINISHED;
                 }, transactionManager)
