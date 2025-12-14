@@ -2,21 +2,29 @@ package com.node5.orderservice.order.application;
 
 import com.node5.common.domain.PageInfoDto;
 import com.node5.orderservice.order.application.dto.*;
+import com.node5.orderservice.order.client.BillingClient;
+import com.node5.orderservice.order.client.dto.WalletInfo;
+import com.node5.orderservice.order.client.dto.WalletRefundRequest;
+import com.node5.orderservice.order.client.dto.WalletWithdrawRequest;
 import com.node5.orderservice.order.domain.Order;
 import com.node5.orderservice.order.domain.OrderItem;
 import com.node5.orderservice.order.domain.OrderItemRepository;
 import com.node5.orderservice.order.domain.OrderRepository;
 import com.node5.orderservice.order.exception.OrderAccessDeniedException;
 import com.node5.orderservice.order.exception.OrderNotFoundException;
+import com.node5.orderservice.order.exception.OrderPaymentFailedException;
 import com.node5.orderservice.order.exception.OrderRequestNotAllowedException;
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -33,6 +41,7 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final OrderTransactionService orderTransactionService;
+    private final BillingClient billingClient;
 
     @Transactional
     public OrderCreateInfo create(OrderCommand command) {
@@ -54,8 +63,20 @@ public class OrderService {
                 .toList();
         orderItemRepository.saveAll(orderItems);
 
-        // TODO 결제 API 호출
-        orderTransactionService.updateOrderStatus(orderId, PAID); // 결제 성공 가정 (임시)
+        // 예치금 사용 API 호출
+        try {
+            BigDecimal roundedAmount = order.getTotalAmount().setScale(0, RoundingMode.HALF_UP);
+            ResponseEntity<WalletInfo> response = billingClient.withdraw(new WalletWithdrawRequest(order.getId(), roundedAmount.longValue()));
+
+            if (response.getStatusCode().is2xxSuccessful()) {
+                orderTransactionService.updateOrderStatus(orderId, PAID);
+            }
+        } catch(FeignException e) {
+            orderTransactionService.updateOrderStatus(orderId, PAYMENT_FAILED);
+            throw new OrderPaymentFailedException(orderId, e.getMessage());
+        } catch(Exception e) {
+            orderTransactionService.updateOrderStatus(orderId, PAYMENT_FAILED);
+        }
 
         return OrderCreateInfo.from(saved);
     }
@@ -125,10 +146,19 @@ public class OrderService {
 
         // 취소가 가능한 주문 상태인지 확인
         if(order.getStatus() == PAID){
-            // TODO 결제 취소 API 호출
-            // - 결제 취소 성공 시: orderTransactionService.updateOrderStatus(order, CANCELED)
-            // - 결제 취소 실패 시: [예외 처리]
-            orderTransactionService.updateOrderStatus(orderId, CANCELED); // 결제 취소 성공 가정 (임시)
+            // 예치금 환불 API 호출
+            try {
+                BigDecimal roundedAmount = order.getTotalAmount().setScale(0, RoundingMode.HALF_UP);
+                ResponseEntity<WalletInfo> response = billingClient.requestRefund(new WalletRefundRequest(order.getId(), roundedAmount.longValue()));
+
+                if (response.getStatusCode().is2xxSuccessful()) {
+                    orderTransactionService.updateOrderStatus(orderId, CANCELED);
+                }
+            } catch(FeignException e) {
+                throw new OrderPaymentFailedException(orderId, e.getMessage());
+            } catch(Exception e) {
+                throw new OrderPaymentFailedException(orderId, e.getMessage());
+            }
         }else{
             throw new OrderRequestNotAllowedException(
                     order.getId(),
@@ -151,10 +181,19 @@ public class OrderService {
 
         // 환불이 가능한 주문 상태인지 확인
         if(order.getStatus() == DELIVERY_ING || order.getStatus() == DELIVERY_COMPLETED){
-            // TODO 결제 취소 API 호출
-            // - 결제 취소 성공 시: (배송 로직 생략) orderTransactionService.updateOrderStatus(order, REFUND_COMPLETED)
-            // - 결제 취소 실패 시: [예외 처리]
-            orderTransactionService.updateOrderStatus(orderId, REFUND_COMPLETED); // 결제 취소 성공 가정 (임시)
+            // 예치금 환불 API 호출
+            try {
+                BigDecimal roundedAmount = order.getTotalAmount().setScale(0, RoundingMode.HALF_UP);
+                ResponseEntity<WalletInfo> response = billingClient.requestRefund(new WalletRefundRequest(order.getId(), roundedAmount.longValue()));
+
+                if (response.getStatusCode().is2xxSuccessful()) {
+                    orderTransactionService.updateOrderStatus(orderId, REFUND_COMPLETED);
+                }
+            } catch(FeignException e) {
+                throw new OrderPaymentFailedException(orderId, e.getMessage());
+            } catch(Exception e) {
+                throw new OrderPaymentFailedException(orderId, e.getMessage());
+            }
         }else{
             throw new OrderRequestNotAllowedException(
                     order.getId(),

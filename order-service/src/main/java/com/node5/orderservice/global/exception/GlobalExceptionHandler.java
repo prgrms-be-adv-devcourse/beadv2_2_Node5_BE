@@ -3,6 +3,7 @@ package com.node5.orderservice.global.exception;
 import com.node5.common.exception.ExceptionResponseDto;
 import com.node5.orderservice.order.exception.OrderAccessDeniedException;
 import com.node5.orderservice.order.exception.OrderNotFoundException;
+import com.node5.orderservice.order.exception.OrderPaymentFailedException;
 import com.node5.orderservice.order.exception.OrderRequestNotAllowedException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
@@ -42,7 +43,7 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(new ExceptionResponseDto("VALIDATION_ERROR", message));
+                .body(new ExceptionResponseDto("ORDER_001", message));
     }
 
     @ExceptionHandler(OrderNotFoundException.class)
@@ -61,6 +62,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(OrderRequestNotAllowedException.class)
     public ResponseEntity<ExceptionResponseDto> handleOrderRequestNotAllowed(OrderRequestNotAllowedException e, HttpServletRequest request) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new ExceptionResponseDto("ORDER_REQUEST_NOT_ALLOWED", e.getMessage()));
+    }
+
+    @ExceptionHandler(OrderPaymentFailedException.class)
+    public ResponseEntity<ExceptionResponseDto> handleOrderPaymentFailed(OrderPaymentFailedException e, HttpServletRequest request) {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(new ExceptionResponseDto("ORDER_REQUEST_NOT_ALLOWED", e.getMessage()));
