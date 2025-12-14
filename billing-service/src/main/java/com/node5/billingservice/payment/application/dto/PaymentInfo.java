@@ -6,7 +6,7 @@ import com.node5.billingservice.payment.domain.PaymentStatus;
 import java.util.UUID;
 
 public record PaymentInfo(
-        UUID walletId,
+        UUID memberId,
         String paymentKey,
         String orderId,
         Long amount,
@@ -18,7 +18,7 @@ public record PaymentInfo(
 ) {
     public static PaymentInfo from(Payment payment) {
         return new PaymentInfo(
-                payment.getWalletId(),
+                payment.getMemberId(),
                 payment.getPaymentKey(),
                 payment.getOrderId(),
                 payment.getAmount(),
