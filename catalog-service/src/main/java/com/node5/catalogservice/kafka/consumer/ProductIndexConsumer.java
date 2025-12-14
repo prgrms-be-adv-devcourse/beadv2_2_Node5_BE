@@ -12,7 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * Kafka 상품 색인 이벤트를 수신하여
- * Elasticsearch 상품 문서를 생성/갱신하는 Consumer입니다.
+ * Elasticsearch 상품 문서를 생성/갱신합니다.
  */
 @Slf4j
 @Component
@@ -27,24 +27,30 @@ public class ProductIndexConsumer {
 	)
 	public void consume(ProductIndexEvent event) {
 
-		log.info("Kafka 상품 색인 이벤트 수신, id={}, name={}, status={}, type={}",
-			event.productId(), event.name(), event.status(), event.type());
+		String productId = event.productId().toString();
 
-		// Kafka 이벤트 -> ES 문서로 변환
-		ProductDocument document = new ProductDocument(
-			event.productId().toString(),
-			event.shopId().toString(),
-			event.name(),
-			event.category(),
-			event.thumbnailUrl(),
-			event.price(),
-			event.status(),
-			event.createdAt()
-		);
+		log.info("Kafka 상품 색인 이벤트 수신, productId={}, type={}",
+			productId, event.type());
 
-		// ES 색인
-		productSearchRepository.save(document);
+		try {
+			ProductDocument document = new ProductDocument(
+				productId,
+				event.shopId().toString(),
+				event.name(),
+				event.category(),
+				event.thumbnailUrl(),
+				event.price(),
+				event.status(),
+				event.createdAt()
+			);
 
-		log.info("ES 상품 색인 완료, id={}, type={}", document.getProductId(), event.type());
+			productSearchRepository.save(document);
+
+			log.info("ES 상품 색인 완료, productId={}", productId);
+
+		} catch (Exception e) {
+			log.error("ES 상품 색인 실패, productId={}", productId, e);
+			throw e;
+		}
 	}
 }
