@@ -1,0 +1,36 @@
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    driver-class-name: org.postgresql.Driver
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+  jackson:
+    time-zone: Asia/Seoul
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: Asia/Seoul
+  batch:
+    jdbc:
+      initialize-schema: always
+      schema: public
+    job:
+      names: '*'
+  task:
+    scheduling:
+      cron:
+        settlement: ${SETTLEMENT_SCHEDULING_CRON}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+api:
+  v1: /api/v1
