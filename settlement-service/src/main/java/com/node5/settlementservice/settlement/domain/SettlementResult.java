@@ -28,13 +28,20 @@ public class SettlementResult {
     @Column(nullable = false, length = 20)
     private SettlementPayoutStatus status;
 
+    @Column(nullable = false)
     private BigDecimal salesAmount; // 총 매출액
+    @Column(nullable = false)
     private BigDecimal feeRate; // 수수료율
+    @Column(nullable = false)
     private BigDecimal feeAmount; // 수수료 금액
-    private BigDecimal payoutAmount; // 최종 정산 지급액
+    @Column(nullable = false)
+    private BigDecimal payoutAmount; // 최종 정산 금액
 
+    @Column(nullable = false)
     private Long batchId;
+    @Column(nullable = false)
     private LocalDateTime settledAt;
+
     private LocalDateTime payoutAt;
     private String errorMsg;
 
