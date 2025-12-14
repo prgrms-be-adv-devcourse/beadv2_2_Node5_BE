@@ -28,12 +28,12 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("${api.v1}/search")
 @RequiredArgsConstructor
-@Tag(name = "Product Search", description = "상품 검색 API")
+@Tag(name = "Product Search", description = "사용자를 위한 상품 검색 API")
 public class ProductSearchController {
 
 	private final SearchService searchService;
 
-	@GetMapping("/products")
+	@GetMapping
 	@Operation(
 		summary = "상품 검색",
 		description = "키워드, 카테고리, 가격 범위, 정렬 조건을 조합하여 판매 중 상품을 검색합니다."

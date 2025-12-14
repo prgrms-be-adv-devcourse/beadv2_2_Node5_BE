@@ -33,7 +33,7 @@ import lombok.RequiredArgsConstructor;
  * - 장바구니 조회 / 추가 / 수량 변경 / 삭제 / 비우기<br>
  * - 장바구니 담기 전 상품 존재 및 판매 상태(ON_SALE) 검증<br>
  * - 장바구니 항목 수정/삭제 시 소유권(memberId) 검증<br>
- * - 조회 시 장바구니 상품을 일괄 조회 후 응답에 결합
+ * - 조회 시 CartItem에 포함된 productId 목록을 일괄 조회한 뒤 응답에 결합
  */
 @Service
 @RequiredArgsConstructor
@@ -42,6 +42,9 @@ public class CartService {
 	private final CartItemRepository cartItemRepository;
 	private final ProductRepository productRepository;
 
+	/**
+	 * 사용자의 장바구니 목록을 조회하고, 응답에 상품 정보를 결합하여 반환합니다.
+	 */
 	public Page<CartItemInfo> getCartItems(UUID memberId, Pageable pageable) {
 		Page<CartItem> cartItems = cartItemRepository.findByMemberId(memberId, pageable);
 
@@ -122,7 +125,7 @@ public class CartService {
 	/**
 	 * 사용자의 장바구니를 전체 비웁니다.
 	 * <p>
-	 * - 벌크 삭제 수행을 위해 트랜잭션으로 처리
+	 * - 장바구니 항목을 일괄 삭제하므로 트랜잭션으로 처리
 	 */
 	@Transactional
 	public void clearCart(UUID memberId) {
