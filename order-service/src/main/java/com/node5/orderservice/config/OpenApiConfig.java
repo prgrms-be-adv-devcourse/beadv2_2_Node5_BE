@@ -16,15 +16,18 @@ import java.util.List;
 @Configuration
 public class OpenApiConfig {
 
-    @Value("${openapi.server.url}")
-    private String openApiServerUrl;
-
     private static final String SECURITY_SCHEME_NAME = "BearerAuth";
+
+    @Value("${spring.application.name}")
+    private String appName;
+
+    @Value("${apigateway.host:http://localhost:8000}")
+    private String gatewayHost;
 
     @Bean
     public OpenAPI openAPI() {
         Server server = new Server();
-        server.url(openApiServerUrl);
+        server.url(String.format("%s/%s", gatewayHost, appName));
         List<Server> servers = new ArrayList<>();
         servers.add(server);
 
