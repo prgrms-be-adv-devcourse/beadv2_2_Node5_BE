@@ -11,9 +11,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Kafka 이벤트 받아서 ES 색인하기
+ * Kafka 상품 색인 이벤트를 수신하여
+ * Elasticsearch 상품 문서를 생성/갱신하는 Consumer입니다.
  */
-
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -33,6 +33,7 @@ public class ProductIndexConsumer {
 		// Kafka 이벤트 -> ES 문서로 변환
 		ProductDocument document = new ProductDocument(
 			event.productId().toString(),
+			event.shopId().toString(),
 			event.name(),
 			event.category(),
 			event.thumbnailUrl(),

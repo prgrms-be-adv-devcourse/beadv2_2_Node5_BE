@@ -1,5 +1,7 @@
 package com.node5.catalogservice.search.presentation;
 
+import java.util.UUID;
+
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -11,9 +13,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.node5.catalogservice.product.domain.ProductCategory;
 import com.node5.catalogservice.search.application.SearchService;
+import com.node5.catalogservice.search.application.dto.ProductSearchCommand;
 import com.node5.catalogservice.search.application.dto.ProductSearchResponse;
 import com.node5.catalogservice.search.domain.ProductSearchSort;
-import com.node5.catalogservice.search.presentation.dto.ProductSearchRequest;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -59,13 +61,20 @@ public class ProductSearchController {
 		@Parameter(description = "정렬 기준", required = false)
 		@RequestParam(required = false) ProductSearchSort sort,
 
+		@Parameter(description = "상점 ID(판매자)", required = false)
+		@RequestParam(required = false) UUID shopId,
+
 		@ParameterObject Pageable pageable
 	) {
-		ProductSearchRequest request =
-			new ProductSearchRequest(keyword, category, minPrice, maxPrice, sort);
-
-		return ResponseEntity.ok(
-			searchService.search(request, pageable)
+		ProductSearchCommand command = new ProductSearchCommand(
+			keyword,
+			shopId,
+			category,
+			minPrice,
+			maxPrice,
+			sort
 		);
+
+		return ResponseEntity.ok(searchService.search(command, pageable));
 	}
 }
