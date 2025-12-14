@@ -31,11 +31,12 @@ public class ShopService {
     private final MemberClient memberClient;
 
     public Page<ShopListResponse> findMyShopList(UUID memberId, Pageable pageable) {
-        return shopRepository.findAllByMemberIdAndDeletedAtIsNull(memberId, pageable).map(ShopListResponse::from);
+        return shopRepository.findOwnedShopList(memberId, pageable).map(ShopListResponse::from);
     }
 
     public ShopInfoResponse findMyShopInfo(UUID memberId, UUID shopId) {
-        Shop shop = getOwnedShopOrThrow(memberId, shopId);
+        Shop shop = shopRepository.findOwnedShop(memberId, shopId)
+                .orElseThrow(() -> new ShopException(ShopErrorCode.SHOP_NOT_FOUND));
         return ShopInfoResponse.from(shop);
     }
 
@@ -51,14 +52,16 @@ public class ShopService {
 
     @Transactional
     public ShopInfoResponse modifyMyShopInfo(UUID memberId, UUID shopId, ShopModifyCommand command) {
-        Shop shop = getOwnedShopOrThrow(memberId, shopId);
+        Shop shop = shopRepository.findOwnedShop(memberId, shopId)
+                .orElseThrow(() -> new ShopException(ShopErrorCode.SHOP_NOT_FOUND));
         shop.update(command);
         return ShopInfoResponse.from(shop);
     }
 
     @Transactional
     public ShopDeleteResponse deleteMyShop(UUID memberId, UUID shopId) {
-        Shop shop = getOwnedShopOrThrow(memberId, shopId);
+        Shop shop = shopRepository.findOwnedShop(memberId, shopId)
+                .orElseThrow(() -> new ShopException(ShopErrorCode.SHOP_NOT_FOUND));
         shop.delete();
         shopRepository.flush();
 
@@ -69,19 +72,6 @@ public class ShopService {
         }
 
         return new ShopDeleteResponse(null, null);
-    }
-
-    private Shop getShopOrThrow(UUID shopId) {
-        return shopRepository.findByIdAndDeletedAtIsNull(shopId)
-                .orElseThrow(() -> new ShopException(ShopErrorCode.SHOP_NOT_FOUND));
-    }
-
-    private Shop getOwnedShopOrThrow(UUID memberId, UUID shopId) {
-        Shop shop = getShopOrThrow(shopId);
-        if (!shop.getMemberId().equals(memberId)) {
-            throw new ShopException(ShopErrorCode.SHOP_NOT_OWNED);
-        }
-        return shop;
     }
 
     private RoleModifyResponse updateMemberRoles(UUID memberId, RoleAction action) {
