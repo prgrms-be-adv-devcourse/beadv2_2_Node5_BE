@@ -14,8 +14,7 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
-import static com.node5.billingservice.payment.exception.PaymentErrorCode.PAYMENT_AMOUNT_MISMATCH;
-import static com.node5.billingservice.payment.exception.PaymentErrorCode.PAYMENT_KEY_MISMATCH;
+import static com.node5.billingservice.payment.exception.PaymentErrorCode.*;
 
 @Schema(description = "결제")
 @Entity
@@ -27,8 +26,8 @@ public class Payment extends BaseEntity {
     @Id
     private UUID id;
 
-    @Column(name = "wallet_id", nullable = false)
-    private UUID walletId;
+    @Column(name = "member_id", nullable = false)
+    private UUID memberId;
 
     @Column(name = "payment_key", unique = true, length = 200)
     private String paymentKey;
@@ -56,10 +55,10 @@ public class Payment extends BaseEntity {
     private String failReason;
 
     @Builder
-    private Payment(UUID walletId,
+    private Payment(UUID memberId,
                     Long amount) {
         this.id = UUID.randomUUID();
-        this.walletId = walletId;
+        this.memberId = memberId;
         this.orderId = "ORDER-" + LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS"));
         this.amount = amount;
         this.status = PaymentStatus.READY;
@@ -82,7 +81,11 @@ public class Payment extends BaseEntity {
         this.status = PaymentStatus.CANCELED;
     }
 
-    public void validateValue(Payment payment, String paymentKey, Long amount) {
+    public void validateValue(UUID memberId, Payment payment, String paymentKey, Long amount) {
+        if (!this.memberId.equals(memberId)) {
+            throw new PaymentException(PAYMENT_MEMBER_ID_MISMATCH);
+        }
+
         if (!payment.getPaymentKey().equals(paymentKey)) {
             throw new PaymentException(PAYMENT_KEY_MISMATCH);
         }
