@@ -4,6 +4,7 @@ import com.node5.shopservice.shop.application.dto.*;
 import com.node5.shopservice.shop.client.MemberClient;
 import com.node5.shopservice.shop.client.dto.RoleAction;
 import com.node5.shopservice.shop.client.dto.RoleModifyRequest;
+import com.node5.shopservice.shop.client.dto.RoleModifyResponse;
 import com.node5.shopservice.shop.domain.Shop;
 import com.node5.shopservice.shop.domain.ShopRepository;
 import com.node5.shopservice.shop.exception.ShopErrorCode;
@@ -41,11 +42,11 @@ public class ShopService {
     @Transactional
     public ShopRegisterResponse registerShop(UUID memberId, ShopRegisterCommand command) {
         Shop shop = Shop.create(memberId, command);
-        Shop savedShop = shopRepository.save(shop);
+        shopRepository.save(shop);
 
-        String newAccessToken = updateMemberRoles(memberId, RoleAction.ADD);
+        RoleModifyResponse modifyMemberRoles = updateMemberRoles(memberId, RoleAction.ADD);
 
-        return new ShopRegisterResponse(savedShop.getId(), newAccessToken);
+        return new ShopRegisterResponse(modifyMemberRoles.accessToken(), modifyMemberRoles.memberRoles());
     }
 
     @Transactional
@@ -62,11 +63,12 @@ public class ShopService {
         shopRepository.flush();
 
         int shopCount = shopRepository.countByMemberIdAndDeletedAtIsNull(memberId);
-        String newAccessToken = null;
         if (shopCount == 0) {
-            newAccessToken = updateMemberRoles(memberId, RoleAction.REMOVE);
+            RoleModifyResponse modifyMemberRoles = updateMemberRoles(memberId, RoleAction.REMOVE);
+            return new ShopDeleteResponse(modifyMemberRoles.accessToken(), modifyMemberRoles.memberRoles());
         }
-        return new ShopDeleteResponse(newAccessToken);
+
+        return new ShopDeleteResponse(null, null);
     }
 
     private Shop getShopOrThrow(UUID shopId) {
@@ -82,16 +84,16 @@ public class ShopService {
         return shop;
     }
 
-    private String updateMemberRoles(UUID memberId, RoleAction action) {
+    private RoleModifyResponse updateMemberRoles(UUID memberId, RoleAction action) {
         try {
             return switch (action) {
                 case ADD -> {
                     RoleModifyRequest request = new RoleModifyRequest(ROLE_SELLER);
-                    ResponseEntity<String> response = memberClient.addMemberRole(memberId, request);
+                    ResponseEntity<RoleModifyResponse> response = memberClient.addMemberRole(memberId, request);
                     yield response.getBody();
                 }
                 case REMOVE -> {
-                    ResponseEntity<String> response = memberClient.deleteMemberRole(memberId, ROLE_SELLER);
+                    ResponseEntity<RoleModifyResponse> response = memberClient.deleteMemberRole(memberId, ROLE_SELLER);
                     yield response.getBody();
                 }
             };

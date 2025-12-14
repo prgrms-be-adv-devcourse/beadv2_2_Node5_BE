@@ -1,6 +1,7 @@
 package com.node5.memberservice.member.presentation;
 
 import com.node5.memberservice.member.application.MemberService;
+import com.node5.memberservice.member.application.dto.RoleModifyResponse;
 import com.node5.memberservice.member.presentation.dto.RoleModifyRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +18,7 @@ public class MemberInternalController {
     private final MemberService memberService;
 
     @PostMapping("/{memberId}/roles")
-    public ResponseEntity<String> addMemberRole(
+    public ResponseEntity<RoleModifyResponse> addMemberRole(
             @PathVariable UUID memberId,
             @Valid @RequestBody RoleModifyRequest request
     ) {
@@ -25,7 +26,7 @@ public class MemberInternalController {
     }
 
     @DeleteMapping("/{memberId}/roles/{role}")
-    public ResponseEntity<String> deleteMemberRole(
+    public ResponseEntity<RoleModifyResponse> deleteMemberRole(
             @PathVariable UUID memberId,
             @PathVariable String role
     ) {
