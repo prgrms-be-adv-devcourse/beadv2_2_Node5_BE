@@ -53,17 +53,7 @@ public class SettlementService {
         // ExitStatus에서 상세 메시지 추출
         String exitDescription = execution.getExitStatus().getExitDescription();
 
-        return new JobExecutionInfo(
-                execution.getId(),
-                execution.getStatus().toString(),
-                start,
-                execution.getEndTime(),
-                duration,
-                exitDescription,
-                execution.getJobInstance().getJobName(),
-                shopId == null ? "전체" : shopId,
-                period
-        );
+        return JobExecutionInfo.from(execution, shopId, period, start, end, duration, exitDescription);
     }
 
     public SettlementListInfo getSettlementHistory(UUID shopId, YearMonth startYm, YearMonth endYm, int page) {
