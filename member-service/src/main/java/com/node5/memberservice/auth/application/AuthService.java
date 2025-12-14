@@ -80,8 +80,9 @@ public class AuthService {
             redisService.saveRefreshToken(member.getId(), refreshToken);
             return LoginInfoResponse.success(member, accessToken, refreshToken);
         }
-
-        String temporaryToken = jwtProvider.generateTemporaryToken(oAuthUserInfo);
+        UUID tempId = UUID.randomUUID();
+        redisService.saveOAuthTempUser(tempId, oAuthUserInfo);
+        String temporaryToken = jwtProvider.generateTemporaryToken(tempId);
         return LoginInfoResponse.newMember(temporaryToken);
     }
 
@@ -92,10 +93,21 @@ public class AuthService {
             throw new AuthException(AuthErrorCode.EMAIL_NOT_VERIFIED);
         }
 
-        OAuthUserInfo oAuthUserInfo = jwtProvider.getOAuthUserInfo(command.temporaryToken());
+        Claims claims = jwtProvider.validateTokenType(command.temporaryToken(), TokenType.TEMPORARY);
+        UUID tempId = UUID.fromString(claims.get("tempId", String.class));
+        OAuthUserInfo oAuthUserInfo = redisService.getOAuthTempUser(tempId);
 
         Optional<Member> existMember = memberRepository.findByEmailAndDeletedAtIsNull(email);
-        Member member = existMember.orElseGet(() -> memberRepository.save(Member.create(command)));
+
+        Member member = existMember.orElseGet(() -> {
+            Member newMember = memberRepository.save(Member.create(command));
+            try {
+                billingClient.createWallet(newMember.getId());
+            } catch (Exception e) {
+                throw new AuthException(AuthErrorCode.WALLET_CREATE_FAILED);
+            }
+            return newMember;
+        });
 
         Optional<OAuth> existOAuth = oAuthRepository.findByProviderAndMember(oAuthUserInfo.provider(), member);
 
@@ -107,13 +119,12 @@ public class AuthService {
             oAuthRepository.save(oAuth);
         }
 
-        billingClient.createWallet(member.getId());
-
         JwtMemberInfo jwtMemberInfo = JwtMemberInfo.from(member);
         String accessToken = jwtProvider.generateAccessToken(jwtMemberInfo);
         String refreshToken = jwtProvider.generateRefreshToken(jwtMemberInfo);
         redisService.saveRefreshToken(member.getId(), refreshToken);
 
+        redisService.deleteOAuthTempUser(tempId);
         redisService.deleteVerifiedEmail(email);
 
         return LoginInfoResponse.success(member, accessToken, refreshToken);
