@@ -2,6 +2,7 @@ package com.node5.settlementservice.settlement.presentation;
 
 import com.node5.settlementservice.settlement.application.SettlementService;
 import com.node5.settlementservice.settlement.application.dto.SettlementListInfo;
+import com.node5.settlementservice.settlement.exception.SettlementException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +12,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.YearMonth;
 import java.util.UUID;
+
+import static com.node5.settlementservice.settlement.exception.SettlementErrorCode.INVALID_VALUE;
 
 @Tag(name = "Settlement", description = "정산 API")
 @RestController
@@ -28,6 +31,10 @@ public class SettlementController {
             @RequestParam("endDate") @DateTimeFormat(pattern = "yyyy-MM") YearMonth endDate,
             @RequestParam(value = "page", defaultValue = "0") int page
     ) {
+        if (startDate.isAfter(endDate)) {
+            throw new SettlementException(INVALID_VALUE, "조회 시작일(" + startDate + ")은 종료일(" + endDate + ")보다 늦을 수 없습니다.");
+        }
+
         return ResponseEntity.ok(settlementService.getSettlementHistory(shopId, startDate, endDate, page));
     }
 
