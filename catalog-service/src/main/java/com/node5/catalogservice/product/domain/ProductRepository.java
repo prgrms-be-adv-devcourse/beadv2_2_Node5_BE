@@ -12,6 +12,8 @@ public interface ProductRepository {
 
 	Page<Product> findByStatus(ProductStatus status, Pageable pageable);
 
+	Page<Product> findByShopId(UUID shopId, Pageable pageable);
+
 	Optional<Product> findByIdAndStatus(UUID id, ProductStatus status);
 
 	Optional<Product> findById(UUID id);

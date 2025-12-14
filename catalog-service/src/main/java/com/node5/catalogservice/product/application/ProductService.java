@@ -140,6 +140,18 @@ public class ProductService {
 		productIndexProducer.sendProductUpdateEvent(saved);
 	}
 
+	/**
+	 * 특정 상점의 상품 목록을 조회합니다.
+	 * <p>
+	 * - 요청자가 해당 상점의 소유자인지 검증 후 조회
+	 */
+	public Page<ProductInfo> getProductsByShop(UUID memberId, UUID shopId, Pageable pageable) {
+		validateShopOwnership(memberId, shopId);
+
+		return productRepository.findByShopId(shopId, pageable)
+			.map(ProductInfo::from);
+	}
+
 	private Product getProductOrThrow(UUID productId) {
 		return productRepository.findById(productId)
 			.orElseThrow(ProductNotFoundException::new);
