@@ -2,13 +2,11 @@ package com.node5.memberservice.auth.application.dto;
 
 import com.node5.memberservice.member.domain.Member;
 
+import java.util.List;
 import java.util.UUID;
 
 public record LoginInfoResponse(
-        UUID id,
-        String memberName,
-        String memberStatus,
-        String loginStatus,
+        MemberInfo memberInfo,
         String accessToken,
         String refreshToken,
         String temporaryToken
@@ -16,10 +14,7 @@ public record LoginInfoResponse(
 
     public static LoginInfoResponse success(Member member, String accessToken, String refreshToken) {
         return new LoginInfoResponse(
-                member.getId(),
-                member.getName(),
-                member.getStatus().name(),
-                "SUCCESS",
+                new MemberInfo(member),
                 accessToken,
                 refreshToken,
                 null
@@ -31,10 +26,18 @@ public record LoginInfoResponse(
                 null,
                 null,
                 null,
-                "NEW_MEMBER",
-                null,
-                null,
                 temporaryToken
         );
+    }
+
+    public record MemberInfo(
+            UUID id,
+            String name,
+            String status,
+            List<String> roles
+    ) {
+        public MemberInfo(Member member) {
+            this(member.getId(), member.getName(), member.getStatus().name(), member.getRoles().stream().map(Enum::name).toList());
+        }
     }
 }

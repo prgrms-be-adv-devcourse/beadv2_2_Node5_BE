@@ -1,10 +1,9 @@
-package com.node5.shopservice.shop.application.dto;
+package com.node5.shopservice.shop.client.dto;
 
 import java.util.List;
 
-public record ShopRegisterResponse(
+public record RoleModifyResponse(
         String accessToken,
         List<String> memberRoles
 ) {
-
 }

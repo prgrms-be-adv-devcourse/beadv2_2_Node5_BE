@@ -17,20 +17,19 @@ public class ShopRepositoryAdaptor implements ShopRepository {
     private final ShopJpaRepository shopJpaRepository;
 
     @Override
-    public Page<Shop> findAllByMemberIdAndDeletedAtIsNull(UUID memberId, Pageable pageable) {
+    public Page<Shop> findOwnedShopList(UUID memberId, Pageable pageable) {
         return shopJpaRepository.findAllByMemberIdAndDeletedAtIsNull(memberId, pageable);
     }
 
     @Override
-    public Shop save(Shop shop) {
-        return shopJpaRepository.save(shop);
+    public void save(Shop shop) {
+        shopJpaRepository.save(shop);
     }
 
     @Override
-    public Optional<Shop> findByIdAndDeletedAtIsNull(UUID id) {
-        return shopJpaRepository.findByIdAndDeletedAtIsNull(id);
+    public Optional<Shop> findOwnedShop(UUID shopId, UUID memberId) {
+        return shopJpaRepository.findByIdAndMemberIdAndDeletedAtIsNull(shopId, memberId);
     }
-
 
     @Override
     public int countByMemberIdAndDeletedAtIsNull(UUID memberId) {
