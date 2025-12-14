@@ -2,6 +2,7 @@ CREATE SCHEMA IF NOT EXISTS member;
 
 -- DROP TABLE IF EXISTS member."member";
 -- DROP TABLE IF EXISTS member."o_auth";
+-- DROP TABLE IF EXISTS member."inquiry";
 
 CREATE TABLE member."member" (
 	id uuid NOT NULL,
@@ -24,6 +25,15 @@ CREATE TABLE member."o_auth" (
 	provider_id varchar(100) NOT NULL,
 	created_at timestamp NOT NULL,
     modified_at timestamp NOT NULL,
-	CONSTRAINT pk_oAuth PRIMARY KEY (id)
+	CONSTRAINT pk_o_auth PRIMARY KEY (id)
 );
 
+CREATE TABLE member."inquiry" (
+	id uuid NOT NULL,
+	member_id uuid NOT NULL,
+    message text NOT NULL,
+    inquiry_category varchar(100) NOT NULL,
+	created_at timestamp NOT NULL,
+    modified_at timestamp NOT NULL,
+	CONSTRAINT pk_inquiry PRIMARY KEY (id)
+);
