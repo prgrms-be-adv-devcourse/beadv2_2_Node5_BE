@@ -1,7 +1,6 @@
 package com.node5.orderservice.order.application;
 
 import com.node5.common.domain.PageInfoDto;
-import com.node5.orderservice.application.dto.*;
 import com.node5.orderservice.order.application.dto.*;
 import com.node5.orderservice.order.domain.Order;
 import com.node5.orderservice.order.domain.OrderItem;
@@ -23,6 +22,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static com.node5.orderservice.order.domain.OrderStatus.*;
 
 @Service
 @RequiredArgsConstructor
