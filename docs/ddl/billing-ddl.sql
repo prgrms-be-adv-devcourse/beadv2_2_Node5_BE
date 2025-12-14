@@ -42,7 +42,7 @@ CREATE TABLE billing."wallet_withdraw_log" (
 
 CREATE TABLE billing."payment" (
     id uuid NOT NULL,
-    wallet_id uuid NOT NULL,
+    member_id uuid NOT NULL,
     payment_key varchar(200) UNIQUE,
     order_id varchar(100),
     amount BIGINT NOT NULL,
@@ -58,7 +58,7 @@ CREATE TABLE billing."payment" (
 
 CREATE TABLE billing."payment_failure" (
     id uuid NOT NULL,
-    wallet_id uuid NOT NULL,
+    member_id uuid NOT NULL,
     payment_key varchar(200) NOT NULL,
     order_id varchar(100) NOT NULL,
     error_code varchar(50),
