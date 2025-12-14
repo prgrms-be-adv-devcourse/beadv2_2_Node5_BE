@@ -1,20 +1,33 @@
 package com.node5.settlementservice.application;
 
+import com.node5.common.domain.PageInfoDto;
 import com.node5.settlementservice.application.dto.JobExecutionInfo;
+import com.node5.settlementservice.application.dto.SettlementListInfo;
+import com.node5.settlementservice.domain.SettlementResult;
+import com.node5.settlementservice.domain.SettlementResultRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.explore.JobExplorer;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.time.temporal.ChronoUnit;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class SettlementService {
 
     private final JobExplorer jobExplorer;
+    private final SettlementResultRepository settlementResultRepository;
 
     public JobExecutionInfo getStatusByJobExecutionId(Long jobExecutionId) {
         // JobExplorer를 사용하여 DB 메타데이터에서 JobExecution 조회
@@ -51,5 +64,24 @@ public class SettlementService {
                 shopId == null ? "전체" : shopId,
                 period
         );
+    }
+
+    public SettlementListInfo getSettlementHistory(UUID shopId, YearMonth startYm, YearMonth endYm, int page) {
+        LocalDate periodStart = startYm.atDay(1);
+        LocalDate periodEnd = endYm.atEndOfMonth();
+
+        Pageable pageable = PageRequest.of(page, 12);
+        Page<SettlementResult> result = settlementResultRepository.findByShopIdAndTargetStartDateBetweenOrderByTargetEndDateDesc(shopId, periodStart, periodEnd, pageable);
+        PageInfoDto pageInfo = new PageInfoDto(result.getNumber(), result.getSize(), result.getTotalElements(), result.getTotalPages());
+
+        if(!result.hasContent()){
+            return SettlementListInfo.from(pageInfo, Collections.emptyList());
+        }
+
+        List<SettlementListInfo.SettlementListDetailInfo> detailInfoList = result.getContent().stream()
+                .map(SettlementListInfo.SettlementListDetailInfo::from)
+                .toList();
+
+        return SettlementListInfo.from(pageInfo, detailInfoList);
     }
 }
