@@ -16,8 +16,8 @@ public class PaymentFailureRepositoryAdapter implements PaymentFailureRepository
     private final PaymentFailureJpaRepository paymentFailureJpaRepository;
 
     @Override
-    public Page<PaymentFailure> findAllByWalletId(UUID walletId, Pageable pageable) {
-        return paymentFailureJpaRepository.findAllByWalletId(walletId, pageable);
+    public Page<PaymentFailure> findAllByMemberId(UUID walletId, Pageable pageable) {
+        return paymentFailureJpaRepository.findAllByMemberId(walletId, pageable);
     }
 
     @Override

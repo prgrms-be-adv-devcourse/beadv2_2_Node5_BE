@@ -7,7 +7,7 @@ import java.util.UUID;
 
 public interface PaymentFailureRepository {
 
-    Page<PaymentFailure> findAllByWalletId(UUID walletId, Pageable pageable);
+    Page<PaymentFailure> findAllByMemberId(UUID walletId, Pageable pageable);
 
     PaymentFailure save(PaymentFailure paymentFailure);
 }
