@@ -35,8 +35,8 @@ public class InquiryService {
     public InquiryInfoResponse getInquiryInfo(UUID inquiryId, UUID memberId, String memberRoles) {
         Inquiry inquiry = inquiryRepository.findById(inquiryId).orElseThrow(() -> new InquiryException(InquiryErrorCode.INQUIRY_NOT_FOUND));
 
-        boolean isOwner = inquiry.getMemberId() == memberId;
-        boolean isAdmin = memberRoles.contains(MemberRole.ADMIN.name());
+        boolean isOwner = inquiry.getMemberId().equals(memberId);
+        boolean isAdmin = memberRoles.contains(MemberRole.ADMIN.name()); // Todo - contains 로 권한 체크 X
 
         if (!isOwner && !isAdmin) {
             throw new InquiryException(InquiryErrorCode.INQUIRY_FORBIDDEN);

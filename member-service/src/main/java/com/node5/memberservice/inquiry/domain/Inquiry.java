@@ -2,7 +2,6 @@ package com.node5.memberservice.inquiry.domain;
 
 import com.node5.common.domain.BaseEntity;
 import com.node5.memberservice.inquiry.application.dto.InquiryRegisterCommand;
-import com.node5.memberservice.member.domain.Member;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;

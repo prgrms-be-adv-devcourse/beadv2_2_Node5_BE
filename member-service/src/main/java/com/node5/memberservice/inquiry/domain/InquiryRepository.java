@@ -7,7 +7,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface InquiryRepository {
-    Page<Inquiry> findAll(Pageable pageable);
     Page<Inquiry> findAllByMemberId(UUID memberId, Pageable pageable);
     Optional<Inquiry> findById(UUID id);
     void save(Inquiry inquiry);

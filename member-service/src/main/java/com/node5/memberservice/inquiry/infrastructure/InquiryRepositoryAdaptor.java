@@ -16,11 +16,6 @@ public class InquiryRepositoryAdaptor implements InquiryRepository {
     private final InquiryJpaRepository inquiryJpaRepository;
 
     @Override
-    public Page<Inquiry> findAll(Pageable pageable) {
-        return inquiryJpaRepository.findAll(pageable);
-    }
-
-    @Override
     public Page<Inquiry> findAllByMemberId(UUID memberId, Pageable pageable) {
         return inquiryJpaRepository.findAllByMemberId(memberId, pageable);
     }

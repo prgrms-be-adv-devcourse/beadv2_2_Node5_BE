@@ -3,10 +3,7 @@ package com.node5.memberservice.inquiry.presentation;
 import com.node5.memberservice.inquiry.application.InquiryService;
 import com.node5.memberservice.inquiry.application.dto.InquiryInfoResponse;
 import com.node5.memberservice.inquiry.application.dto.InquiryListResponse;
-import com.node5.memberservice.inquiry.exception.InquiryErrorCode;
-import com.node5.memberservice.inquiry.exception.InquiryException;
 import com.node5.memberservice.inquiry.presentation.dto.InquiryRegisterRequest;
-import com.node5.memberservice.member.domain.MemberRole;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,7 +27,7 @@ public class InquiryController {
 //            @RequestHeader("Member-Roles") String memberRoles,
 //            @PageableDefault(size = 10, page = 0, sort = "createdAt") Pageable pageable
 //    ) {
-//        if (!memberRoles.contains(MemberRole.ADMIN.name())) {
+//        if (!memberRoles.contains(MemberRole.ADMIN.name())) { // Todo - contains 로 권한 체크 X
 //            throw new InquiryException(InquiryErrorCode.INQUIRY_FORBIDDEN);
 //        }
 //        return ResponseEntity.ok(inquiryService.getInquiryListForAdmin(memberRoles, pageable));
