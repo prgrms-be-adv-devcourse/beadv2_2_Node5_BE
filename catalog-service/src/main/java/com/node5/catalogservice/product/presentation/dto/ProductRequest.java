@@ -16,10 +16,6 @@ import jakarta.validation.constraints.PositiveOrZero;
 @Schema(description = "상품 등록 요청")
 public record ProductRequest(
 
-	@Schema(description = "상점 ID", example = "dd63cad6-3440-4945-a3de-900d589e003f")
-	@NotNull(message = "shopId는 필수입니다.")
-	UUID shopId,
-
 	@Schema(description = "상품명", example = "노이즈 캔슬링 헤드폰")
 	@NotBlank(message = "상품명은 필수입니다.")
 	String name,
@@ -48,7 +44,7 @@ public record ProductRequest(
 	String thumbnailUrl
 ) {
 
-	public ProductCommand toCommand() {
+	public ProductCommand toCommand(UUID shopId) {
 		return new ProductCommand(
 			shopId,
 			name,
