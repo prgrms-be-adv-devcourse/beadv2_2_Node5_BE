@@ -28,4 +28,9 @@ public interface SettlementSourceJpaRepository extends JpaRepository<SettlementS
             @Param("startDate") LocalDateTime startDate,
             @Param("endDatePlusOneDay") LocalDateTime endDatePlusOneDay
     );
+
+    @Query("SELECT DISTINCT s.shopId FROM SettlementSource s " +
+            "WHERE s.paidAt >= :startDateTime AND s.paidAt < :endDateTime " +
+            "AND s.status = 'PENDING'")
+    List<UUID> findDistinctShopIds(LocalDateTime startDateTime, LocalDateTime endDateTime);
 }

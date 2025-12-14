@@ -10,4 +10,6 @@ public interface SettlementSourceRepository {
     List<SettlementSource> findPendingByPeriod(LocalDateTime startDate, LocalDateTime endDate);
 
     List<SettlementSource> saveAll(List<SettlementSource> sources);
+
+    List<UUID> findDistinctShopIds(LocalDateTime startDateTime, LocalDateTime endDateTime);
 }

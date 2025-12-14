@@ -29,4 +29,9 @@ public class SettlementSourceRepositoryAdapter implements SettlementSourceReposi
     public List<SettlementSource> saveAll(List<SettlementSource> sources) {
         return sourceJpaRepository.saveAll(sources);
     }
+
+    @Override
+    public List<UUID> findDistinctShopIds(LocalDateTime startDateTime, LocalDateTime endDateTime) {
+        return sourceJpaRepository.findDistinctShopIds(startDateTime, endDateTime);
+    }
 }
