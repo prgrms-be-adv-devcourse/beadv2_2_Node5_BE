@@ -35,7 +35,7 @@ public class ShopService {
     }
 
     public ShopInfoResponse findMyShopInfo(UUID memberId, UUID shopId) {
-        Shop shop = shopRepository.findOwnedShop(memberId, shopId)
+        Shop shop = shopRepository.findOwnedShop(shopId, memberId)
                 .orElseThrow(() -> new ShopException(ShopErrorCode.SHOP_NOT_FOUND));
         return ShopInfoResponse.from(shop);
     }
