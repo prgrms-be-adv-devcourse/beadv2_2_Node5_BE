@@ -1,0 +1,52 @@
+server:
+  port: 0 # random port
+
+spring:
+  application:
+    name: catalog-service
+  config:
+    import: optional:configserver:http://config-service:8888
+  profiles:
+    active: default
+  elasticsearch:
+    uris: http://localhost:9200
+    connection-timeout: 1s
+    socket-timeout: 3s
+  cloud:
+    config:
+      fail-fast: true
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      group-id: catalog-service-search
+      properties:
+        spring.json.trusted.packages: "com.node5.catalogservice.*"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: refresh, health, beans, info, prometheus
+
+apigateway:
+  host: http://localhost:8000
+
+shop-service:
+  url: http://localhost:8085
+
+app:
+  search:
+    product-index-name: products
+    kafka:
+      topics:
+        product-index: product-index-topic
+
+  s3:
+    bucket: ${S3_BUCKET_NAME}
+    region: ${AWS_REGION:ap-northeast-2}
+    presigned-url-expiration-seconds: ${S3_PRESIGNED_EXPIRE:600}
