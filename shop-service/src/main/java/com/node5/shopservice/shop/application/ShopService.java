@@ -31,11 +31,11 @@ public class ShopService {
     private final MemberClient memberClient;
 
     public Page<ShopListResponse> findMyShopList(UUID memberId, Pageable pageable) {
-        return shopRepository.findOwnedShopList(memberId, pageable).map(ShopListResponse::from);
+        return shopRepository.findAllByMemberIdAndDeletedAtIsNull(memberId, pageable).map(ShopListResponse::from);
     }
 
     public ShopInfoResponse findMyShopInfo(UUID memberId, UUID shopId) {
-        Shop shop = shopRepository.findOwnedShop(shopId, memberId)
+        Shop shop = shopRepository.findByIdAndMemberIdAndDeletedAtIsNull(shopId, memberId)
                 .orElseThrow(() -> new ShopException(ShopErrorCode.SHOP_NOT_FOUND));
         return ShopInfoResponse.from(shop);
     }
@@ -52,7 +52,7 @@ public class ShopService {
 
     @Transactional
     public ShopInfoResponse modifyMyShopInfo(UUID memberId, UUID shopId, ShopModifyCommand command) {
-        Shop shop = shopRepository.findOwnedShop(memberId, shopId)
+        Shop shop = shopRepository.findByIdAndMemberIdAndDeletedAtIsNull(shopId, memberId)
                 .orElseThrow(() -> new ShopException(ShopErrorCode.SHOP_NOT_FOUND));
         shop.update(command);
         return ShopInfoResponse.from(shop);
@@ -60,7 +60,7 @@ public class ShopService {
 
     @Transactional
     public ShopDeleteResponse deleteMyShop(UUID memberId, UUID shopId) {
-        Shop shop = shopRepository.findOwnedShop(memberId, shopId)
+        Shop shop = shopRepository.findByIdAndMemberIdAndDeletedAtIsNull(shopId, memberId)
                 .orElseThrow(() -> new ShopException(ShopErrorCode.SHOP_NOT_FOUND));
         shop.delete();
         shopRepository.flush();
