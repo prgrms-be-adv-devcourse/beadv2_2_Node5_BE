@@ -1,26 +1,26 @@
-CREATE SCHEMA subscription
+CREATE SCHEMA IF NOT EXISTS subscription
 
-    CREATE TABLE subscription.subscription (
-                                               id UUID NOT NULL,
-                                               member_id UUID NOT NULL,
+CREATE TABLE subscription.subscription (
+                                           id UUID NOT NULL,
+                                           member_id UUID NOT NULL,
 
-                                               product_id UUID NOT NULL,
-                                               product_name VARCHAR(100),
-                                               thumbnail_url VARCHAR,
-                                               price_per_item BIGINT NOT NULL,
-                                               quantity INTEGER NOT NULL DEFAULT 1,
-                                               total_price BIGINT,
+                                           product_id UUID NOT NULL,
+                                           product_name VARCHAR(100),
+                                           thumbnail_url VARCHAR,
+                                           price_per_item BIGINT NOT NULL,
+                                           quantity INTEGER NOT NULL DEFAULT 1,
+                                           total_price BIGINT,
 
-                                               subscription_status VARCHAR(20) NOT NULL,
-                                               next_run_date DATE NOT NULL,
-                                               delivery_address VARCHAR(100),
+                                           subscription_status VARCHAR(20) NOT NULL,
+                                           next_run_date DATE NOT NULL,
+                                           delivery_address VARCHAR(100),
 
-                                               created_at TIMESTAMP NOT NULL DEFAULT now(),
-                                               modified_at TIMESTAMP NOT NULL DEFAULT now(),
-                                               deleted_at TIMESTAMP,
+                                           created_at TIMESTAMP NOT NULL DEFAULT now(),
+                                           modified_at TIMESTAMP NOT NULL DEFAULT now(),
+                                           deleted_at TIMESTAMP,
 
-                                               PRIMARY KEY (id)
-    );
+                                           PRIMARY KEY (id)
+);
 
 CREATE INDEX idx_subscription_member_id ON subscription.subscription(member_id);
 CREATE INDEX idx_subscription_product_id ON subscription.subscription(product_id);
