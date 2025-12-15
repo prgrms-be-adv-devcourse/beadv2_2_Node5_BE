@@ -1,5 +1,7 @@
 package com.node5.catalogservice.product.presentation;
 
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springdoc.core.annotations.ParameterObject;
@@ -8,6 +10,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -56,5 +60,20 @@ public class ProductController {
 		@Parameter(description = "상품 ID") @PathVariable UUID productId
 	) {
 		return ResponseEntity.ok(productService.getOnSaleProduct(productId));
+	}
+
+	@PostMapping("/shop-ids")
+	@Operation(
+		summary = "상품 ID 목록으로 상점 ID 조회",
+		description = "여러 상품 ID에 대해 각 상품의 상점 ID를 조회합니다. (주문/결제용)"
+	)
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "상품-상점 매핑 조회 성공"),
+		@ApiResponse(responseCode = "404", description = "판매 중이 아닌 상품이 포함됨")
+	})
+	public ResponseEntity<Map<UUID, UUID>> getShopIdsByProductIds(
+		@RequestBody List<UUID> productIds
+	) {
+		return ResponseEntity.ok(productService.getShopIdsByProductIds(productIds));
 	}
 }
