@@ -47,6 +47,6 @@ app:
         product-index: product-index-topic
 
   s3:
-    bucket: myroutine-s3-bucket
-    region: ap-northeast-2
-    presigned-url-expiration-seconds: 600
+    bucket: ${S3_BUCKET_NAME}
+    region: ${AWS_REGION:ap-northeast-2}
+    presigned-url-expiration-seconds: ${S3_PRESIGNED_EXPIRE:600}
