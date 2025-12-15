@@ -80,27 +80,34 @@ public class SubscriptionService {
         Subscription subscription = subscriptionRepository.findById(id)
                 .orElseThrow(() -> new SubscriptionException(SUBSCRIPTION_NOT_FOUND));
 
-        subscription.update(
-                command.pricePerItem(),
-                command.quantity(),
-                command.deliveryAddress()
-        );
+        List<SubscriptionRecurrenceRule> rule = subscriptionRecurrenceRuleRepository.findAllBySubscriptionId(subscription.getId());
+        RecurrenceType type = rule.get(0).getRecurrenceType();
+
+        if (type == RecurrenceType.WEEKLY) {
+            // dayOfMonth 필드가 들어오면 에러
+            if (command.dayOfMonth() != null) {
+                throw new SubscriptionException(SUBSCRIPTION_RECURRENCE_UPDATE_NOT_ALLOWED);
+            }
+            // dayOfWeek 필드가 null이면 유지, 값 있으면 변경
+            if (command.dayOfWeek() != null) {
+                updateSubscriptionRecurrenceRule(subscription, RecurrenceType.WEEKLY, command.dayOfWeek(), command.dayOfMonth());
+            }
+        }
+
+        if (type == RecurrenceType.MONTHLY) {
+            // dayOfWeek 필드가 들어오면 에러
+            if (command.dayOfWeek() != null) {
+                throw new SubscriptionException(SUBSCRIPTION_RECURRENCE_UPDATE_NOT_ALLOWED);
+            }
+            // dayOfMonth 필드가 null이면 유지, 값 있으면 변경
+            if (command.dayOfMonth() != null) {
+                updateSubscriptionRecurrenceRule(subscription, RecurrenceType.MONTHLY, command.dayOfWeek(), command.dayOfMonth());
+            }
+        }
+
+        subscription.update(command.deliveryAddress());
 
         Subscription updatedSubscription = subscriptionRepository.save(subscription);
-
-        if(command.recurrenceType() != null) {
-
-            List<SubscriptionRecurrenceRule> newRules = createSubscriptionRecurrenceRule(
-                    id,
-                    command.recurrenceType(),
-                    command.dayOfWeek(),
-                    command.dayOfMonth()
-            );
-
-            subscriptionRecurrenceRuleRepository.deleteAllBySubscriptionId(id);
-            subscription.calculateNextRunDate(newRules);
-            subscriptionRecurrenceRuleRepository.saveAll(newRules);
-        }
 
         return toSubscriptionInfo(updatedSubscription);
     }
@@ -136,6 +143,11 @@ public class SubscriptionService {
         Subscription saved = subscriptionRepository.save(subscription);
 
         return toSubscriptionInfo(saved);
+    }
+
+    public Page<SubscriptionInfo> findAllByProductId(UUID productId, Pageable pageable) {
+        Page<Subscription> subscriptions = subscriptionRepository.findAllByProductId(productId, pageable);
+        return  subscriptions.map(this::toSubscriptionInfo);
     }
 
     private ProductInfoResponse getProductInfo(UUID productId) {
@@ -181,7 +193,7 @@ public class SubscriptionService {
 
     private SubscriptionInfo toSubscriptionInfo(Subscription subscription) {
         List<SubscriptionRecurrenceRule> rules =
-                subscriptionRecurrenceRuleRepository.findBySubscriptionId(subscription.getId());
+                subscriptionRecurrenceRuleRepository.findAllBySubscriptionId(subscription.getId());
 
         if (rules.isEmpty()) {
             throw new SubscriptionException(SUBSCRIPTION_RULE_NOT_FOUND);
@@ -195,5 +207,20 @@ public class SubscriptionService {
         Integer dayOfMonth = rules.get(0).getDayOfMonth();
 
         return SubscriptionInfo.of(subscription, ruleType, dayOfWeek, dayOfMonth);
+    }
+
+    private void updateSubscriptionRecurrenceRule(Subscription subscription, RecurrenceType recurrenceType, List<DayOfWeek> dayOfWeek, Integer dayOfMonth) {
+        UUID SubscriptionId = subscription.getId();
+
+        List<SubscriptionRecurrenceRule> newRules = createSubscriptionRecurrenceRule(
+                SubscriptionId,
+                recurrenceType,
+                dayOfWeek,
+                dayOfMonth
+        );
+
+        subscriptionRecurrenceRuleRepository.deleteAllBySubscriptionId(SubscriptionId);
+        subscription.calculateNextRunDate(newRules);
+        subscriptionRecurrenceRuleRepository.saveAll(newRules);
     }
 }

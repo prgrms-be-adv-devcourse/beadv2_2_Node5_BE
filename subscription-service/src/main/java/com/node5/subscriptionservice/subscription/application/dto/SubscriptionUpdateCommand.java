@@ -7,10 +7,7 @@ import java.time.DayOfWeek;
 import java.util.List;
 
 public record SubscriptionUpdateCommand(
-        BigDecimal pricePerItem,
-        Integer quantity,
         String deliveryAddress,
-        RecurrenceType recurrenceType,
         List<DayOfWeek> dayOfWeek,
         Integer dayOfMonth
 ) {

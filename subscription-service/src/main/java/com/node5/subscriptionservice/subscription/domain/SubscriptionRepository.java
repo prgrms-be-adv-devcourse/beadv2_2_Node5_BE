@@ -16,4 +16,6 @@ public interface SubscriptionRepository {
     Page<Subscription> findAllByMemberId(UUID memberId, Pageable pageable);
 
     Page<Subscription> findAllByNextRunDateAndSubscriptionStatus(LocalDate nextRunDate, SubscriptionStatus subscriptionStatus, Pageable pageable);
+
+    Page<Subscription> findAllByProductId(UUID productId, Pageable pageable);
 }
