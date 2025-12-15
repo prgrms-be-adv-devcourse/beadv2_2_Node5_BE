@@ -47,11 +47,6 @@ public class ProductRepositoryAdapter implements ProductRepository {
 	}
 
 	@Override
-	public Page<Product> findAll(Pageable pageable) {
-		return productJpaRepository.findAll(pageable);
-	}
-
-	@Override
 	public List<Product> findAllByIdIn(Collection<UUID> ids) {
 		return productJpaRepository.findByIdIn(ids);
 	}
