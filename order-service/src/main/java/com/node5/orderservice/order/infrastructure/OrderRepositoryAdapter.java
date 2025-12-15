@@ -2,6 +2,7 @@ package com.node5.orderservice.order.infrastructure;
 
 import com.node5.orderservice.order.domain.Order;
 import com.node5.orderservice.order.domain.OrderRepository;
+import com.node5.orderservice.order.domain.OrderStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.List;
 
 @Repository
 public class OrderRepositoryAdapter implements OrderRepository {
@@ -35,6 +37,21 @@ public class OrderRepositoryAdapter implements OrderRepository {
     @Override
     public Page<Order> findByMemberIdAndCreatedAtAfterOrderByCreatedAtDesc(UUID memberId, LocalDateTime createdAt, Pageable pageable) {
         return orderJpaRepository.findByMemberIdAndCreatedAtAfterOrderByCreatedAtDesc(memberId, createdAt, pageable);
+    }
+
+    @Override
+    public List<Order> findByStatusAndPaidAtBefore(OrderStatus orderStatus, LocalDateTime standard) {
+        return orderJpaRepository.findByStatusAndPaidAtBefore(orderStatus, standard);
+    }
+
+    @Override
+    public List<Order> findByStatusAndModifiedAtBefore(OrderStatus orderStatus, LocalDateTime standard) {
+        return orderJpaRepository.findByStatusAndModifiedAtBefore(orderStatus, standard);
+    }
+
+    @Override
+    public List<Order> saveAll(List<Order> orders) {
+        return orderJpaRepository.saveAll(orders);
     }
 
 }

@@ -1,5 +1,7 @@
 package com.node5.catalogservice.product.infrastructure;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -25,6 +27,11 @@ public class ProductRepositoryAdapter implements ProductRepository {
 	}
 
 	@Override
+	public Page<Product> findByShopId(UUID shopId, Pageable pageable) {
+		return productJpaRepository.findByShopId(shopId, pageable);
+	}
+
+	@Override
 	public Optional<Product> findByIdAndStatus(UUID id, ProductStatus status) {
 		return productJpaRepository.findByIdAndStatus(id, status);
 	}
@@ -42,5 +49,10 @@ public class ProductRepositoryAdapter implements ProductRepository {
 	@Override
 	public Page<Product> findAll(Pageable pageable) {
 		return productJpaRepository.findAll(pageable);
+	}
+
+	@Override
+	public List<Product> findAllByIdIn(Collection<UUID> ids) {
+		return productJpaRepository.findByIdIn(ids);
 	}
 }

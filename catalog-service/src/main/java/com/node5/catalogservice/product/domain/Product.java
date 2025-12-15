@@ -18,7 +18,7 @@ import lombok.Getter;
 
 @Getter
 @Entity
-@Table(name = "product")
+@Table(name = "product", schema = "catalog")
 public class Product extends BaseEntity {
 
 	@Id

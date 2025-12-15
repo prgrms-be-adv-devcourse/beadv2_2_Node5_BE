@@ -18,6 +18,9 @@ public class ProductDocument {
 	@Id
 	private String productId;   // ES 문서 ID = 실제 상품 ID
 
+	@Field(type = FieldType.Keyword)
+	private String shopId;
+
 	@Field(type = FieldType.Text)
 	private String name;
 
@@ -41,6 +44,7 @@ public class ProductDocument {
 
 	public ProductDocument(
 		String id,
+		String shopId,
 		String name,
 		String category,
 		String thumbnailUrl,
@@ -49,6 +53,7 @@ public class ProductDocument {
 		LocalDateTime createdAt
 	) {
 		this.productId = id;
+		this.shopId = shopId;
 		this.name = name;
 		this.category = category;
 		this.thumbnailUrl = thumbnailUrl;
@@ -60,6 +65,7 @@ public class ProductDocument {
 	public static ProductDocument from(Product product) {
 		return new ProductDocument(
 			product.getId().toString(),
+			product.getShopId().toString(),
 			product.getName(),
 			product.getCategory().name(),
 			product.getThumbnailUrl(),

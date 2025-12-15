@@ -28,7 +28,7 @@ import lombok.RequiredArgsConstructor;
  * <p>
  * - 상품 조회 / 생성 / 수정 / 상태 변경<br>
  * - 판매자 소유권 검증 (Shop-Service 연동)<br>
- * - 변경 발생 시 검색 색인 동기화를 위한 Kafka 이벤트 발행
+ * - 상품 변경 시 검색 색인 동기화를 위한 Kafka 이벤트를 발행
  */
 @Service
 @RequiredArgsConstructor
@@ -38,18 +38,19 @@ public class ProductService {
 	private final ProductIndexProducer productIndexProducer;
 	private final ShopServiceClient shopServiceClient;
 
+	/**
+	 * 판매 중(ON_SALE) 상품 목록을 조회합니다.
+	 */
 	public Page<ProductInfo> getOnSaleProducts(Pageable pageable) {
 		return productRepository.findByStatus(ProductStatus.ON_SALE, pageable)
 			.map(ProductInfo::from);
 	}
 
+	/**
+	 * 판매 중(ON_SALE) 상품을 단건 조회합니다.
+	 */
 	public ProductInfo getOnSaleProduct(UUID id) {
 		return ProductInfo.from(getOnSaleProductOrThrow(id));
-	}
-
-	public Page<ProductInfo> getProducts(Pageable pageable) {
-		return productRepository.findAll(pageable)
-			.map(ProductInfo::from);
 	}
 
 	/**
@@ -109,6 +110,7 @@ public class ProductService {
 	/**
 	 * 상품 판매 상태를 변경합니다.
 	 * <p>
+	 * - 상품 존재 확인<br>
 	 * - 상점 소유권 검증<br>
 	 * - 변경 후 검색 색인 업데이트 이벤트 발행
 	 */
@@ -128,16 +130,31 @@ public class ProductService {
 	/**
 	 * 상품을 판매 중단(DISCONTINUED) 처리합니다.
 	 * <p>
+	 * - 상품 존재 확인<br>
+	 * - 상점 소유권 검증<br>
 	 * - 변경 후 검색 색인 업데이트 이벤트 발행
 	 */
 	@Transactional
-	public void discontinueProduct(UUID id) {
-		Product product = getProductOrThrow(id);
+	public void discontinueProduct(UUID memberId, UUID productId) {
+		Product product = getProductOrThrow(productId);
+		validateShopOwnership(memberId, product.getShopId());
 
 		product.discontinue();
 
 		Product saved = productRepository.save(product);
 		productIndexProducer.sendProductUpdateEvent(saved);
+	}
+
+	/**
+	 * 특정 상점의 상품 목록을 조회합니다.
+	 * <p>
+	 * - 요청자가 해당 상점의 소유자인지 검증 후 조회
+	 */
+	public Page<ProductInfo> getProductsByShop(UUID memberId, UUID shopId, Pageable pageable) {
+		validateShopOwnership(memberId, shopId);
+
+		return productRepository.findByShopId(shopId, pageable)
+			.map(ProductInfo::from);
 	}
 
 	private Product getProductOrThrow(UUID productId) {

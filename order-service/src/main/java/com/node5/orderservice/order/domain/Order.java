@@ -96,4 +96,18 @@ public class Order extends BaseEntity {
     public void updateStatus(OrderStatus orderStatus) {
         this.status = orderStatus;
     }
+
+    public void markAsPaid(LocalDateTime paidAt){
+        if (this.paidAt != null) {
+            throw new IllegalStateException("paidAt 필드는 이미 기록되어 변경할 수 없습니다.");
+        }
+        this.status = OrderStatus.PAID;
+        this.paidAt = paidAt;
+    }
+
+    public void markAsClosed(OrderStatus status, LocalDateTime closedAt){
+        this.closedAt = closedAt;
+        this.status = status;
+    }
+
 }
