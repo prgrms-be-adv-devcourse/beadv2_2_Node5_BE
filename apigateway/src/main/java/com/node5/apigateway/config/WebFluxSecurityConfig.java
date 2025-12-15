@@ -22,13 +22,19 @@ public class WebFluxSecurityConfig {
 
     private final static String[] PERMITALL_ANTPATTERNS = {
             "/", "/csrf",
-            "/?*-service/api/v1/**",
+//            "/?*-service/api/v1/**",
+            "/member-service/api/v1/auth/oauth/**",
+            "/member-service/api/v1/auth/email/**",
+            "/member-service/api/v1/auth/refresh-token",
             "/?*-service/swagger-ui/**",
             "/?*-service/actuator/?*", "/actuator/?*",
             "/v3/api-docs/**", "/?*-service/v3/api-docs", "/swagger*/**", "/webjars/**"
     };
-    private final static String USER_JOIN_ANTPATTERNS = "/member-service/api/v1/auth/oauth/register";
-
+    private final static String[] GUEST_PERMITALL_ANTPATTERNS = {
+            "/catalog-service/api/v1/products",
+            "/catalog-service/api/v1/products/*",
+            "/catalog-service/api/v1/search"
+    };
 
     @Bean
     public SecurityWebFilterChain configure(ServerHttpSecurity http, ReactiveAuthorizationManager<AuthorizationContext> check) {
@@ -48,7 +54,7 @@ public class WebFluxSecurityConfig {
                 .httpBasic(basic -> basic.authenticationEntryPoint(new HttpStatusServerEntryPoint(HttpStatus.UNAUTHORIZED)))
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers(PERMITALL_ANTPATTERNS).permitAll()
-                        .pathMatchers(HttpMethod.POST, USER_JOIN_ANTPATTERNS).permitAll()
+                        .pathMatchers(HttpMethod.GET, GUEST_PERMITALL_ANTPATTERNS).permitAll()
                         .anyExchange().access(check)
                 );
 
