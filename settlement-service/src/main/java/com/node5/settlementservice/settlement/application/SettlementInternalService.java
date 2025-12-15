@@ -1,6 +1,10 @@
 package com.node5.settlementservice.settlement.application;
 
 import com.node5.settlementservice.settlement.application.dto.JobExecutionInfo;
+import com.node5.settlementservice.settlement.application.dto.SettlementSourceItem;
+import com.node5.settlementservice.settlement.domain.SettlementProcessStatus;
+import com.node5.settlementservice.settlement.domain.SettlementSource;
+import com.node5.settlementservice.settlement.domain.SettlementSourceRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobParameters;
@@ -9,12 +13,15 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class SettlementInternalService {
 
     private final JobExplorer jobExplorer;
+    private final SettlementSourceRepository settlementSourceRepository;
 
     public JobExecutionInfo getStatusByJobExecutionId(Long jobExecutionId) {
         // JobExplorer를 사용하여 DB 메타데이터에서 JobExecution 조회
@@ -41,5 +48,19 @@ public class SettlementInternalService {
         String exitDescription = execution.getExitStatus().getExitDescription();
 
         return JobExecutionInfo.from(execution, shopId, period, start, end, duration, exitDescription);
+    }
+
+    public void saveSettlementResource(List<SettlementSourceItem> items) {
+        List<SettlementSource> sources = items.stream()
+                .map(item -> SettlementSource.create(
+                        item.productId(),
+                        item.shopId(),
+                        item.orderId(),
+                        item.itemAmount(),
+                        item.paidAt(),
+                        SettlementProcessStatus.PENDING
+                ))
+                .toList();
+        settlementSourceRepository.saveAll(sources);
     }
 }
