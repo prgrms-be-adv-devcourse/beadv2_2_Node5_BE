@@ -16,6 +16,6 @@ dependencies {
 }
 
 tasks.named('test') {
-    useJUnitPlatform()
-    failOnNoMatchingTests = true
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
 }
