@@ -11,12 +11,11 @@ dependencies {
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0'
 
     //test
-    runtimeOnly 'com.h2database:h2'
+    testRuntimeOnly 'com.h2database:h2'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    implementation 'org.assertj:assertj-core:3.26.3'
 }
 
 tasks.named('test') {
-    testClassesDirs = sourceSets.test.output.classesDirs
-    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform()
+    failOnNoMatchingTests = true
 }
