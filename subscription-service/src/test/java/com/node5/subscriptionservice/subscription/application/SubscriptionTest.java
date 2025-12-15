@@ -45,7 +45,7 @@ class SubscriptionTest {
         Subscription subscription = createSubscription();
         subscription.delete();
 
-        assertThatThrownBy(() -> subscription.update(BigDecimal.TEN, 1, "서울"))
+        assertThatThrownBy(() -> subscription.update("서울"))
                 .isInstanceOf(SubscriptionException.class)
                 .extracting("errorCode")
                 .isEqualTo(SubscriptionErrorCode.SUBSCRIPTION_INVALID_STATE);

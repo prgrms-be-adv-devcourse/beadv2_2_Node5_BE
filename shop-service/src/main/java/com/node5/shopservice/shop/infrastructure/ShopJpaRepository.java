@@ -9,7 +9,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface ShopJpaRepository extends JpaRepository<Shop, UUID> {
-    Optional<Shop> findByIdAndDeletedAtIsNull(UUID memberId);
     Page<Shop> findAllByMemberIdAndDeletedAtIsNull(UUID memberId, Pageable pageable);
     int countByMemberIdAndDeletedAtIsNull(UUID memberId);
+    Optional<Shop> findByIdAndMemberIdAndDeletedAtIsNull(UUID shopId, UUID memberId);
 }

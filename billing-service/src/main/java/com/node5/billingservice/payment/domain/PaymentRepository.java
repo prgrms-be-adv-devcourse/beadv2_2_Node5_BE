@@ -8,7 +8,7 @@ import java.util.UUID;
 
 public interface PaymentRepository {
 
-    Page<Payment> findAllByWalletId(UUID walletId, Pageable pageable);
+    Page<Payment> findAllByMemberId(UUID walletId, Pageable pageable);
 
     Optional<Payment> findByOrderId(String orderId);
 

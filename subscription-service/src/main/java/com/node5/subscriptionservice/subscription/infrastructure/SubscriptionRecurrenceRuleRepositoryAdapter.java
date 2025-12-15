@@ -15,7 +15,7 @@ public class SubscriptionRecurrenceRuleRepositoryAdapter implements Subscription
     private final SubscriptionRecurrenceRuleJpaRepository jpaRepository;
 
     @Override
-    public List<SubscriptionRecurrenceRule> findBySubscriptionId(UUID subscriptionId){return jpaRepository.findBySubscriptionId(subscriptionId);}
+    public List<SubscriptionRecurrenceRule> findAllBySubscriptionId(UUID subscriptionId){return jpaRepository.findAllBySubscriptionId(subscriptionId);}
 
     @Override
     public List<SubscriptionRecurrenceRule> saveAll(List<SubscriptionRecurrenceRule> rules){return jpaRepository.saveAll(rules);}

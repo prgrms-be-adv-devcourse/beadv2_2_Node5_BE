@@ -40,10 +40,10 @@ public class PaymentService {
     // walletId로 결제 내역 조회
     public Page<PaymentInfo> findAll(UUID memberId, Pageable pageable) {
 
-        Wallet wallet = walletRepositoryAdapter.findByMemberId(memberId)
+        walletRepositoryAdapter.findByMemberId(memberId)
                 .orElseThrow(() -> new WalletException(WALLET_NOT_FOUND));
 
-        Page<Payment> paymentPage = paymentRepositoryAdapter.findAllByWalletId(wallet.getId(), pageable);
+        Page<Payment> paymentPage = paymentRepositoryAdapter.findAllByMemberId(memberId, pageable);
         return paymentPage.map(PaymentInfo::from);
     }
 
@@ -51,11 +51,11 @@ public class PaymentService {
     @Transactional
     public PaymentInfo request(UUID memberId, PaymentCommand command) {
 
-        Wallet wallet = walletRepositoryAdapter.findByMemberId(memberId)
+        walletRepositoryAdapter.findByMemberId(memberId)
                 .orElseThrow(() -> new WalletException(WALLET_NOT_FOUND));
 
         Payment payment = Payment.builder()
-                .walletId(wallet.getId())
+                .memberId(memberId)
                 .amount(command.amount())
                 .build();
         paymentRepositoryAdapter.save(payment);
@@ -89,7 +89,7 @@ public class PaymentService {
     // 결제 실패 기록
     @Transactional
     public PaymentFailureInfo failure(UUID memberId, PaymentFailureCommand command) {
-        Wallet wallet = walletRepositoryAdapter.findByMemberIdForUpdate(memberId)
+        walletRepositoryAdapter.findByMemberIdForUpdate(memberId)
                 .orElseThrow(() -> new WalletException(WALLET_NOT_FOUND));
 
         Payment payment = paymentRepositoryAdapter.findByOrderId(command.orderId())
@@ -102,7 +102,7 @@ public class PaymentService {
         payment.failure(command.errorMessage());
 
         PaymentFailure failure = PaymentFailure.builder()
-                .walletId(wallet.getId())
+                .memberId(memberId)
                 .orderId(payment.getOrderId())
                 .errorCode(command.errorCode())
                 .errorMessage(command.errorMessage())
@@ -113,6 +113,7 @@ public class PaymentService {
         return PaymentFailureInfo.from(failure);
     }
 
+    // 결제 취소
     @Transactional
     public PaymentInfo cancel(UUID memberId, PaymentCancelCommand command) {
         Wallet wallet = walletRepositoryAdapter.findByMemberIdForUpdate(memberId)
@@ -122,7 +123,10 @@ public class PaymentService {
                 .orElseThrow(() -> new PaymentException(PAYMENT_NOT_FOUND));
 
         // 결제 키와 금액 검증
-        payment.validateValue(payment, command.paymentKey(), command.amount());
+        payment.validateValue(memberId, payment, command.paymentKey(), command.amount());
+
+        // 예치금 잔액 검증
+        wallet.validateSufficientBalance(command.amount());
 
         // 결제 취소 요청
         TossPaymentResponse tossPayment = tossPaymentClient.cancel(command);

@@ -10,13 +10,12 @@ import com.node5.memberservice.auth.oauth.OAuthProviderService;
 import com.node5.memberservice.auth.oauth.dto.OAuthUserInfo;
 import com.node5.memberservice.auth.util.JwtProvider;
 import com.node5.memberservice.auth.util.TokenType;
+import com.node5.memberservice.mail.application.MailService;
 import com.node5.memberservice.member.domain.Member;
 import com.node5.memberservice.member.domain.MemberRepository;
 import com.node5.memberservice.redis.application.RedisService;
 import io.jsonwebtoken.Claims;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,7 +34,7 @@ public class AuthService {
     private final MemberRepository memberRepository;
     private final Map<String, OAuthProviderService> providerMap;
     private final JwtProvider jwtProvider;
-    private final JavaMailSender mailSender;
+    private final MailService mailService;
     private final RedisService redisService;
     private final BillingClient billingClient;
 
@@ -48,7 +47,7 @@ public class AuthService {
             MemberRepository memberRepository,
             List<OAuthProviderService> providerList,
             JwtProvider jwtProvider,
-            JavaMailSender mailSender,
+            MailService mailService,
             RedisService redisService,
             BillingClient billingClient
     ) {
@@ -56,7 +55,7 @@ public class AuthService {
         this.memberRepository = memberRepository;
         this.providerMap = providerList.stream().collect(Collectors.toMap(OAuthProviderService::getProviderName, provider -> provider));
         this.jwtProvider = jwtProvider;
-        this.mailSender = mailSender;
+        this.mailService = mailService;
         this.redisService = redisService;
         this.billingClient = billingClient;
     }
@@ -81,8 +80,9 @@ public class AuthService {
             redisService.saveRefreshToken(member.getId(), refreshToken);
             return LoginInfoResponse.success(member, accessToken, refreshToken);
         }
-
-        String temporaryToken = jwtProvider.generateTemporaryToken(oAuthUserInfo);
+        UUID tempId = UUID.randomUUID();
+        redisService.saveOAuthTempUser(tempId, oAuthUserInfo);
+        String temporaryToken = jwtProvider.generateTemporaryToken(tempId);
         return LoginInfoResponse.newMember(temporaryToken);
     }
 
@@ -93,10 +93,21 @@ public class AuthService {
             throw new AuthException(AuthErrorCode.EMAIL_NOT_VERIFIED);
         }
 
-        OAuthUserInfo oAuthUserInfo = jwtProvider.getOAuthUserInfo(command.temporaryToken());
+        Claims claims = jwtProvider.validateTokenType(command.temporaryToken(), TokenType.TEMPORARY);
+        UUID tempId = UUID.fromString(claims.get("tempId", String.class));
+        OAuthUserInfo oAuthUserInfo = redisService.getOAuthTempUser(tempId);
 
         Optional<Member> existMember = memberRepository.findByEmailAndDeletedAtIsNull(email);
-        Member member = existMember.orElseGet(() -> memberRepository.save(Member.create(command)));
+
+        Member member = existMember.orElseGet(() -> {
+            Member newMember = memberRepository.save(Member.create(command));
+            try {
+                billingClient.createWallet(newMember.getId());
+            } catch (Exception e) {
+                throw new AuthException(AuthErrorCode.WALLET_CREATE_FAILED);
+            }
+            return newMember;
+        });
 
         Optional<OAuth> existOAuth = oAuthRepository.findByProviderAndMember(oAuthUserInfo.provider(), member);
 
@@ -108,13 +119,12 @@ public class AuthService {
             oAuthRepository.save(oAuth);
         }
 
-        billingClient.createWallet(member.getId());
-
         JwtMemberInfo jwtMemberInfo = JwtMemberInfo.from(member);
         String accessToken = jwtProvider.generateAccessToken(jwtMemberInfo);
         String refreshToken = jwtProvider.generateRefreshToken(jwtMemberInfo);
         redisService.saveRefreshToken(member.getId(), refreshToken);
 
+        redisService.deleteOAuthTempUser(tempId);
         redisService.deleteVerifiedEmail(email);
 
         return LoginInfoResponse.success(member, accessToken, refreshToken);
@@ -122,10 +132,10 @@ public class AuthService {
 
     public void sendEmailVerificationCode(SendEmailVerificationCommand command) {
         jwtProvider.validateTokenType(command.temporaryToken(), TokenType.TEMPORARY);
+
         String verificationCode = generateVerificationCode();
         redisService.saveVerificationCode(command.email(), verificationCode);
-        SimpleMailMessage mailMessage = createMailMessage(command.email(), verificationCode);
-        mailSender.send(mailMessage);
+        mailService.sendVerificationMail(command.email(), sender, verificationCode);
     }
 
     public void verifyEmail(VerifyEmailCommand command) {
@@ -168,15 +178,6 @@ public class AuthService {
 
     public void logout(UUID memberId) {
         redisService.deleteRefreshToken(memberId);
-    }
-
-    private SimpleMailMessage createMailMessage(String to, String verificationCode) {
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(to);
-        message.setSubject("[MyRoutine] 이메일 인증 코드");
-        message.setText("인증 코드: " + verificationCode);
-        message.setFrom(sender);
-        return message;
     }
 
     private String generateVerificationCode() {

@@ -108,21 +108,16 @@ public class Subscription extends BaseEntity {
         );
     }
 
-    public void update(BigDecimal pricePerItem,
-                                      Integer quantity,
-                                      String deliveryAddress){
+    public void update(String deliveryAddress){
         SubscriptionStatus currentStatus = this.subscriptionStatus;
         // ACTIVE, PAUSED, FAILED 일때 수정 가능
         if (currentStatus == SubscriptionStatus.CANCELLED
                 || currentStatus == SubscriptionStatus.UNAVAILABLE) {
             throw new SubscriptionException(SUBSCRIPTION_INVALID_STATE);
         }
-
-        BigDecimal totalPrice = pricePerItem.multiply(BigDecimal.valueOf(quantity));
-        this.pricePerItem = pricePerItem;
-        this.quantity = quantity;
-        this.totalPrice = totalPrice;
-        this.deliveryAddress = deliveryAddress;
+        if (deliveryAddress != null) {
+            this.deliveryAddress = deliveryAddress;
+        }
     }
 
     public void calculateNextRunDate(List<SubscriptionRecurrenceRule> rules) {

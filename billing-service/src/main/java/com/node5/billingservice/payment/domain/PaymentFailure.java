@@ -20,8 +20,8 @@ public class PaymentFailure extends BaseEntity {
     @Id
     private UUID id;
 
-    @Column(name = "wallet_id", nullable = false)
-    private UUID walletId;
+    @Column(name = "member_id", nullable = false)
+    private UUID memberId;
 
     @Column(name = "payment_key", nullable = false, unique = true, length = 200)
     private String paymentKey;
@@ -39,14 +39,14 @@ public class PaymentFailure extends BaseEntity {
     private Long amount;
 
     @Builder
-    private PaymentFailure(UUID walletId,
+    private PaymentFailure(UUID memberId,
                            String orderId,
                            String paymentKey,
                            String errorCode,
                            String errorMessage,
                            Long amount) {
         this.id = UUID.randomUUID();
-        this.walletId = walletId;
+        this.memberId = memberId;
         this.orderId = orderId;
         this.paymentKey = paymentKey;
         this.errorCode = errorCode;

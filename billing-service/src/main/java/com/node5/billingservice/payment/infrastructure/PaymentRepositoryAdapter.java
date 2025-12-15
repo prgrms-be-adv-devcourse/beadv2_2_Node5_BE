@@ -17,8 +17,8 @@ public class PaymentRepositoryAdapter implements PaymentRepository {
     private final PaymentJpaRepository paymentJpaRepository;
 
     @Override
-    public Page<Payment> findAllByWalletId(UUID walletId, Pageable pageable) {
-        return paymentJpaRepository.findAllByWalletId(walletId, pageable);
+    public Page<Payment> findAllByMemberId(UUID memberId, Pageable pageable) {
+        return paymentJpaRepository.findAllByMemberId(memberId, pageable);
     }
 
     @Override

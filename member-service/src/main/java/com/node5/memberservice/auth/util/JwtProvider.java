@@ -1,10 +1,10 @@
 package com.node5.memberservice.auth.util;
 
 import com.node5.memberservice.auth.application.dto.JwtMemberInfo;
-import com.node5.memberservice.auth.oauth.dto.OAuthUserInfo;
+import com.node5.memberservice.auth.exception.AuthErrorCode;
+import com.node5.memberservice.auth.exception.AuthException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import lombok.Getter;
@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.UUID;
 
 @Component
 public class JwtProvider {
@@ -60,14 +61,12 @@ public class JwtProvider {
     }
 
 
-    // Todo - redis가 현재 없어 회원가입을 위한 provider, providerId 를 토큰에 담아 전송
-    public String generateTemporaryToken(OAuthUserInfo oAuthUserInfo) {
+    public String generateTemporaryToken(UUID tempId) {
         long temporaryTokenExpiration = 10 * 60 * 1000; // 10분
         Date now = new Date();
         Date expirationDate = new Date(now.getTime() + temporaryTokenExpiration);
         return Jwts.builder()
-                .claim("provider", oAuthUserInfo.provider())
-                .claim("providerId", oAuthUserInfo.providerId())
+                .claim("tempId", tempId.toString())
                 .claim("type", TokenType.TEMPORARY.name())
                 .issuedAt(now)
                 .expiration(expirationDate)
@@ -83,11 +82,9 @@ public class JwtProvider {
                     .parseSignedClaims(token)
                     .getPayload();
         } catch (ExpiredJwtException expiredJwtException) {
-            throw new JwtException("JWT expired");
-        } catch (JwtException jwtException) {
-            throw new JwtException("JWT error");
+            throw new AuthException(AuthErrorCode.TOKEN_EXPIRED);
         } catch (Exception e) {
-            throw new RuntimeException(e.getMessage());
+            throw new AuthException(AuthErrorCode.TOKEN_INVALID);
         }
     }
 
@@ -97,22 +94,8 @@ public class JwtProvider {
         String actualType = claims.get("type", String.class);
 
         if (!expectedType.name().equals(actualType)) {
-            throw new JwtException("토큰 타입 불일치: expected=" + expectedType + ", actual=" + actualType);
+            throw new AuthException(AuthErrorCode.TOKEN_TYPE_MISMATCH);
         }
         return claims;
-    }
-
-    public OAuthUserInfo getOAuthUserInfo(String token) {
-        Claims claims = parseClaims(token);
-
-        String type = claims.get("type", String.class);
-        if (!TokenType.TEMPORARY.name().equals(type)) {
-            throw new JwtException("임시 토큰이 아닙니다.");
-        }
-
-        return new OAuthUserInfo(
-                claims.get("provider", String.class),
-                claims.get("providerId", String.class)
-        );
     }
 }

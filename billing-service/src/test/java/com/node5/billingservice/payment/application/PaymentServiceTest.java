@@ -49,9 +49,8 @@ public class PaymentServiceTest extends IntegrationTestSupport {
         Wallet wallet = Wallet.builder()
                 .memberId(memberId)
                 .build();
-        UUID walletID = wallet.getId();
         Payment payment = Payment.builder()
-                .walletId(walletID)
+                .memberId(memberId)
                 .amount(1000L)
                 .build();
         when(walletRepositoryAdapter.findByMemberId(memberId))
@@ -67,8 +66,8 @@ public class PaymentServiceTest extends IntegrationTestSupport {
 
         // then
         assertThat(paymentInfo)
-                .extracting("walletId", "amount", "status")
-                .contains(walletID, 1000L, PaymentStatus.READY);
+                .extracting("memberId", "amount", "status")
+                .contains(memberId, 1000L, PaymentStatus.READY);
     }
 
     @Test
@@ -96,9 +95,8 @@ public class PaymentServiceTest extends IntegrationTestSupport {
         Wallet wallet = Wallet.builder()
                 .memberId(memberId)
                 .build();
-        UUID walletID = wallet.getId();
         Payment payment = Payment.builder()
-                .walletId(walletID)
+                .memberId(memberId)
                 .amount(1000L)
                 .build();
         String orderId = payment.getOrderId();
@@ -128,8 +126,8 @@ public class PaymentServiceTest extends IntegrationTestSupport {
 
         // then
         assertThat(paymentInfo)
-                .extracting("walletId", "paymentKey", "amount", "status")
-                .contains(walletID, paymentKey, 1000L, PaymentStatus.CONFIRMED);
+                .extracting("memberId", "paymentKey", "amount", "status")
+                .contains(memberId, paymentKey, 1000L, PaymentStatus.CONFIRMED);
     }
 
     @Test
@@ -140,9 +138,8 @@ public class PaymentServiceTest extends IntegrationTestSupport {
         Wallet wallet = Wallet.builder()
                 .memberId(memberId)
                 .build();
-        UUID walletID = wallet.getId();
         Payment payment = Payment.builder()
-                .walletId(walletID)
+                .memberId(memberId)
                 .amount(1000L)
                 .build();
         String orderId = payment.getOrderId();
@@ -175,11 +172,10 @@ public class PaymentServiceTest extends IntegrationTestSupport {
         Wallet wallet = Wallet.builder()
                 .memberId(memberId)
                 .build();
-        UUID walletID = wallet.getId();
         when(walletRepositoryAdapter.findByMemberIdForUpdate(memberId))
                 .thenReturn(Optional.of(wallet));
         Payment payment = Payment.builder()
-                .walletId(walletID)
+                .memberId(memberId)
                 .amount(1000L)
                 .build();
         String orderId = payment.getOrderId();
@@ -207,8 +203,8 @@ public class PaymentServiceTest extends IntegrationTestSupport {
         PaymentInfo paymentInfo = paymentService.cancel(memberId, command);
         // then
         assertThat(paymentInfo)
-                .extracting("walletId", "paymentKey", "amount", "status")
-                .contains(walletID, paymentKey, 1000L, PaymentStatus.CANCELED);
+                .extracting("memberId", "paymentKey", "amount", "status")
+                .contains(memberId, paymentKey, 1000L, PaymentStatus.CANCELED);
 
     }
 

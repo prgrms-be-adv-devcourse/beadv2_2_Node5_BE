@@ -8,7 +8,7 @@ import java.util.UUID;
 
 public interface SubscriptionRecurrenceRuleJpaRepository extends JpaRepository<SubscriptionRecurrenceRule, UUID> {
 
-    List<SubscriptionRecurrenceRule> findBySubscriptionId(UUID subscriptionId);
+    List<SubscriptionRecurrenceRule> findAllBySubscriptionId(UUID subscriptionId);
 
     void deleteAllBySubscriptionId(UUID subscriptionId);
 }

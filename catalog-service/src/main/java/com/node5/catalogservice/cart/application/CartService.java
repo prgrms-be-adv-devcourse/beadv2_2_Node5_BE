@@ -1,6 +1,11 @@
 package com.node5.catalogservice.cart.application;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -11,6 +16,10 @@ import com.node5.catalogservice.cart.application.dto.CartItemInfo;
 import com.node5.catalogservice.cart.application.dto.CartItemUpdateCommand;
 import com.node5.catalogservice.cart.domain.CartItem;
 import com.node5.catalogservice.cart.domain.CartItemRepository;
+import com.node5.catalogservice.cart.exception.CartItemForbiddenException;
+import com.node5.catalogservice.cart.exception.CartItemNotFoundException;
+import com.node5.catalogservice.cart.exception.CartProductNotFoundException;
+import com.node5.catalogservice.cart.exception.CartProductNotOnSaleException;
 import com.node5.catalogservice.product.domain.Product;
 import com.node5.catalogservice.product.domain.ProductRepository;
 import com.node5.catalogservice.product.domain.ProductStatus;
@@ -18,6 +27,14 @@ import com.node5.catalogservice.product.domain.ProductStatus;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * 장바구니(Cart) 도메인의 비즈니스 로직을 담당합니다.
+ * <p>
+ * - 장바구니 조회 / 추가 / 수량 변경 / 삭제 / 비우기<br>
+ * - 장바구니 담기 전 상품 존재 및 판매 상태(ON_SALE) 검증<br>
+ * - 장바구니 항목 수정/삭제 시 소유권(memberId) 검증<br>
+ * - 조회 시 CartItem에 포함된 productId 목록을 일괄 조회한 뒤 응답에 결합
+ */
 @Service
 @RequiredArgsConstructor
 public class CartService {
@@ -25,59 +42,117 @@ public class CartService {
 	private final CartItemRepository cartItemRepository;
 	private final ProductRepository productRepository;
 
+	/**
+	 * 사용자의 장바구니 목록을 조회하고, 응답에 상품 정보를 결합하여 반환합니다.
+	 */
 	public Page<CartItemInfo> getCartItems(UUID memberId, Pageable pageable) {
-		return cartItemRepository.findByMemberId(memberId,pageable)
-			.map(CartItemInfo::from);
+		Page<CartItem> cartItems = cartItemRepository.findByMemberId(memberId, pageable);
+
+		List<UUID> productIds = cartItems.getContent().stream()
+			.map(CartItem::getProductId)
+			.distinct()
+			.toList();
+
+		Map<UUID, Product> productMap = productIds.isEmpty()
+			? Collections.emptyMap()
+			: productRepository.findAllByIdIn(productIds).stream()
+			.collect(Collectors.toMap(Product::getId, Function.identity()));
+
+		return cartItems.map(item -> {
+			Product product = productMap.get(item.getProductId());
+			if (product == null) {
+				throw new CartProductNotFoundException();
+			}
+			return CartItemInfo.from(item, product);
+		});
 	}
 
+	/**
+	 * 장바구니에 상품을 추가합니다.
+	 * <p>
+	 * - 상품 존재 여부 및 판매 상태(ON_SALE) 검증<br>
+	 * - 동일 상품이 이미 담긴 경우 수량을 증가 처리
+	 */
 	public CartItemInfo addItem(CartItemCommand command) {
 		UUID memberId = command.memberId();
 		UUID productId = command.productId();
 		int quantity = command.quantity();
 
-		// 상품 상태 검증
-		validateProduct(productId);
+		Product product = getOnSaleProductOrThrow(productId);
 
-		CartItem cartItem = cartItemRepository.findByMemberIdAndProductId(memberId, productId)
+		CartItem cartItem = cartItemRepository.findByMemberIdAndProductId(memberId, product.getId())
 			.map(existing -> {
-				existing.increaseQuantity(quantity); // 수량 증가
+				existing.increaseQuantity(quantity);
 				return existing;
 			})
-			.orElseGet(() -> CartItem.create(memberId, productId, quantity)); // 새로 담기
+			.orElseGet(() -> CartItem.create(memberId, product.getId(), quantity));
 
 		CartItem saved = cartItemRepository.save(cartItem);
-		return CartItemInfo.from(saved);
+		return CartItemInfo.from(saved, product);
 	}
 
-	public CartItemInfo updateItem(UUID cartItemId, CartItemUpdateCommand command) {
+	/**
+	 * 장바구니 항목의 수량을 변경합니다.
+	 * <p>
+	 * - 장바구니 항목 존재 여부 확인<br>
+	 * - 요청자가 해당 장바구니 항목의 소유자인지 검증<br>
+	 * - 응답에 상품 정보 포함(상품 유실 시 예외)
+	 */
+	public CartItemInfo updateItem(UUID memberId, UUID cartItemId, CartItemUpdateCommand command) {
 		CartItem cartItem = getCartItemOrThrow(cartItemId);
+		validateOwnership(memberId, cartItem);
 
-		cartItem.updateQuantity(command.quantity()); // 도메인에서 유효성 검사
-
+		cartItem.updateQuantity(command.quantity());
 		CartItem saved = cartItemRepository.save(cartItem);
-		return CartItemInfo.from(saved);
+
+		Product product = getProductOrThrow(saved.getProductId());
+		return CartItemInfo.from(saved, product);
 	}
 
-	public void removeItem(UUID cartItemId) {
+	/**
+	 * 장바구니 항목을 삭제합니다.
+	 * <p>
+	 * - 장바구니 항목 존재 여부 확인<br>
+	 * - 요청자가 해당 장바구니 항목의 소유자인지 검증
+	 */
+	public void removeItem(UUID memberId, UUID cartItemId) {
+		CartItem cartItem = getCartItemOrThrow(cartItemId);
+		validateOwnership(memberId, cartItem);
+
 		cartItemRepository.deleteById(cartItemId);
 	}
 
+	/**
+	 * 사용자의 장바구니를 전체 비웁니다.
+	 * <p>
+	 * - 장바구니 항목을 일괄 삭제하므로 트랜잭션으로 처리
+	 */
 	@Transactional
 	public void clearCart(UUID memberId) {
 		cartItemRepository.deleteByMemberId(memberId);
 	}
 
-	private void validateProduct(UUID productId) {
-		Product product = productRepository.findById(productId)
-			.orElseThrow(() -> new IllegalArgumentException("상품이 존재하지 않습니다. id=" + productId));
-
-		if (product.getStatus() != ProductStatus.ON_SALE) {
-			throw new IllegalArgumentException("해당 상품은 장바구니에 담을 수 없는 상태입니다. status=" + product.getStatus());
+	private void validateOwnership(UUID memberId, CartItem cartItem) {
+		if (!cartItem.getMemberId().equals(memberId)) {
+			throw new CartItemForbiddenException();
 		}
+	}
+
+	private Product getProductOrThrow(UUID productId) {
+		return productRepository.findById(productId)
+			.orElseThrow(CartProductNotFoundException::new);
+	}
+
+	private Product getOnSaleProductOrThrow(UUID productId) {
+		Product product = getProductOrThrow(productId);
+		if (product.getStatus() != ProductStatus.ON_SALE) {
+			throw new CartProductNotOnSaleException();
+		}
+		return product;
 	}
 
 	private CartItem getCartItemOrThrow(UUID cartItemId) {
 		return cartItemRepository.findById(cartItemId)
-			.orElseThrow(() -> new IllegalArgumentException("장바구니 항목이 존재하지 않습니다. id=" + cartItemId));
+			.orElseThrow(CartItemNotFoundException::new);
 	}
 }

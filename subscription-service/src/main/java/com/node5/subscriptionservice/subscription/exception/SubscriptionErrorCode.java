@@ -11,10 +11,8 @@ public enum SubscriptionErrorCode implements BaseErrorCode {
     INVALID_RECURRENCE_TYPE(500, "SUBSCRIPTION_004", "유효하지 않은 반복 타입입니다."),
     SUBSCRIPTION_ORDER_REQUEST_FAILED(502, "SUBSCRIPTION_005", "구독 제품의 주문 서비스 요청에 실패했습니다."),
     SUBSCRIPTION_PRODUCT_NOT_FOUND(404, "SUBSCRIPTION_006", "상품을 찾을 수 없습니다."),
-    SUBSCRIPTION_PRODUCT_REQUEST_FAILED(502, "SUBSCRIPTION_007", "상품 정보 조회에 실패했습니다.");
-
-
-
+    SUBSCRIPTION_PRODUCT_REQUEST_FAILED(502, "SUBSCRIPTION_007", "상품 정보 조회에 실패했습니다."),
+    SUBSCRIPTION_RECURRENCE_UPDATE_NOT_ALLOWED(400, "SUBSCRIPTION_008", "구독 주기는 해당 구독 주기에서는 요청한 항목을 수정할 수 없습니다.");
 
     private final int status;
     private final String code;

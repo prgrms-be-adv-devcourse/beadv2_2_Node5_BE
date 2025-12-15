@@ -65,7 +65,7 @@ public class SubscriptionOrderBatchConfig {
                     requestOrder(subscription);
 
                     List<SubscriptionRecurrenceRule> rules =
-                            subscriptionRecurrenceRuleRepository.findBySubscriptionId(subscription.getId());
+                            subscriptionRecurrenceRuleRepository.findAllBySubscriptionId(subscription.getId());
                     subscription.calculateNextRunDate(rules);
                     subscriptionRepository.save(subscription);
 
