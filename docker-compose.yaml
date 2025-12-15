@@ -52,42 +52,56 @@ services:
     depends_on:
       discovery-service:
         condition: service_healthy
+    env_file:
+      - .env
 
   catalog-service:
     image: node5dev/catalog-service:latest
     depends_on:
       discovery-service:
         condition: service_healthy
+    env_file:
+      - .env
 
   member-service:
     image: node5dev/member-service:latest
     depends_on:
       discovery-service:
         condition: service_healthy
+    env_file:
+      - .env
 
   order-service:
     image: node5dev/order-service:latest
     depends_on:
       discovery-service:
         condition: service_healthy
+    env_file:
+      - .env
 
   settlement-service:
     image: node5dev/settlement-service:latest
     depends_on:
       discovery-service:
         condition: service_healthy
+    env_file:
+      - .env
 
   shop-service:
     image: node5dev/shop-service:latest
     depends_on:
       discovery-service:
         condition: service_healthy
+    env_file:
+      - .env
 
   subscription-service:
     image: node5dev/subscription-service:latest
     depends_on:
       discovery-service:
         condition: service_healthy
+    env_file:
+      - .env
 
   apigateway-service:
     image: node5dev/apigateway:latest
