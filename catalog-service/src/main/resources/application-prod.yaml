@@ -1,6 +1,3 @@
-server:
-  port: 0 # random port
-
 spring:
   config:
     import: optional:configserver:http://config-service:8888
@@ -30,7 +27,7 @@ management:
         include: refresh, health, beans, info, prometheus
 
 apigateway:
-  host: http://localhost:8000
+  host: http://apigateway-service:8000
 
 shop-service:
   url: http://shop-service:8085
