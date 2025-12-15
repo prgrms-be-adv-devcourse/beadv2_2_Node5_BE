@@ -31,4 +31,9 @@ public class SubscriptionRepositoryAdapter implements SubscriptionRepository {
     public Page<Subscription> findAllByNextRunDateAndSubscriptionStatus(LocalDate nextRunDate, SubscriptionStatus subscriptionStatus, Pageable pageable) {
         return jpaRepository.findAllByNextRunDateAndSubscriptionStatus(nextRunDate, subscriptionStatus, pageable);
     }
+
+    @Override
+    public Page<Subscription> findAllByProductId(UUID productId, Pageable pageable){
+        return jpaRepository.findAllByProductId(productId, pageable);
+    }
 }

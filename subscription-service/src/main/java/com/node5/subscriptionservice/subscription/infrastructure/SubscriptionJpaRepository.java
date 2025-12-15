@@ -13,4 +13,6 @@ public interface SubscriptionJpaRepository extends JpaRepository<Subscription, U
     Page<Subscription> findAllByMemberId(UUID memberId, Pageable pageable);
 
     Page<Subscription> findAllByNextRunDateAndSubscriptionStatus(LocalDate nextRunDate, SubscriptionStatus subscriptionStatus, Pageable pageable);
+
+    Page<Subscription> findAllByProductId(UUID productId, Pageable pageable);
 }

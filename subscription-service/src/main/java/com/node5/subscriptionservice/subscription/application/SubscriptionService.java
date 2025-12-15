@@ -145,6 +145,11 @@ public class SubscriptionService {
         return toSubscriptionInfo(saved);
     }
 
+    public Page<SubscriptionInfo> findAllByProductId(UUID productId, Pageable pageable) {
+        Page<Subscription> subscriptions = subscriptionRepository.findAllByProductId(productId, pageable);
+        return  subscriptions.map(this::toSubscriptionInfo);
+    }
+
     private ProductInfoResponse getProductInfo(UUID productId) {
         try {
             ApiResponseDto<ProductInfoResponse> response = productClient.findById(productId).getBody();
