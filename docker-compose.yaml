@@ -12,7 +12,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql
+      - postgres_data:/var/lib/postgresql/data
     healthcheck: # Healthcheck 추가
       test: ["CMD-SHELL", "pg_isready -U node5 -d my_routine"]
       interval: 5s
@@ -53,7 +53,6 @@ services:
       discovery-service:
         condition: service_healthy
     env_file:
-      - .env.common
       - .env.billing
 
   catalog-service:
@@ -62,7 +61,6 @@ services:
       discovery-service:
         condition: service_healthy
     env_file:
-      - .env.common
       - .env.catalog
 
   member-service:
@@ -71,7 +69,6 @@ services:
       discovery-service:
         condition: service_healthy
     env_file:
-      - .env.common
       - .env.member
 
   order-service:
@@ -80,7 +77,6 @@ services:
       discovery-service:
         condition: service_healthy
     env_file:
-      - .env.common
       - .env.order
 
   settlement-service:
@@ -89,7 +85,6 @@ services:
       discovery-service:
         condition: service_healthy
     env_file:
-      - .env.common
       - .env.settlement
 
   shop-service:
@@ -98,7 +93,6 @@ services:
       discovery-service:
         condition: service_healthy
     env_file:
-      - .env.common
       - .env.shop
 
   subscription-service:
@@ -107,7 +101,6 @@ services:
       discovery-service:
         condition: service_healthy
     env_file:
-      - .env.common
       - .env.subscription
 
   apigateway-service:
