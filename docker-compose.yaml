@@ -91,7 +91,7 @@ services:
       discovery-service:
         condition: service_healthy
     env_file:
-      - ./env/.env.billing
+      - /home/ubuntu/env/.env.billing
 
   catalog-service:
     image: node5dev/catalog-service:latest
@@ -99,7 +99,7 @@ services:
       discovery-service:
         condition: service_healthy
     env_file:
-      - ./env/.env.catalog
+      - /home/ubuntu/env/.env.catalog
 
   member-service:
     image: node5dev/member-service:latest
@@ -107,7 +107,7 @@ services:
       discovery-service:
         condition: service_healthy
     env_file:
-      - ./env/.env.member
+      - /home/ubuntu/env/.env.member
 
   order-service:
     image: node5dev/order-service:latest
@@ -115,7 +115,7 @@ services:
       discovery-service:
         condition: service_healthy
     env_file:
-      - ./env/.env.order
+      - /home/ubuntu/env/.env.order
 
   settlement-service:
     image: node5dev/settlement-service:latest
@@ -123,7 +123,7 @@ services:
       discovery-service:
         condition: service_healthy
     env_file:
-      - ./env/.env.settlement
+      - /home/ubuntu/env/.env.settlement
 
   shop-service:
     image: node5dev/shop-service:latest
@@ -131,7 +131,7 @@ services:
       discovery-service:
         condition: service_healthy
     env_file:
-      - ./env/.env.shop
+      - /home/ubuntu/env/.env.shop
 
   subscription-service:
     image: node5dev/subscription-service:latest
@@ -139,7 +139,7 @@ services:
       discovery-service:
         condition: service_healthy
     env_file:
-      - ./env/.env.subscription
+      - /home/ubuntu/env/.env.subscription
 
   apigateway-service:
     image: node5dev/apigateway:latest
