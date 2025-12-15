@@ -17,7 +17,7 @@ import jakarta.persistence.Table;
  * - 수량(quantity)은 1 이상이어야 하며, 변경 시 도메인 규칙을 검증합니다.
  */
 @Entity
-@Table(name = "cart_item")
+@Table(name = "cart_item", schema = "catalog")
 public class CartItem extends BaseEntity {
 
 	@Id
