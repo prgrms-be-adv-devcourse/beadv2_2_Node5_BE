@@ -11,9 +11,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 상품 저장/수정 후 이벤트 발행
+ * 상품 변경 이벤트를 Kafka로 발행합니다.
  */
-
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -25,35 +24,26 @@ public class ProductIndexProducer {
 	private String productIndexTopic;
 
 	public void sendProductIndexEvent(Product product) {
-		ProductIndexEvent event = ProductIndexEvent.create(product);
-
-		log.info("Kafka 상품 색인 이벤트 전송, productId={}, name={}",
-			event.productId(), event.name());
-
-		send(event);
+		send(ProductIndexEvent.create(product));
 	}
 
 	public void sendProductUpdateEvent(Product product) {
-		ProductIndexEvent event = ProductIndexEvent.update(product);
-
-		log.info("Kafka 상품 수정 이벤트 발행, productId={}", event.productId());
-
-		send(event);
+		send(ProductIndexEvent.update(product));
 	}
 
-	public void send(ProductIndexEvent event) {
+	private void send(ProductIndexEvent event) {
 		String key = event.productId().toString();
 
-		log.info("Kafka 상품 색인 이벤트 발행, topic={}, key={}, name={}",
-			productIndexTopic, key, event.name());
+		log.info("Kafka 상품 색인 이벤트 발행, topic={}, key={}",
+			productIndexTopic, key);
 
 		kafkaTemplate
 			.send(productIndexTopic, key, event)
 			.whenComplete((result, ex) -> {
 				if (ex != null) {
-					log.error("Kafka 상품 색인 이벤트 전송 실패, key={}", key, ex);
+					log.error("Kafka 상품 색인 이벤트 발행 실패, key={}", key, ex);
 				} else {
-					log.info("Kafka 상품 색인 이벤트 전송 성공, key={}, offset={}",
+					log.info("Kafka 상품 색인 이벤트 발행 성공, key={}, offset={}",
 						key, result.getRecordMetadata().offset()
 					);
 				}

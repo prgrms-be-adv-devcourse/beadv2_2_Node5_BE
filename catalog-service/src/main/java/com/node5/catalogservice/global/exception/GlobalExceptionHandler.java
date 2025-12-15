@@ -14,8 +14,8 @@ import com.node5.common.exception.ExceptionResponseDto;
 /**
  * 전역 예외 처리 핸들러.
  * <p>
- * - 도메인 예외(BaseException)는 ErrorCode 기준으로 응답<br>
- * - Validation / 요청 파싱 오류는 공통 400 응답으로 처리
+ * - 도메인 예외(BaseException)는 ErrorCode 기준으로 HTTP 응답을 생성합니다.<br>
+ * - Validation 및 요청 파싱 오류는 공통 400(Bad Request) 응답으로 처리합니다.
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {

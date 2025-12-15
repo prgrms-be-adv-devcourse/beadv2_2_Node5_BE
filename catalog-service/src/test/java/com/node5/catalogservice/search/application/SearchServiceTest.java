@@ -10,7 +10,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.elasticsearch.DataElasticsearchTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -18,14 +17,19 @@ import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import com.node5.catalogservice.product.domain.ProductCategory;
+import com.node5.catalogservice.search.application.dto.ProductSearchCommand;
 import com.node5.catalogservice.search.application.dto.ProductSearchResponse;
 import com.node5.catalogservice.search.config.ElasticsearchIndexConfig;
 import com.node5.catalogservice.search.domain.ProductDocument;
 import com.node5.catalogservice.search.domain.ProductSearchSort;
 import com.node5.catalogservice.search.infrastructure.ProductSearchRepository;
-import com.node5.catalogservice.search.presentation.dto.ProductSearchRequest;
 
+/**
+ * Elasticsearch 상품 검색 유스케이스 통합 테스트.
+ */
 @DataElasticsearchTest(properties = {
 	"spring.cloud.config.enabled=false",
 	"spring.cloud.config.fail-fast=false",
@@ -40,7 +44,9 @@ import com.node5.catalogservice.search.presentation.dto.ProductSearchRequest;
 )
 public class SearchServiceTest {
 
-	@MockBean
+	private static final PageRequest DEFAULT_PAGE = PageRequest.of(0, 10);
+
+	@MockitoBean
 	private JpaMetamodelMappingContext jpaMetamodelMappingContext;
 
 	@Autowired
@@ -53,77 +59,49 @@ public class SearchServiceTest {
 	private ElasticsearchOperations operations;
 
 	@BeforeEach
-	public void setup() {
-		// 1) ProductDocument 기반으로 인덱스 초기화
+	void setup() {
 		IndexOperations indexOps = operations.indexOps(ProductDocument.class);
 
 		if (indexOps.exists()) {
-			indexOps.delete(); // 혹시 남아 있으면 삭제
+			indexOps.delete();
 		}
-		indexOps.create();     // 인덱스 생성
-		indexOps.putMapping(); // @Field 기반 매핑 반영
+		indexOps.create();
+		indexOps.putMapping();
 		indexOps.refresh();
 
-		// 2) 문서 초기화
 		productSearchRepository.deleteAll();
 
 		LocalDateTime base = LocalDateTime.of(2025, 1, 1, 0, 0);
 
 		productSearchRepository.save(new ProductDocument(
-			"1",
-			"테스트 상품",
-			"TEST",
-			"product/test-thumb-1.png",
-			1000L,
-			"ON_SALE",
-			base.plusDays(1)
+			"1", "1", "테스트 상품", "TEST", "product/test-thumb-1.png",
+			1000L, "ON_SALE", base.plusDays(1)
 		));
 
 		productSearchRepository.save(new ProductDocument(
-			"2",
-			"사과 상품",
-			"FOOD",
-			"product/apple-thumb.png",
-			2000L,
-			"ON_SALE",
-			base.plusDays(2)
+			"2", "2", "사과 상품", "FOOD", "product/apple-thumb.png",
+			2000L, "ON_SALE", base.plusDays(2)
 		));
 
 		productSearchRepository.save(new ProductDocument(
-			"3",
-			"숨긴 상품",
-			"TEST",
-			"product/hidden-thumb.png",
-			5000L,
-			"HIDDEN",
-			base.plusDays(3)
+			"3", "3", "숨긴 상품", "TEST", "product/hidden-thumb.png",
+			5000L, "HIDDEN", base.plusDays(3)
 		));
 	}
 
-
 	@Test
 	void 검색_키워드만_사용하면_이름_포함된_상품만_반환된다() {
-		// given
-		ProductSearchRequest request = new ProductSearchRequest(
-			"테스트", null, null, null, null
-		);
-
-		// when
 		Page<ProductSearchResponse> result =
-			searchService.search(request, PageRequest.of(0, 10));
+			searchService.search(command("테스트", null, null, null, null, null), DEFAULT_PAGE);
 
-		// then
 		assertThat(result.getContent()).hasSize(1);
 		assertThat(result.getContent().get(0).name()).contains("테스트");
 	}
 
 	@Test
-	void 최신순_정렬이_기본값이다() {
+	void 정렬_조건을_주지_않으면_기본값은_LATEST이다() {
 		Page<ProductSearchResponse> result =
-			searchService.search(new ProductSearchRequest(
-				"상품", null, null, null, null
-				),
-				PageRequest.of(0, 10));
+			searchService.search(command(null, null, null, null, null, null), DEFAULT_PAGE);
 
 		assertThat(result.getContent())
 			.extracting(ProductSearchResponse::createdAt)
@@ -132,74 +110,55 @@ public class SearchServiceTest {
 
 	@Test
 	void 정렬_LATEST_지정시_createdAt_내림차순으로_정렬된다() {
-		// given
-		ProductSearchRequest request = new ProductSearchRequest(
-			null, null, null, null, ProductSearchSort.LATEST
-		);
-
-		// when
 		Page<ProductSearchResponse> result =
-			searchService.search(request, PageRequest.of(0, 10));
+			searchService.search(command(null, null, null, null, null, ProductSearchSort.LATEST), DEFAULT_PAGE);
 
-		// then
 		assertThat(result.getContent())
 			.extracting(ProductSearchResponse::createdAt)
-			.isSortedAccordingTo(Comparator.reverseOrder()); // 내림차순
+			.isSortedAccordingTo(Comparator.reverseOrder());
 	}
 
 	@Test
 	void 정렬_LOW_PRICE_이면_가격_오름차순으로_정렬된다() {
-		// given
-		ProductSearchRequest request = new ProductSearchRequest(
-			null, null, null, null, ProductSearchSort.LOW_PRICE
-		);
-
-		// when
 		Page<ProductSearchResponse> result =
-			searchService.search(request, PageRequest.of(0, 10));
+			searchService.search(command(null, null, null, null, null, ProductSearchSort.LOW_PRICE), DEFAULT_PAGE);
 
-		// then
-		assertThat(result.getContent()).hasSize(2); // HIDDEN 한 개 제외
-
+		assertThat(result.getContent()).hasSize(2);
 		assertThat(result.getContent())
 			.extracting(ProductSearchResponse::price)
-			.isSorted(); // 오름차순
+			.isSorted();
 	}
 
 	@Test
 	void 정렬_HIGH_PRICE_이면_가격_내림차순으로_정렬된다() {
-		// given
-		ProductSearchRequest request = new ProductSearchRequest(
-			null, null, null, null, ProductSearchSort.HIGH_PRICE
-		);
-
-		// when
 		Page<ProductSearchResponse> result =
-			searchService.search(request, PageRequest.of(0, 10));
+			searchService.search(command(null, null, null, null, null, ProductSearchSort.HIGH_PRICE), DEFAULT_PAGE);
 
-		// then
 		assertThat(result.getContent()).hasSize(2);
-
 		assertThat(result.getContent())
 			.extracting(ProductSearchResponse::price)
-			.isSortedAccordingTo(Comparator.reverseOrder()); // 내림차순
+			.isSortedAccordingTo(Comparator.reverseOrder());
 	}
 
 	@Test
 	void 항상_ON_SALE_상태의_상품만_검색된다() {
-		// given
-		ProductSearchRequest request = new ProductSearchRequest(
-			null, null, null, null, null
-		);
-
-		// when
 		Page<ProductSearchResponse> result =
-			searchService.search(request, PageRequest.of(0, 10));
+			searchService.search(command(null, null, null, null, null, null), DEFAULT_PAGE);
 
-		// then
 		assertThat(result.getContent())
-			.hasSize(2) // HIDDEN 한 개 제외
+			.hasSize(2)
 			.extracting(ProductSearchResponse::status)
 			.containsOnly("ON_SALE");
+	}
+
+	private ProductSearchCommand command(
+		String keyword,
+		java.util.UUID shopId,
+		ProductCategory category,
+		Integer minPrice,
+		Integer maxPrice,
+		ProductSearchSort sort
+	) {
+		return new ProductSearchCommand(keyword, shopId, category, minPrice, maxPrice, sort);
 	}
 }

@@ -1,5 +1,7 @@
 package com.node5.catalogservice.product.infrastructure;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -14,5 +16,9 @@ public interface ProductJpaRepository extends JpaRepository<Product, UUID> {
 
 	Page<Product> findByStatus(ProductStatus status, Pageable pageable);
 
+	Page<Product> findByShopId(UUID shopId, Pageable pageable);
+
 	Optional<Product> findByIdAndStatus(UUID id, ProductStatus status);
+
+	List<Product> findByIdIn(Collection<UUID> ids);
 }
