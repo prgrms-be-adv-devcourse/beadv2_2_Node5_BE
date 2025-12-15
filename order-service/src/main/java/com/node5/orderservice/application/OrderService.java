@@ -52,9 +52,10 @@ public class OrderService {
         orderItemRepository.saveAll(orderItems);
 
         // TODO 결제 API 호출
-        orderTransactionService.updateOrderStatus(orderId, PAID); // 결제 성공 가정 (임시)
+        order.markAsPaid(LocalDateTime.now()); // 결제 성공 가정 (임시)
+        orderRepository.save(order);
 
-        return OrderCreateInfo.from(saved);
+        return OrderCreateInfo.from(order);
     }
 
     public OrderListInfo getOrderList(UUID memberId, int page, int size, String period) {
