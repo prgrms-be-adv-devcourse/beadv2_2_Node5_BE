@@ -31,6 +31,7 @@ CREATE TABLE member."o_auth" (
 CREATE TABLE member."inquiry" (
 	id uuid NOT NULL,
 	member_id uuid NOT NULL,
+    title varchar(100) NOT NULL,
     message text NOT NULL,
     inquiry_category varchar(100) NOT NULL,
 	created_at timestamp NOT NULL,

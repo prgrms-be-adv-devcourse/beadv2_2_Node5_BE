@@ -7,9 +7,9 @@ CREATE TABLE subscription.subscription (
                                            product_id UUID NOT NULL,
                                            product_name VARCHAR(100),
                                            thumbnail_url VARCHAR,
-                                           price_per_item BIGINT NOT NULL,
+                                           price_per_item NUMERIC(38, 2) NOT NULL,
                                            quantity INTEGER NOT NULL DEFAULT 1,
-                                           total_price BIGINT,
+                                           total_price NUMERIC(38, 2),
 
                                            subscription_status VARCHAR(20) NOT NULL,
                                            next_run_date DATE NOT NULL,
