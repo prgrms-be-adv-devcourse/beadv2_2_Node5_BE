@@ -1,4 +1,4 @@
-CREATE SCHEMA IF NOT EXISTS subscription
+CREATE SCHEMA IF NOT EXISTS subscription;
 
 CREATE TABLE subscription.subscription (
                                            id UUID NOT NULL,
