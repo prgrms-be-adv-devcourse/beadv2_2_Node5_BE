@@ -91,7 +91,7 @@ services:
       discovery-service:
         condition: service_healthy
     env_file:
-      - .env.billing
+      - ./env/.env.billing
 
   catalog-service:
     image: node5dev/catalog-service:latest
@@ -99,7 +99,7 @@ services:
       discovery-service:
         condition: service_healthy
     env_file:
-      - .env.catalog
+      - ./env/.env.catalog
 
   member-service:
     image: node5dev/member-service:latest
@@ -107,7 +107,7 @@ services:
       discovery-service:
         condition: service_healthy
     env_file:
-      - .env.member
+      - ./env/.env.member
 
   order-service:
     image: node5dev/order-service:latest
@@ -115,7 +115,7 @@ services:
       discovery-service:
         condition: service_healthy
     env_file:
-      - .env.order
+      - ./env/.env.order
 
   settlement-service:
     image: node5dev/settlement-service:latest
@@ -123,7 +123,7 @@ services:
       discovery-service:
         condition: service_healthy
     env_file:
-      - .env.settlement
+      - ./env/.env.settlement
 
   shop-service:
     image: node5dev/shop-service:latest
@@ -131,7 +131,7 @@ services:
       discovery-service:
         condition: service_healthy
     env_file:
-      - .env.shop
+      - ./env/.env.shop
 
   subscription-service:
     image: node5dev/subscription-service:latest
@@ -139,7 +139,7 @@ services:
       discovery-service:
         condition: service_healthy
     env_file:
-      - .env.subscription
+      - ./env/.env.subscription
 
   apigateway-service:
     image: node5dev/apigateway:latest
