@@ -4,6 +4,7 @@ import com.node5.common.domain.PageInfoDto;
 import com.node5.settlementservice.settlement.application.dto.SettlementListInfo;
 import com.node5.settlementservice.settlement.domain.SettlementResult;
 import com.node5.settlementservice.settlement.domain.SettlementResultRepository;
+import com.node5.settlementservice.settlement.exception.SettlementException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -16,6 +17,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
+import static com.node5.settlementservice.settlement.exception.SettlementErrorCode.ACCESS_DENIED;
+
 @Service
 @RequiredArgsConstructor
 public class SettlementService {
@@ -23,7 +26,11 @@ public class SettlementService {
     private final SettlementResultRepository settlementResultRepository;
 
 
-    public SettlementListInfo getSettlementHistory(UUID shopId, YearMonth startYm, YearMonth endYm, int page) {
+    public SettlementListInfo getSettlementHistory(String roles, UUID shopId, YearMonth startYm, YearMonth endYm, int page) {
+        if(!hasSellerRole(roles)){
+            throw new SettlementException(ACCESS_DENIED);
+        }
+
         LocalDate periodStart = startYm.atDay(1);
         LocalDate periodEnd = endYm.atEndOfMonth();
 
@@ -40,5 +47,20 @@ public class SettlementService {
                 .toList();
 
         return SettlementListInfo.from(pageInfo, detailInfoList);
+    }
+
+    private boolean hasSellerRole(String roles){
+        if (roles == null || roles.isEmpty()) {
+            return false;
+        }
+
+        String[] roleArr = roles.split(",");
+        for (String role : roleArr) {
+            if ("SELLER".equals(role.trim().toUpperCase())) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
