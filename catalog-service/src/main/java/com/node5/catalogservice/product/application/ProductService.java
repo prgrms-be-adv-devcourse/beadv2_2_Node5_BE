@@ -161,10 +161,10 @@ public class ProductService {
 	}
 
 	/**
-	 * 상품 ID 목록에 대해 판매 중(ON_SALE) 상품의 상점 ID를 조회합니다.
+	 * 상품 ID 목록에 대해 상품의 상점 ID를 조회합니다.
 	 * <p>
 	 * - 요청된 모든 상품이 존재해야 하며<br>
-	 * - 하나라도 판매 중이 아닌 상품이 포함되면 예외를 반환합니다.
+	 * - 하나라도 존재하지 않으면 예외를 반환합니다.
 	 */
 	@Transactional(readOnly = true)
 	public Map<UUID, UUID> getShopIdsByProductIds(List<UUID> productIds) {
@@ -178,14 +178,7 @@ public class ProductService {
 		List<Product> products = productRepository.findAllByIdIn(distinctIds);
 
 		if (products.size() != distinctIds.size()) {
-			throw new OnSaleProductNotFoundException();
-		}
-
-		boolean hasNotOnSale = products.stream()
-			.anyMatch(p -> p.getStatus() != ProductStatus.ON_SALE);
-
-		if (hasNotOnSale) {
-			throw new OnSaleProductNotFoundException();
+			throw new ProductNotFoundException();
 		}
 
 		return products.stream()

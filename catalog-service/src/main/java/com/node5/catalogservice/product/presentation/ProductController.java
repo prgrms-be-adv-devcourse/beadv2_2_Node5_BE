@@ -69,7 +69,7 @@ public class ProductController {
 	)
 	@ApiResponses({
 		@ApiResponse(responseCode = "200", description = "상품-상점 매핑 조회 성공"),
-		@ApiResponse(responseCode = "404", description = "판매 중이 아닌 상품이 포함됨")
+		@ApiResponse(responseCode = "404", description = "존재하지 않는 상품 ID가 포함됨")
 	})
 	public ResponseEntity<Map<UUID, UUID>> getShopIdsByProductIds(
 		@RequestBody List<UUID> productIds
