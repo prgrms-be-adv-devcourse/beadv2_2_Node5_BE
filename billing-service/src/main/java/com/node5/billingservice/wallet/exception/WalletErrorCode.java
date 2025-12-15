@@ -3,15 +3,18 @@ package com.node5.billingservice.wallet.exception;
 import com.node5.common.exception.BaseErrorCode;
 import lombok.Getter;
 
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
+
 @Getter
 public enum WalletErrorCode implements BaseErrorCode {
-    WALLET_NOT_FOUND(404, "WALLET_001", "예치금이 존재하지 않습니다."),
-    WALLET_ALREADY_EXISTS(400, "WALLET_002", "예치금이 이미 존재합니다."),
-    WALLET_WITHDRAW_LOG_NOT_FOUND(404, "WALLET_003", "예치금 출금 내역이 존재하지 않습니다."),
-    WALLET_REFUND_STATE_INVALID(400, "WALLET_004", "환불 가능한 상태가 아닙니다."),
-    WALLET_ORDER_ID_MISMATCH(400, "WALLET_005", "주문 ID가 일치하지 않습니다."),
-    WALLET_REFUND_AMOUNT_INVALID(400, "WALLET_006", "환불 금액이 일치하지 않습니다."),
-    INSUFFICIENT_WALLET_BALANCE(400, "WALLET_007", "예치금 잔액이 부족합니다.");
+    WALLET_NOT_FOUND(NOT_FOUND.value(), "WALLET_001", "예치금이 존재하지 않습니다."),
+    WALLET_ALREADY_EXISTS(BAD_REQUEST.value(), "WALLET_002", "예치금이 이미 존재합니다."),
+    WALLET_WITHDRAW_LOG_NOT_FOUND(NOT_FOUND.value(), "WALLET_003", "예치금 출금 내역이 존재하지 않습니다."),
+    WALLET_REFUND_STATE_INVALID(BAD_REQUEST.value(), "WALLET_004", "환불 가능한 상태가 아닙니다."),
+    WALLET_ORDER_ID_MISMATCH(BAD_REQUEST.value(), "WALLET_005", "주문 ID가 일치하지 않습니다."),
+    WALLET_REFUND_AMOUNT_INVALID(BAD_REQUEST.value(), "WALLET_006", "환불 금액이 일치하지 않습니다."),
+    INSUFFICIENT_WALLET_BALANCE(BAD_REQUEST.value(), "WALLET_007", "예치금 잔액이 부족합니다.");
 
     private final int status;
     private final String code;
