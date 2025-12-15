@@ -1,6 +1,6 @@
 spring:
   config:
-    import: optional:configserver:http://config-service:8888
+    import: optional:configserver:http://localhost:8888
   cloud:
     gateway:
       server:
@@ -42,7 +42,6 @@ spring:
                 - Path=/settlement-service/**
               filters:
                 - RewritePath=/settlement-service/(?<segment>.*), /$\{segment}
-                - RewritePath=/subscription-service/(?<segment>.*), /$\{segment}
             - id: order-service
               uri: lb://ORDER-SERVICE
               predicates:
