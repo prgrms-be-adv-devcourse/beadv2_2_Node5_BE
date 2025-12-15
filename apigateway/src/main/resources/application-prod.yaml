@@ -21,7 +21,7 @@ spring:
             - id: member-service
               uri: lb://MEMBER-SERVICE
               predicates:
-                - Path=/member-service/**
+                - Path=/member-service/api/v1/**, /member-service/v3/api-docs/**
               filters:
                 - RewritePath=/member-service/(?<segment>.*), /$\{segment}
             - id: billing-service
