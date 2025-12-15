@@ -127,9 +127,13 @@ public class OrderService {
         return OrderListInfo.from(pageInfo, orderListInfos);
     }
 
-    public OrderDetailInfo getOrderDetail(UUID orderId) {
+    public OrderDetailInfo getOrderDetail(UUID orderId, UUID memberId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException(orderId));
+
+        if(!order.getMemberId().equals(memberId)){
+            throw new OrderAccessDeniedException(order.getId(), memberId, "상세 조회");
+        }
 
         List<OrderItem> orderItems = orderItemRepository.findByOrderId(orderId);
         List<OrderItemInfo> orderItemInfos = orderItems.stream()

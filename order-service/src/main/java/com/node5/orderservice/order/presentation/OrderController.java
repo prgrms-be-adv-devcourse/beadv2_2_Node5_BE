@@ -38,7 +38,7 @@ public class OrderController {
     @Operation(summary = "주문 목록 조회", description = "일정 기간동안의 모든 주문 내역을 페이징 조회한다.")
     @GetMapping
     public ResponseEntity<OrderListInfo> getOrderList(
-            @RequestParam("memberId") UUID memberId,
+            @RequestHeader("Member-Id") UUID memberId,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "5") int size,
             @RequestParam(value = "period", defaultValue = "3")
@@ -49,15 +49,18 @@ public class OrderController {
 
     @Operation(summary = "주문 상세 조회", description = "주문 ID로부터 특정 주문 상세 내역을 조회한다.")
     @GetMapping("/{orderId}")
-    public ResponseEntity<OrderDetailInfo> getOrder(@PathVariable("orderId") UUID id) {
-        return ResponseEntity.ok(orderService.getOrderDetail(id));
+    public ResponseEntity<OrderDetailInfo> getOrder(
+            @PathVariable("orderId") UUID orderId,
+            @RequestHeader("Member-Id") UUID memberId
+    ) {
+        return ResponseEntity.ok(orderService.getOrderDetail(orderId, memberId));
     }
 
     @Operation(summary = "주문 취소", description = "주문의 상태가 PAID인 경우 취소가 가능하며, 결제 취소 성공 시 주문의 상태가 CANCELED로 변경된다.")
     @PatchMapping("/{orderId}/cancel")
     public ResponseEntity<OrderStatusInfo> cancel(
             @PathVariable("orderId") UUID orderId,
-            @RequestParam("memberId") UUID memberId
+            @RequestHeader("Member-Id") UUID memberId
     ) {
         return ResponseEntity.ok(orderService.cancel(orderId, memberId));
     }
@@ -66,7 +69,7 @@ public class OrderController {
     @PatchMapping("/{orderId}/refund")
     public ResponseEntity<OrderStatusInfo> refund(
             @PathVariable("orderId") UUID orderId,
-            @RequestParam("memberId") UUID memberId
+            @RequestHeader("Member-Id") UUID memberId
     ) {
         return ResponseEntity.ok(orderService.refund(orderId, memberId));
     }
