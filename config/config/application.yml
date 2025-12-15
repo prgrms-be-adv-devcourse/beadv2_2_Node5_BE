@@ -13,5 +13,5 @@ eureka:
       defaultZone: http://admin:admin@discovery-service:8761/eureka
 
 apigateway:
-#  host: http://${apigateway.hostname:localhost}:${server.port}
-  host: http://localhost:8000
+#  host: http://localhost:8000
+  host: http://apigateway-service:8000
