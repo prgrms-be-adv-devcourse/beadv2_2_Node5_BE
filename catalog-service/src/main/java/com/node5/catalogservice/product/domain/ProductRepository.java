@@ -20,7 +20,5 @@ public interface ProductRepository {
 
 	Product save(Product product);
 
-	Page<Product> findAll(Pageable pageable);
-
 	List<Product> findAllByIdIn(Collection<UUID> ids);
 }

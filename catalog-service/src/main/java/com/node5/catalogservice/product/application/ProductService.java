@@ -1,6 +1,9 @@
 package com.node5.catalogservice.product.application;
 
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -155,6 +158,31 @@ public class ProductService {
 
 		return productRepository.findByShopId(shopId, pageable)
 			.map(ProductInfo::from);
+	}
+
+	/**
+	 * 상품 ID 목록에 대해 상품의 상점 ID를 조회합니다.
+	 * <p>
+	 * - 요청된 모든 상품이 존재해야 하며<br>
+	 * - 하나라도 존재하지 않으면 예외를 반환합니다.
+	 */
+	@Transactional(readOnly = true)
+	public Map<UUID, UUID> getShopIdsByProductIds(List<UUID> productIds) {
+
+		if (productIds == null || productIds.isEmpty()) {
+			return Map.of();
+		}
+
+		List<UUID> distinctIds = productIds.stream().distinct().toList();
+
+		List<Product> products = productRepository.findAllByIdIn(distinctIds);
+
+		if (products.size() != distinctIds.size()) {
+			throw new ProductNotFoundException();
+		}
+
+		return products.stream()
+			.collect(Collectors.toMap(Product::getId, Product::getShopId));
 	}
 
 	private Product getProductOrThrow(UUID productId) {
