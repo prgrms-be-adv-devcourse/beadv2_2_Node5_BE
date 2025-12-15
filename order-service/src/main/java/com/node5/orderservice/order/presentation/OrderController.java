@@ -29,10 +29,13 @@ public class OrderController {
 
     @Operation(summary = "주문 생성", description = "장바구니 상품이나 정기 구독 상품 주문 정보를 Order, OrderItem 테이블에 등록한다.")
     @PostMapping
-    public ResponseEntity<OrderCreateInfo> create(@RequestBody @Valid OrderCreateRequest request) {
+    public ResponseEntity<OrderCreateInfo> create(
+            @RequestHeader("Member-Id") UUID memberId,
+            @RequestBody @Valid OrderCreateRequest request
+    ) {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(orderService.create(request.toCommand()));
+                .body(orderService.create(memberId, request.toCommand()));
     }
 
     @Operation(summary = "주문 목록 조회", description = "일정 기간동안의 모든 주문 내역을 페이징 조회한다.")

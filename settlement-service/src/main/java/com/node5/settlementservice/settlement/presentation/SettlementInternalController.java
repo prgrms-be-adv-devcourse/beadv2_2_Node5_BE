@@ -2,6 +2,7 @@ package com.node5.settlementservice.settlement.presentation;
 
 import com.node5.settlementservice.settlement.application.SettlementInternalService;
 import com.node5.settlementservice.settlement.application.dto.JobExecutionInfo;
+import com.node5.settlementservice.settlement.application.dto.SettlementSourceItem;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @Tag(name = "Settlement", description = "정산 API")
 @RestController
@@ -60,6 +62,13 @@ public class SettlementInternalController {
             @PathVariable Long jobExecutionId
     ) {
         return ResponseEntity.ok(settlementInternalService.getStatusByJobExecutionId(jobExecutionId));
+    }
+
+    @PostMapping("/internal/settlements/source")
+    public ResponseEntity<Void> settle(@RequestBody List<SettlementSourceItem> items
+    ) {
+        settlementInternalService.saveSettlementResource(items);
+        return ResponseEntity.ok().build();
     }
 
     private JobParametersBuilder getDefaultSettlementParamsBuilder(String yearMonth){

@@ -48,7 +48,7 @@ public class OrderService {
     private final BillingClient billingClient;
 
     @Transactional
-    public OrderCreateInfo create(OrderCommand command) {
+    public OrderCreateInfo create(UUID memberId, OrderCommand command) {
         // 주문번호 생성, 총 주문 금액 계산하여 Order 생성
         String orderNum = generateNewOrderNum();
         Optional<BigDecimal> totalAmountOptional = command.items().stream()
@@ -56,7 +56,7 @@ public class OrderService {
                 .reduce(BigDecimal::add);
         BigDecimal totalAmount = totalAmountOptional.orElse(BigDecimal.ZERO);
 
-        Order order = Order.create(command, orderNum, totalAmount);
+        Order order = Order.create(memberId, command, orderNum, totalAmount);
         Order saved = orderRepository.save(order);
 
         // OrderItem 생성

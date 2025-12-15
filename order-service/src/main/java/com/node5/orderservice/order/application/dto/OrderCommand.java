@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.UUID;
 
 public record OrderCommand(
-        UUID memberId,
         OrderType orderType,
         UUID subscriptionId,
         String recipientName,

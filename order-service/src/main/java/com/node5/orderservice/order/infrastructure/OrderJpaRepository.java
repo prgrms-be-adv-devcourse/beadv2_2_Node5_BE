@@ -24,4 +24,6 @@ public interface OrderJpaRepository extends JpaRepository<Order, UUID> {
 
     @Query("SELECT o FROM Order o WHERE o.status = :status AND o.modifiedAt < :standard")
     List<Order> findByStatusAndModifiedAtBefore(@Param("status") OrderStatus status, @Param("standard") LocalDateTime standard);
+
+    List<Order> findByStatus(OrderStatus orderStatus);
 }

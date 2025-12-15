@@ -54,4 +54,9 @@ public class OrderRepositoryAdapter implements OrderRepository {
         return orderJpaRepository.saveAll(orders);
     }
 
+    @Override
+    public List<Order> findByStatus(OrderStatus orderStatus) {
+        return orderJpaRepository.findByStatus(orderStatus);
+    }
+
 }

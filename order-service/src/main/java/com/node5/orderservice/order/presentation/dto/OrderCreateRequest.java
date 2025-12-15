@@ -11,9 +11,6 @@ import java.util.List;
 import java.util.UUID;
 
 public record OrderCreateRequest(
-        @NotNull(message = "구매자 ID는 필수 값입니다.")
-        UUID memberId,
-
         @NotNull(message = "주문 유형은 필수 값입니다.")
         OrderType orderType,
 
@@ -50,7 +47,6 @@ public record OrderCreateRequest(
                 .toList();
 
         return new OrderCommand(
-                memberId,
                 orderType(),
                 subscriptionId,
                 recipientName,

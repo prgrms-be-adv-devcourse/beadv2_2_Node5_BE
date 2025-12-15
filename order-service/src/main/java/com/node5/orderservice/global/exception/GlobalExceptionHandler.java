@@ -1,10 +1,7 @@
 package com.node5.orderservice.global.exception;
 
 import com.node5.common.exception.ExceptionResponseDto;
-import com.node5.orderservice.order.exception.OrderAccessDeniedException;
-import com.node5.orderservice.order.exception.OrderNotFoundException;
-import com.node5.orderservice.order.exception.OrderPaymentFailedException;
-import com.node5.orderservice.order.exception.OrderRequestNotAllowedException;
+import com.node5.orderservice.order.exception.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
@@ -71,7 +68,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ExceptionResponseDto> handleOrderPaymentFailed(OrderPaymentFailedException e, HttpServletRequest request) {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(new ExceptionResponseDto("ORDER_REQUEST_NOT_ALLOWED", e.getMessage()));
+                .body(new ExceptionResponseDto("ORDER_PAYMENT_SERVICE_FAILED", e.getMessage()));
+    }
+
+    @ExceptionHandler(OrderGetShopIdFailed.class)
+    public ResponseEntity<ExceptionResponseDto> handleOrderShopServiceFailed(OrderGetShopIdFailed e, HttpServletRequest request) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new ExceptionResponseDto("ORDER_SHOP_SERVICE_FAILED", e.getMessage()));
     }
 
 }

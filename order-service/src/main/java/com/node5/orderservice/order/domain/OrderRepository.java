@@ -23,4 +23,6 @@ public interface OrderRepository {
     List<Order> findByStatusAndModifiedAtBefore(OrderStatus orderStatus, LocalDateTime standard);
 
     List<Order> saveAll(List<Order> paidOrders);
+
+    List<Order> findByStatus(OrderStatus orderStatus);
 }

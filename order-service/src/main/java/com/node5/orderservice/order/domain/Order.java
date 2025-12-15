@@ -76,6 +76,7 @@ public class Order extends BaseEntity {
     }
 
     public static Order create(
+            UUID memberId,
             OrderCommand command,
             String orderNum,
             BigDecimal totalAmount
@@ -83,7 +84,7 @@ public class Order extends BaseEntity {
         return Order.builder()
                 .id(UUID.randomUUID())
                 .status(OrderStatus.CREATED)
-                .memberId(command.memberId())
+                .memberId(memberId)
                 .orderNum(orderNum)
                 .orderType(command.orderType())
                 .subscriptionId(command.subscriptionId())
