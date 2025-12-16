@@ -16,7 +16,9 @@ public enum ProductErrorCode implements BaseErrorCode {
 	SHOP_FORBIDDEN(403, "SHOP_FORBIDDEN", "해당 상점에 대한 권한이 없습니다."),
 
 	PRODUCT_STATUS_CHANGE_NOT_ALLOWED(409, "PRODUCT_STATUS_CHANGE_NOT_ALLOWED", "중단된 상품은 상태를 변경할 수 없습니다."),
-	PRODUCT_INVALID_STOCK(400, "PRODUCT_INVALID_STOCK", "재고 수량은 0 이상이어야 합니다.");
+	PRODUCT_INVALID_STOCK(400, "PRODUCT_INVALID_STOCK", "재고 수량은 0 이상이어야 합니다."),
+
+	UNSUPPORTED_IMAGE_CONTENT_TYPE(400, "UNSUPPORTED_IMAGE_CONTENT_TYPE", "지원하지 않는 이미지 타입입니다.");
 
 	private final int status;
 	private final String code;
