@@ -2,13 +2,14 @@ package com.node5.settlementservice.config;
 
 import com.node5.settlementservice.settlement.client.BillingClient;
 import com.node5.settlementservice.settlement.client.BillingErrorDecoder;
+import com.node5.settlementservice.settlement.client.ShopClient;
 import feign.codec.ErrorDecoder;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@EnableFeignClients(clients = BillingClient.class)
+@EnableFeignClients(clients = {BillingClient.class, ShopClient.class})
 public class OpenFeignConfig {
 
     @Bean

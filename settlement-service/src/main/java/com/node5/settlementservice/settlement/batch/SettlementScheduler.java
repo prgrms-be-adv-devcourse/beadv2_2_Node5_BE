@@ -32,7 +32,7 @@ public class SettlementScheduler {
     private boolean settlementAsyncEnabled;
     private final SettlementSourceRepository settlementSourceRepository;
 
-    @Scheduled(cron = "${spring.task.scheduling.cron.settlement:0 */3 * * * *}") // 테스트: 3분
+    @Scheduled(cron = "${spring.task.scheduling.cron.settlement:0 */10 * * * *}")
     public void runMonthlySettlement() {
         YearMonth previousMonth = YearMonth.now().minusMonths(1);
 
