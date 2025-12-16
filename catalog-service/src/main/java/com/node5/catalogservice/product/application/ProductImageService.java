@@ -1,12 +1,14 @@
 package com.node5.catalogservice.product.application;
 
 import java.time.Duration;
+import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.node5.catalogservice.product.application.dto.PresignedUrlInfo;
+import com.node5.catalogservice.product.exception.ProductUnsupportedImageContentTypeException;
 
 import lombok.RequiredArgsConstructor;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
@@ -18,6 +20,11 @@ import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignReques
 @RequiredArgsConstructor
 public class ProductImageService {
 
+	private static final Set<String> ALLOWED_IMAGE_CONTENT_TYPES = Set.of(
+		"image/png",
+		"image/jpeg"
+	);
+
 	private final S3Presigner s3Presigner;
 
 	@Value("${app.s3.bucket}")
@@ -26,8 +33,10 @@ public class ProductImageService {
 	@Value("${app.s3.presigned-url-expiration-seconds:600}")
 	private long expirationSeconds;
 
-	public PresignedUrlInfo createUploadUrl(String fileName, String contentType) {
-		String key = "product/" + UUID.randomUUID() + "-" + fileName;
+	public PresignedUrlInfo createUploadUrl(String contentType) {
+		validateContentType(contentType);
+
+		String key = "product/" + UUID.randomUUID();
 
 		PutObjectRequest objectRequest = PutObjectRequest.builder()
 			.bucket(bucket)
@@ -43,8 +52,15 @@ public class ProductImageService {
 		PresignedPutObjectRequest presignedRequest =
 			s3Presigner.presignPutObject(presignRequest);
 
-		String url = presignedRequest.url().toString();
+		return new PresignedUrlInfo(presignedRequest.url().toString(), key);
+	}
 
-		return new PresignedUrlInfo(url, key);
+	private void validateContentType(String contentType) {
+		if (contentType == null || contentType.isBlank()) {
+			throw new ProductUnsupportedImageContentTypeException();
+		}
+		if (!ALLOWED_IMAGE_CONTENT_TYPES.contains(contentType)) {
+			throw new ProductUnsupportedImageContentTypeException();
+		}
 	}
 }

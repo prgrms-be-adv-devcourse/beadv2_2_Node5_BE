@@ -59,7 +59,7 @@ public class ProductSearchController {
 		@RequestParam(required = false) Integer maxPrice,
 
 		@Parameter(description = "정렬 기준", required = false)
-		@RequestParam(required = false) ProductSearchSort sort,
+		@RequestParam(name = "searchSort", required = false) ProductSearchSort searchSort,
 
 		@Parameter(description = "상점 ID(판매자)", required = false)
 		@RequestParam(required = false) UUID shopId,
@@ -72,7 +72,7 @@ public class ProductSearchController {
 			category,
 			minPrice,
 			maxPrice,
-			sort
+			searchSort
 		);
 
 		return ResponseEntity.ok(searchService.search(command, pageable));
