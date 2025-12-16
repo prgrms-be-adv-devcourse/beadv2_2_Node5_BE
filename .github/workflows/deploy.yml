@@ -1,0 +1,69 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+jobs:
+  build-and-push:
+    name: build application and make jar file
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        service: [
+          "apigateway",
+          "billing-service",
+          "catalog-service",
+          "member-service",
+          "order-service",
+          "settlement-service",
+          "shop-service",
+          "subscription-service"
+        ]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Build bootJar
+        run: ./gradlew :${{ matrix.service }}:bootJar
+
+      # 도커 로그인
+      - name: Login to Dockerhub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # 도커 이미지 build & push
+      - name: Build & Push docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./${{ matrix.service }}
+          push: true
+          tags: ${{ secrets.DOCKER_REPO }}/${{ matrix.service }}:latest
+
+    # EC2 배포
+  deploy:
+    name: Deploy to EC2
+    runs-on: self-hosted
+    needs: build-and-push
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Docker login & deploy
+        run: |
+          echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+          docker compose down
+          docker compose pull
+          docker compose up --build -d
+          docker image prune -a -f

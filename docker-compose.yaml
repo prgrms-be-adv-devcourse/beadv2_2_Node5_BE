@@ -1,0 +1,172 @@
+version: "3"
+
+services:
+  database:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: node5
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: my_routine
+      LANG: ko_KR.utf8
+      LC_ALL: ko_KR.utf8
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck: # Healthcheck 추가
+      test: ["CMD-SHELL", "pg_isready -U node5 -d my_routine"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  config-service:
+    image: node5dev/config:latest
+    ports:
+      - "8888:8888"
+    depends_on:
+      database:
+        condition: service_healthy
+    volumes:
+      - /home/ubuntu/config:/app/config
+    healthcheck: # Healthcheck 추가
+      test: [ "CMD", "curl", "-f", "http://localhost:8888/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  discovery-service:
+    image: node5dev/discovery:latest
+    ports:
+      - "8761:8761"
+    depends_on:
+      config-service:
+        condition: service_healthy
+    healthcheck: # Healthcheck 추가
+      test: [ "CMD", "curl", "-f", "http://localhost:8761/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.1
+    restart: unless-stopped
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.1
+    restart: unless-stopped
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.3
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: -Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -fsS http://localhost:9200 >/dev/null || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  billing-service:
+    image: node5dev/billing-service:latest
+    depends_on:
+      discovery-service:
+        condition: service_healthy
+    env_file:
+      - /home/ubuntu/env/.env.billing
+
+  catalog-service:
+    image: node5dev/catalog-service:latest
+    depends_on:
+      discovery-service:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    env_file:
+      - /home/ubuntu/env/.env.catalog
+
+  member-service:
+    image: node5dev/member-service:latest
+    depends_on:
+      discovery-service:
+        condition: service_healthy
+    env_file:
+      - /home/ubuntu/env/.env.member
+
+  order-service:
+    image: node5dev/order-service:latest
+    depends_on:
+      discovery-service:
+        condition: service_healthy
+    env_file:
+      - /home/ubuntu/env/.env.order
+
+  settlement-service:
+    image: node5dev/settlement-service:latest
+    depends_on:
+      discovery-service:
+        condition: service_healthy
+    env_file:
+      - /home/ubuntu/env/.env.settlement
+
+  shop-service:
+    image: node5dev/shop-service:latest
+    depends_on:
+      discovery-service:
+        condition: service_healthy
+    env_file:
+      - /home/ubuntu/env/.env.shop
+
+  subscription-service:
+    image: node5dev/subscription-service:latest
+    depends_on:
+      discovery-service:
+        condition: service_healthy
+    env_file:
+      - /home/ubuntu/env/.env.subscription
+
+  apigateway-service:
+    image: node5dev/apigateway:latest
+    ports:
+      - "8000:8000"
+    depends_on:
+      discovery-service:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  redis_data:
+  es_data:

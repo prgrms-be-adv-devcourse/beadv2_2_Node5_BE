@@ -1,0 +1,6 @@
+server:
+  port: 0 # random port
+
+spring:
+  application:
+    name: catalog-service

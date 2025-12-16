@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Toss Payment Demo</title>
+    <script src="https://js.tosspayments.com/v1/payment"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 2rem;
+        }
+        .field {
+            margin: 0.75rem 0;
+            display: flex;
+            flex-direction: column;
+            max-width: 360px;
+        }
+        label {
+            font-weight: bold;
+            margin-bottom: 0.25rem;
+        }
+        input {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+        }
+        #actions {
+            margin-top: 1.5rem;
+            display: flex;
+            gap: 0.75rem;
+        }
+        button {
+            padding: 0.75rem 1.5rem;
+            background-color: #3182f6;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        #status {
+            margin-top: 1rem;
+            color: #0a5bff;
+            white-space: pre-line;
+        }
+    </style>
+</head>
+<body>
+<h1>Toss 결제 테스트</h1>
+<p>결제 금액과 MemberId를 입력 후 결제 요청을 보내 받아온 orderId로 결제를 진행합니다.</p>
+
+<div class="field">
+    <label for="amount-input">결제 금액 (KRW)</label>
+    <input id="amount-input" type="number" min="1" step="1" value="1000" placeholder="1000">
+</div>
+<div class="field">
+    <label for="member-id-input">Member ID (UUID)</label>
+    <input id="member-id-input" type="text" placeholder="00000000-0000-0000-0000-000000000000">
+</div>
+
+<div id="actions">
+    <button id="request-button">/payments/request 신청</button>
+    <button id="pay-button" disabled>Toss 결제 진행</button>
+</div>
+
+<div id="status"></div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        if (typeof window.TossPayments !== 'function') {
+            console.error('TossPayments is not defined. 스크립트 로드를 확인해주세요.');
+            alert('Toss Payments 실행 환경을 확인해주세요.');
+            return;
+        }
+
+        const clientKey = 'test_ck_BX7zk2yd8yj019oN1YJq3x9POLqK'; // 테스트용 클라이언트 키
+        const tossPayments = window.TossPayments(clientKey);
+
+        const amountInput = document.getElementById('amount-input');
+        const memberInput = document.getElementById('member-id-input');
+        const requestButton = document.getElementById('request-button');
+        const payButton = document.getElementById('pay-button');
+        const status = document.getElementById('status');
+
+        let orderId = null;
+        let currentMemberId = null;
+        let currentAmount = null;
+
+        function setStatus(message, isError = false) {
+            status.style.color = isError ? '#c62828' : '#0a5bff';
+            status.textContent = message;
+        }
+
+        requestButton.addEventListener('click', async function () {
+            const amount = Number(amountInput.value);
+            const memberId = memberInput.value.trim();
+
+            if (!memberId) {
+                setStatus('memberId를 입력해주세요.', true);
+                return;
+            }
+            if (!Number.isFinite(amount) || amount <= 0) {
+                setStatus('유효한 결제 금액을 입력해주세요.', true);
+                return;
+            }
+
+            try {
+                requestButton.disabled = true;
+                setStatus('payments/request 요청 중...');
+
+                const response = await fetch(`/api/v1/payments/request`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Member-Id': memberId
+                    },
+                    body: JSON.stringify({ amount })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`서버 오류: ${response.status}`);
+                }
+
+                const data = await response.json();
+                orderId = data.orderId;
+                currentMemberId = memberId;
+                currentAmount = amount;
+
+                payButton.disabled = false;
+                setStatus(`요청 성공. orderId: ${orderId}`);
+            } catch (error) {
+                console.error('payments/request 실패:', error);
+                setStatus('payments/request 요청 실패: ' + error.message, true);
+            } finally {
+                requestButton.disabled = false;
+            }
+        });
+
+        payButton.addEventListener('click', function () {
+            if (!orderId || !currentMemberId || !currentAmount) {
+                setStatus('먼저 결제 요청을 받아주세요.', true);
+                return;
+            }
+
+            const successUrl = `${window.location.origin}/payments/success.html?memberId=${encodeURIComponent(currentMemberId)}`;
+            const failUrl = `${window.location.origin}/payments/fail.html?memberId=${encodeURIComponent(currentMemberId)}`;
+
+            tossPayments.requestPayment('CARD', {
+                amount: currentAmount,
+                orderId: orderId,
+                orderName: '테스트 결제',
+                successUrl,
+                failUrl
+            });
+        });
+    });
+</script>
+</body>
+</html>
