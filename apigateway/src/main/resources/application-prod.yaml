@@ -15,7 +15,7 @@ spring:
             - id: shop-service
               uri: lb://SHOP-SERVICE
               predicates:
-                - Path=/shop-service/**
+                - Path=/shop-service/api/v1/**, /shop-service/v3/api-docs/**
               filters:
                 - RewritePath=/shop-service/(?<segment>.*), /$\{segment}
             - id: member-service

@@ -40,4 +40,9 @@ public class ShopRepositoryAdaptor implements ShopRepository {
     public void flush() {
         shopJpaRepository.flush();
     }
+
+    @Override
+    public Optional<Shop> findById(UUID shopId) {
+        return shopJpaRepository.findById(shopId);
+    }
 }
