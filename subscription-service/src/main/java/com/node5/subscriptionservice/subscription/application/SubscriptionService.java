@@ -4,6 +4,7 @@ import com.node5.subscriptionservice.subscription.application.dto.SubscriptionCr
 import com.node5.subscriptionservice.subscription.application.dto.SubscriptionInfo;
 import com.node5.subscriptionservice.subscription.application.dto.SubscriptionUpdateCommand;
 import com.node5.subscriptionservice.subscription.client.ProductClient;
+import com.node5.subscriptionservice.subscription.client.ShopClient;
 import com.node5.subscriptionservice.subscription.client.dto.ProductInfoResponse;
 import com.node5.subscriptionservice.subscription.domain.*;
 import com.node5.subscriptionservice.subscription.exception.SubscriptionException;
@@ -29,6 +30,7 @@ public class SubscriptionService {
     private final SubscriptionRepository subscriptionRepository;
     private final SubscriptionRecurrenceRuleRepository subscriptionRecurrenceRuleRepository;
     private final ProductClient productClient;
+    private final ShopClient shopClient;
 
     public SubscriptionInfo findById(UUID id) {
         Subscription subscription = subscriptionRepository.findById(id)
@@ -44,6 +46,7 @@ public class SubscriptionService {
     @Transactional
     public SubscriptionInfo create(SubscriptionCreateCommand command, UUID memberId) {
         ProductInfoResponse productInfo = getProductInfo(command.productId());
+        validateProductNotCurrentMembersShop(memberId, productInfo.shopId());
 
         Subscription subscription = Subscription.create(
                 memberId,
@@ -155,7 +158,7 @@ public class SubscriptionService {
             if (response == null) {
                 throw new SubscriptionException(SUBSCRIPTION_PRODUCT_NOT_FOUND);
             }
-            if (response.id() == null || response.name() == null || response.price() == null) {
+            if (response.id() == null || response.name() == null || response.price() == null || response.shopId() == null) {
                 throw new SubscriptionException(SUBSCRIPTION_PRODUCT_REQUEST_FAILED);
             }
             return response;
@@ -167,6 +170,20 @@ public class SubscriptionService {
             throw new SubscriptionException(SUBSCRIPTION_PRODUCT_REQUEST_FAILED);
         } catch (Exception ex) {
             throw new SubscriptionException(SUBSCRIPTION_PRODUCT_REQUEST_FAILED);
+        }
+    }
+
+    private void validateProductNotCurrentMembersShop(UUID memberId, UUID shopId) {
+        String shopOwnerIdStr;
+        try {
+            shopOwnerIdStr = shopClient.getMemberIdByShopId(shopId).getBody();
+        } catch (FeignException e) {
+            throw new SubscriptionException(SUBSCRIPTION_SHOP_REQUEST_FAILED);
+        }
+        UUID shopOwnerId = UUID.fromString(shopOwnerIdStr);
+
+        if(shopOwnerId.equals(memberId)) {
+            throw new SubscriptionException(SUBSCRIPTION_SELF_PRODUCT_NOT_ALLOWED);
         }
     }
 
