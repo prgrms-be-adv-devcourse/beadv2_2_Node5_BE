@@ -94,4 +94,10 @@ public class Payment extends BaseEntity {
             throw new PaymentException(PAYMENT_AMOUNT_MISMATCH);
         }
     }
+
+    public void validateStatus(Payment payment, PaymentStatus paymentStatus) {
+        if (payment.getStatus() != paymentStatus) {
+            throw new PaymentException(PAYMENT_STATUS_INVALID);
+        }
+    }
 }

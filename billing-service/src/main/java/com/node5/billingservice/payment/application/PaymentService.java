@@ -5,6 +5,7 @@ import com.node5.billingservice.payment.client.dto.TossPaymentResponse;
 import com.node5.billingservice.payment.client.TossPaymentClient;
 import com.node5.billingservice.payment.domain.Payment;
 import com.node5.billingservice.payment.domain.PaymentFailure;
+import com.node5.billingservice.payment.domain.PaymentStatus;
 import com.node5.billingservice.payment.exception.PaymentException;
 import com.node5.billingservice.payment.infrastructure.PaymentFailureRepositoryAdapter;
 import com.node5.billingservice.payment.infrastructure.PaymentRepositoryAdapter;
@@ -76,6 +77,9 @@ public class PaymentService {
         if (!Objects.equals(payment.getAmount(), command.amount())) {
             throw new PaymentException(PAYMENT_AMOUNT_MISMATCH);
         }
+        // 결제 상태 검증
+        payment.validateStatus(payment, PaymentStatus.READY);
+
 
         TossPaymentResponse tossPayment = tossPaymentClient.confirm(command);
         payment.confirm(tossPayment);
@@ -99,6 +103,9 @@ public class PaymentService {
         if (!Objects.equals(payment.getAmount(), command.amount())) {
             throw new PaymentException(PAYMENT_AMOUNT_MISMATCH);
         }
+        // 결제 상태 검증
+        payment.validateStatus(payment, PaymentStatus.READY);
+
         payment.failure(command.errorMessage());
 
         PaymentFailure failure = PaymentFailure.builder()
@@ -124,6 +131,9 @@ public class PaymentService {
 
         // 결제 키와 금액 검증
         payment.validateValue(memberId, payment, command.paymentKey(), command.amount());
+
+        // 결제 상태 검증
+        payment.validateStatus(payment, PaymentStatus.CONFIRMED);
 
         // 예치금 잔액 검증
         wallet.validateSufficientBalance(command.amount());
