@@ -26,8 +26,8 @@ public class ProductImageService {
 	@Value("${app.s3.presigned-url-expiration-seconds:600}")
 	private long expirationSeconds;
 
-	public PresignedUrlInfo createUploadUrl(String fileName, String contentType) {
-		String key = "product/" + UUID.randomUUID() + "-" + fileName;
+	public PresignedUrlInfo createUploadUrl(String contentType) {
+		String key = "product/" + UUID.randomUUID();
 
 		PutObjectRequest objectRequest = PutObjectRequest.builder()
 			.bucket(bucket)
@@ -43,8 +43,6 @@ public class ProductImageService {
 		PresignedPutObjectRequest presignedRequest =
 			s3Presigner.presignPutObject(presignRequest);
 
-		String url = presignedRequest.url().toString();
-
-		return new PresignedUrlInfo(url, key);
+		return new PresignedUrlInfo(presignedRequest.url().toString(), key);
 	}
 }

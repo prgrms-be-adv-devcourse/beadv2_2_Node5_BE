@@ -154,7 +154,7 @@ public class SellerProductController {
 	public ResponseEntity<PresignedUrlResponse> createPresignedUrl(
 		@Valid @RequestBody PresignedUrlRequest request
 	) {
-		PresignedUrlInfo info = productImageService.createUploadUrl(request.fileName(), request.contentType());
+		PresignedUrlInfo info = productImageService.createUploadUrl(request.contentType());
 		return ResponseEntity.ok(new PresignedUrlResponse(info.url(), info.key()));
 	}
 }
