@@ -5,6 +5,6 @@ import java.util.UUID;
 public record WalletInfo (
         UUID id,
         UUID memberId,
-        Long amount
+        Long balance
 ) {
 }
