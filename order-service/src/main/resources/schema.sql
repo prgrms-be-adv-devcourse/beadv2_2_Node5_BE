@@ -1,1 +1,0 @@
-CREATE SEQUENCE IF NOT EXISTS order_num_seq;
