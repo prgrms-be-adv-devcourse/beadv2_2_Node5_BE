@@ -174,13 +174,16 @@ public class SubscriptionService {
     }
 
     private void validateProductNotCurrentMembersShop(UUID memberId, UUID shopId) {
+        String shopOwnerIdStr;
         try {
-            shopClient.findMyShop(memberId, shopId);
-            // 조회에 성공할 경우 본인의 상점인 것이므로 예외처리
-            throw new SubscriptionException(SUBSCRIPTION_SELF_PRODUCT_NOT_ALLOWED);
-        } catch (FeignException.NotFound | FeignException.Forbidden e) {
+            shopOwnerIdStr = shopClient.getMemberIdByShopId(shopId).getBody();
         } catch (FeignException e) {
             throw new SubscriptionException(SUBSCRIPTION_SHOP_REQUEST_FAILED);
+        }
+        UUID shopOwnerId = UUID.fromString(shopOwnerIdStr);
+
+        if(shopOwnerId.equals(memberId)) {
+            throw new SubscriptionException(SUBSCRIPTION_SELF_PRODUCT_NOT_ALLOWED);
         }
     }
 
