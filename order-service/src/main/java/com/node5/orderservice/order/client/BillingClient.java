@@ -9,13 +9,22 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+
+import java.util.UUID;
 
 @FeignClient(name = "billing-service")
 public interface BillingClient {
 
     @PostMapping("/internal/wallets/withdraw")
-    ResponseEntity<WalletInfo> withdraw(@Valid @RequestBody WalletWithdrawRequest request);
+    ResponseEntity<WalletInfo> withdraw(
+            @RequestHeader("Member-Id") UUID memberId,
+            @Valid @RequestBody WalletWithdrawRequest request
+    );
 
     @PutMapping("/internal/wallets/refund")
-    ResponseEntity<WalletInfo> requestRefund(@Valid @RequestBody WalletRefundRequest request);
+    ResponseEntity<WalletInfo> requestRefund(
+            @RequestHeader("Member-Id") UUID memberId,
+            @Valid @RequestBody WalletRefundRequest request
+    );
 }

@@ -70,7 +70,7 @@ public class OrderService {
         // 예치금 사용 API 호출
         try {
             BigDecimal roundedAmount = order.getTotalAmount().setScale(0, RoundingMode.HALF_UP);
-            ResponseEntity<WalletInfo> response = billingClient.withdraw(new WalletWithdrawRequest(order.getId(), roundedAmount.longValue()));
+            ResponseEntity<WalletInfo> response = billingClient.withdraw(memberId, new WalletWithdrawRequest(order.getId(), roundedAmount.longValue()));
 
             if (response.getStatusCode().is2xxSuccessful()) {
                 orderTransactionService.updateOrderStatus(orderId, PAID);
@@ -157,7 +157,7 @@ public class OrderService {
             // 예치금 환불 API 호출
             try {
                 BigDecimal roundedAmount = order.getTotalAmount().setScale(0, RoundingMode.HALF_UP);
-                ResponseEntity<WalletInfo> response = billingClient.requestRefund(new WalletRefundRequest(order.getId(), roundedAmount.longValue()));
+                ResponseEntity<WalletInfo> response = billingClient.requestRefund(memberId, new WalletRefundRequest(order.getId(), roundedAmount.longValue()));
 
                 if (response.getStatusCode().is2xxSuccessful()) {
                     orderTransactionService.updateOrderStatus(orderId, CANCELED);
@@ -192,7 +192,7 @@ public class OrderService {
             // 예치금 환불 API 호출
             try {
                 BigDecimal roundedAmount = order.getTotalAmount().setScale(0, RoundingMode.HALF_UP);
-                ResponseEntity<WalletInfo> response = billingClient.requestRefund(new WalletRefundRequest(order.getId(), roundedAmount.longValue()));
+                ResponseEntity<WalletInfo> response = billingClient.requestRefund(memberId, new WalletRefundRequest(order.getId(), roundedAmount.longValue()));
 
                 if (response.getStatusCode().is2xxSuccessful()) {
                     orderTransactionService.updateOrderStatus(orderId, REFUND_COMPLETED);
