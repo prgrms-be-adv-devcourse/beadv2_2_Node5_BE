@@ -92,4 +92,12 @@ public class ShopService {
             throw new ShopException(ShopErrorCode.ROLE_UPDATE_FAILED);
         }
     }
+
+    public String getMemberIdByShopId(UUID shopId) {
+        Shop shop = shopRepository.findById(shopId).orElseThrow(
+                () -> new ShopException(ShopErrorCode.SHOP_NOT_FOUND)
+        );
+
+        return shop.getMemberId().toString();
+    }
 }
