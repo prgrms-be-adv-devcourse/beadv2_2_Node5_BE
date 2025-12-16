@@ -19,7 +19,7 @@ public class OrderScheduler {
     public void updateOrderStatus() {
         log.info("** Order status update scheduler started at {}", LocalDateTime.now());
 
-        LocalDateTime ago = LocalDateTime.now().minusMinutes(1); //TODO 테스트용 설정
+        LocalDateTime ago = LocalDateTime.now().minusMinutes(1);
 
         // PAID -> DELIVERY_ING 갱신
         orderTransactionService.updateToDeliveryIng(ago);
@@ -34,8 +34,7 @@ public class OrderScheduler {
     }
 
     // 매일 CONFIRMED 상태의 주문만 조회하여 정산 API를 호출
-    //@Scheduled(cron = "0 0 0 * * *")
-    @Scheduled(cron = "0 */3 * * * *") //테스트: 3분
+    @Scheduled(cron = "${scheduling.cron.collect-settlement-source:0 */5 * * * *}")
     public void processSettlementRequest(){
         orderTransactionService.processSettlementRequest();
     }

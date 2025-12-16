@@ -1,6 +1,7 @@
 package com.node5.settlementservice.settlement.batch;
 
 import com.node5.settlementservice.settlement.client.BillingClient;
+import com.node5.settlementservice.settlement.client.ShopClient;
 import com.node5.settlementservice.settlement.client.dto.WalletInfo;
 import com.node5.settlementservice.settlement.client.dto.WalletSettleRequest;
 import com.node5.settlementservice.settlement.domain.*;
@@ -36,6 +37,7 @@ import java.util.stream.Collectors;
 public class SettlementBatchConfig {
     private static final BigDecimal FEE_RATE = new BigDecimal("0.05"); // 수수료율 5% 고정
     private final BillingClient billingClient;
+    private final ShopClient shopClient;
 
     // Job: 전체 정산 작업 정의
     @Bean
@@ -132,9 +134,14 @@ public class SettlementBatchConfig {
                         try {
                             // 에치금 정산 API 요청
                             BigDecimal roundedAmount = result.getPayoutAmount().setScale(0, RoundingMode.HALF_UP);
-                            ResponseEntity<WalletInfo> response = billingClient.settle(new WalletSettleRequest(result.getId(), roundedAmount.longValue()));
+                            ResponseEntity<String> shopResponse = shopClient.getMemberIdByShopId(UUID.fromString(shopParam));
+                            String memberId = null;
+                            if(shopResponse.getStatusCode().is2xxSuccessful()){
+                                memberId = shopResponse.getBody();
+                            }
+                            ResponseEntity<WalletInfo> walletResponse = billingClient.settle(UUID.fromString(memberId), new WalletSettleRequest(result.getId(), roundedAmount.longValue()));
 
-                            if (response.getStatusCode().is2xxSuccessful()) {
+                            if (walletResponse.getStatusCode().is2xxSuccessful()) {
                                 result.markPaid();
                             }
                         } catch(FeignException e) {
