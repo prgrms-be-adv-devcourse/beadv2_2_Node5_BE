@@ -1,6 +1,5 @@
 package com.node5.subscriptionservice.subscription.application;
 
-import com.node5.common.domain.ApiResponseDto;
 import com.node5.subscriptionservice.subscription.application.dto.SubscriptionCreateCommand;
 import com.node5.subscriptionservice.subscription.application.dto.SubscriptionInfo;
 import com.node5.subscriptionservice.subscription.application.dto.SubscriptionUpdateCommand;
@@ -152,14 +151,14 @@ public class SubscriptionService {
 
     private ProductInfoResponse getProductInfo(UUID productId) {
         try {
-            ApiResponseDto<ProductInfoResponse> response = productClient.findById(productId).getBody();
-            if (response == null || response.data() == null) {
+            ProductInfoResponse response = productClient.findById(productId).getBody();
+            if (response == null) {
                 throw new SubscriptionException(SUBSCRIPTION_PRODUCT_NOT_FOUND);
             }
-            if (response.data().id() == null || response.data().name() == null || response.data().price() == null) {
+            if (response.id() == null || response.name() == null || response.price() == null) {
                 throw new SubscriptionException(SUBSCRIPTION_PRODUCT_REQUEST_FAILED);
             }
-            return response.data();
+            return response;
         } catch (SubscriptionException exception) {
             throw exception;
         } catch (FeignException.NotFound ex) {
