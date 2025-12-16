@@ -8,7 +8,7 @@ spring:
     time-zone: Asia/Seoul
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: validate
     show-sql: true
     properties:
       hibernate:
@@ -18,10 +18,6 @@ spring:
   sql:
     init:
       mode: always #SQL 초기화 파일(schema.sql) 항상 실행
-  task:
-    scheduling:
-      cron:
-        collect-settlement-source: ${SCHEDULER_CRON_COLLECT_SETTLEMENT_SOURCE}
 
 api:
   v1: /api/v1
