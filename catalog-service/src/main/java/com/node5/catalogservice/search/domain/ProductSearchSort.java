@@ -12,12 +12,4 @@ public enum ProductSearchSort {
 	LOW_PRICE,
 	@Schema(description = "높은 가격순")
 	HIGH_PRICE;
-
-	public Sort toSort() {
-		return switch (this) {
-			case LATEST -> Sort.by(Sort.Direction.DESC, "createdAt");
-			case LOW_PRICE -> Sort.by(Sort.Direction.ASC, "price");
-			case HIGH_PRICE -> Sort.by(Sort.Direction.DESC, "price");
-		};
-	}
 }
