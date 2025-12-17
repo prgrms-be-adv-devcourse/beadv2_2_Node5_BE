@@ -11,7 +11,7 @@ public record CartItemUpdateRequest(
 
 	public CartItemUpdateCommand toCommand() {
 		if (quantity == null) {
-			throw new IllegalArgumentException("quantity is required");
+			throw new IllegalArgumentException("수량은 필수 값입니다.");
 		}
 		return new CartItemUpdateCommand(quantity);
 	}

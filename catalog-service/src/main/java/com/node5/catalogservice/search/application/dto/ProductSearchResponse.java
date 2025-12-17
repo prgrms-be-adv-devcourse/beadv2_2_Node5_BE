@@ -4,11 +4,6 @@ import java.time.LocalDateTime;
 
 import com.node5.catalogservice.search.domain.ProductDocument;
 
-/**
- * 상품 검색 유스케이스의 조회 결과를 표현하는 DTO입니다.
- * <p>
- * Elasticsearch 문서(ProductDocument)를 기반으로 생성됩니다.
- */
 public record ProductSearchResponse(
 	String productId,
 	String shopId,
