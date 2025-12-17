@@ -9,8 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-@FeignClient(name = "product-service")
-public interface ProductClient {
+@FeignClient(name = "catalog-service")
+public interface CatalogClient {
 
     @PostMapping("/api/v1/products/shop-ids")
     ResponseEntity<Map<UUID, UUID>> getShopIdsByProductIds(@RequestBody List<UUID> productIds);

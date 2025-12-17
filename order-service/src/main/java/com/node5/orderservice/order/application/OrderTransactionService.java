@@ -1,7 +1,7 @@
 package com.node5.orderservice.order.application;
 
 import com.node5.orderservice.order.application.dto.OrderWithItems;
-import com.node5.orderservice.order.client.ProductClient;
+import com.node5.orderservice.order.client.CatalogClient;
 import com.node5.orderservice.order.client.SettlementClient;
 import com.node5.orderservice.order.client.dto.SettlementSourceItem;
 import com.node5.orderservice.order.domain.*;
@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 public class OrderTransactionService {
 
     private final OrderRepository orderRepository;
-    private final ProductClient productClient;
+    private final CatalogClient catalogClient;
     private final SettlementClient settlementClient;
     private final OrderItemRepository orderItemRepository;
 
@@ -103,7 +103,7 @@ public class OrderTransactionService {
 
         // Product ID, Shop ID
         Map<UUID, UUID> productIdToShopIdMap;
-        ResponseEntity<Map<UUID, UUID>> responseEntity = productClient.getShopIdsByProductIds(allProductIds);
+        ResponseEntity<Map<UUID, UUID>> responseEntity = catalogClient.getShopIdsByProductIds(allProductIds);
 
         if (responseEntity.getStatusCode().is2xxSuccessful()) {
             productIdToShopIdMap = Optional.ofNullable(responseEntity.getBody())
