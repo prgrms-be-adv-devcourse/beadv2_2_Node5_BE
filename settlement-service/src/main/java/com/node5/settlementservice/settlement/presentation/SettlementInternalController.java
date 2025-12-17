@@ -64,7 +64,7 @@ public class SettlementInternalController {
         return ResponseEntity.ok(settlementInternalService.getStatusByJobExecutionId(jobExecutionId));
     }
 
-    @PostMapping("/internal/settlements/source")
+    @PostMapping("/source")
     public ResponseEntity<Void> settle(@RequestBody List<SettlementSourceItem> items
     ) {
         settlementInternalService.saveSettlementResource(items);
