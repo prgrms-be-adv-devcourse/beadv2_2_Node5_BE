@@ -36,6 +36,7 @@ public class SubscriptionInternalService {
             List<UUID> subscriptionIds = page.getContent();
 
             if (subscriptionIds.isEmpty()) {
+                log.info("No subscriptions found for date {}", runDate);
                 break;
             }
 
