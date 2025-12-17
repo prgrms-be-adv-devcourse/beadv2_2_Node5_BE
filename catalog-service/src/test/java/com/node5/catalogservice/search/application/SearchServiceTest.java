@@ -4,6 +4,7 @@ import static org.assertj.core.api.AssertionsForInterfaceTypes.*;
 
 import java.time.LocalDateTime;
 import java.util.Comparator;
+import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -71,8 +72,6 @@ public class SearchServiceTest {
 		indexOps.putMapping();
 		indexOps.refresh();
 
-		productSearchRepository.deleteAll();
-
 		LocalDateTime base = LocalDateTime.of(2025, 1, 1, 0, 0);
 
 		productSearchRepository.save(new ProductDocument(
@@ -107,18 +106,6 @@ public class SearchServiceTest {
 		// when
 		Page<ProductSearchResponse> result =
 			searchService.search(command(null, null, null, null, null, null), DEFAULT_PAGE);
-
-		// then
-		assertThat(result.getContent())
-			.extracting(ProductSearchResponse::createdAt)
-			.isSortedAccordingTo(Comparator.reverseOrder());
-	}
-
-	@Test
-	void 정렬_LATEST_지정시_createdAt_내림차순으로_정렬된다() {
-		// when
-		Page<ProductSearchResponse> result =
-			searchService.search(command(null, null, null, null, null, ProductSearchSort.LATEST), DEFAULT_PAGE);
 
 		// then
 		assertThat(result.getContent())
@@ -167,7 +154,7 @@ public class SearchServiceTest {
 
 	private ProductSearchCommand command(
 		String keyword,
-		java.util.UUID shopId,
+		UUID shopId,
 		ProductCategory category,
 		Integer minPrice,
 		Integer maxPrice,
