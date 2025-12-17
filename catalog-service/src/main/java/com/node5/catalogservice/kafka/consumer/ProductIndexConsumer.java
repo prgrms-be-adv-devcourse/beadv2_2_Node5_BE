@@ -10,10 +10,6 @@ import com.node5.catalogservice.search.infrastructure.ProductSearchRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Kafka 상품 색인 이벤트를 수신하여
- * Elasticsearch 상품 문서를 생성/갱신합니다.
- */
 @Slf4j
 @Component
 @RequiredArgsConstructor
