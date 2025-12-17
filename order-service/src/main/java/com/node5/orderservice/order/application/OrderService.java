@@ -73,7 +73,7 @@ public class OrderService {
             ResponseEntity<WalletInfo> response = billingClient.withdraw(memberId, new WalletWithdrawRequest(order.getId(), roundedAmount.longValue()));
 
             if (response.getStatusCode().is2xxSuccessful()) {
-                orderTransactionService.updateOrderStatus(orderId, PAID);
+                saved.markAsPaid(LocalDateTime.now());
             }
         } catch(FeignException e) {
             orderTransactionService.updateOrderStatus(orderId, PAYMENT_FAILED);
