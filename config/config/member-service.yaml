@@ -59,6 +59,11 @@ google:
     id: ${GOOGLE_CLIENT_ID}
     secret: ${GOOGLE_CLIENT_SECRET}
 
+naver:
+  client:
+    id: ${NAVER_CLIENT_ID}
+    secret: ${NAVER_CLIENT_SECRET}
+
 oauth:
   redirect:
     url: ${OAUTH_REDIRECT_URL}
