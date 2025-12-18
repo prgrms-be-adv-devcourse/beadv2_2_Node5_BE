@@ -134,11 +134,14 @@ public class SettlementBatchConfig {
                         try {
                             // 에치금 정산 API 요청
                             BigDecimal roundedAmount = result.getPayoutAmount().setScale(0, RoundingMode.HALF_UP);
+                            log.error(">>>>>>>>>" + shopParam);
                             ResponseEntity<String> shopResponse = shopClient.getMemberIdByShopId(UUID.fromString(shopParam));
                             String memberId = null;
+
                             if(shopResponse.getStatusCode().is2xxSuccessful()){
                                 memberId = shopResponse.getBody();
                             }
+                            log.error(">>>>>>>>>" + memberId);
                             ResponseEntity<WalletInfo> walletResponse = billingClient.settle(UUID.fromString(memberId), new WalletSettleRequest(result.getId(), roundedAmount.longValue()));
 
                             if (walletResponse.getStatusCode().is2xxSuccessful()) {
