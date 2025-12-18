@@ -1,7 +1,7 @@
 package com.node5.settlementservice.settlement.client;
 
 import com.node5.settlementservice.settlement.client.dto.WalletSettleRequest;
-import com.node5.settlementservice.settlement.client.dto.WalletInfo;
+import com.node5.settlementservice.settlement.client.dto.WalletSettleInfo;
 import jakarta.validation.Valid;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
@@ -15,7 +15,7 @@ import java.util.UUID;
 public interface BillingClient {
 
     @PutMapping("/internal/wallets/settle")
-    ResponseEntity<WalletInfo> settle(
+    ResponseEntity<WalletSettleInfo> settle(
             @RequestHeader("Member-Id") UUID memberId,
             @Valid @RequestBody WalletSettleRequest request
     );

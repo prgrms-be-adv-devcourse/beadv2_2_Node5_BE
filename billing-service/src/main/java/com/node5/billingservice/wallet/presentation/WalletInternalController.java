@@ -2,6 +2,7 @@ package com.node5.billingservice.wallet.presentation;
 
 import com.node5.billingservice.wallet.application.WalletService;
 import com.node5.billingservice.wallet.application.dto.WalletInfo;
+import com.node5.billingservice.wallet.application.dto.WalletSettleInfo;
 import com.node5.billingservice.wallet.presentation.dto.WalletRefundRequest;
 import com.node5.billingservice.wallet.presentation.dto.WalletSettleRequest;
 import com.node5.billingservice.wallet.presentation.dto.WalletWithdrawRequest;
@@ -30,7 +31,7 @@ public class WalletInternalController {
 
     @Operation(summary = "예치금 정산", description = "회원의 예치금을 정산받는다.")
     @PutMapping("/settle")
-    public ResponseEntity<WalletInfo> settle(@RequestHeader("Member-Id") UUID memberId, @Valid @RequestBody WalletSettleRequest request) {
+    public ResponseEntity<WalletSettleInfo> settle(@RequestHeader("Member-Id") UUID memberId, @Valid @RequestBody WalletSettleRequest request) {
         return ResponseEntity.ok(walletService.settleWallet(memberId, request.toCommand()));
     }
 
