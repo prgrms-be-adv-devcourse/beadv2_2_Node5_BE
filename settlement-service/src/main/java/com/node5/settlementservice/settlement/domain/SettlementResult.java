@@ -107,4 +107,8 @@ public class SettlementResult {
         this.status = SettlementPayoutStatus.FAILED;
         this.errorMsg = errorMsg;
     }
+
+    public void updatePayoutAt(LocalDateTime payoutAt) {
+        this.payoutAt = payoutAt;
+    }
 }

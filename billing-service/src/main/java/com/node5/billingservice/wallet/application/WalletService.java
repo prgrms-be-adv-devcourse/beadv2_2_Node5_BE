@@ -58,7 +58,7 @@ public class WalletService {
 
     // 예치금 정산
     @Transactional
-    public WalletInfo settleWallet(UUID memberId, WalletSettleCommand command) {
+    public WalletSettleInfo settleWallet(UUID memberId, WalletSettleCommand command) {
         Wallet wallet = walletRepository.findByMemberIdForUpdate(memberId)
                 .orElseThrow(() -> new WalletException(WALLET_NOT_FOUND));
 
@@ -70,7 +70,7 @@ public class WalletService {
         walletDepositLogRepository.save(walletDepositLog);
 
         wallet.deposit(command.amount());
-        return WalletInfo.from(wallet);
+        return WalletSettleInfo.from(wallet);
     }
 
     //예치금 사용

@@ -2,7 +2,7 @@ package com.node5.settlementservice.settlement.batch;
 
 import com.node5.settlementservice.settlement.client.BillingClient;
 import com.node5.settlementservice.settlement.client.ShopClient;
-import com.node5.settlementservice.settlement.client.dto.WalletInfo;
+import com.node5.settlementservice.settlement.client.dto.WalletSettleInfo;
 import com.node5.settlementservice.settlement.client.dto.WalletSettleRequest;
 import com.node5.settlementservice.settlement.domain.*;
 import feign.FeignException;
@@ -134,16 +134,15 @@ public class SettlementBatchConfig {
                         try {
                             // 에치금 정산 API 요청
                             BigDecimal roundedAmount = result.getPayoutAmount().setScale(0, RoundingMode.HALF_UP);
-                            log.error(">>>>>>>>>" + shopParam);
                             ResponseEntity<String> shopResponse = shopClient.getMemberIdByShopId(UUID.fromString(shopParam));
                             String memberId = null;
 
                             if(shopResponse.getStatusCode().is2xxSuccessful()){
                                 memberId = shopResponse.getBody();
                             }
-                            log.error(">>>>>>>>>" + memberId);
-                            ResponseEntity<WalletInfo> walletResponse = billingClient.settle(UUID.fromString(memberId), new WalletSettleRequest(result.getId(), roundedAmount.longValue()));
+                            ResponseEntity<WalletSettleInfo> walletResponse = billingClient.settle(UUID.fromString(memberId), new WalletSettleRequest(result.getId(), roundedAmount.longValue()));
 
+                            result.updatePayoutAt(walletResponse.getBody().payoutAt());
                             if (walletResponse.getStatusCode().is2xxSuccessful()) {
                                 result.markPaid();
                             }
