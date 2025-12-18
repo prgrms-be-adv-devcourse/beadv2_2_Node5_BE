@@ -7,10 +7,11 @@ public record OAuthLoginRequest(
         @NotBlank(message = "provider은 필수 입니다.")
         String provider,
         @NotBlank(message = "providerCode는 필수 입니다.")
-        String providerCode
+        String providerCode,
+        String redirectUrl
 ) {
 
     public OAuthLoginCommand toCommand() {
-        return new OAuthLoginCommand(provider, providerCode);
+        return new OAuthLoginCommand(provider, providerCode, redirectUrl);
     }
 }

@@ -1,5 +1,6 @@
 package com.node5.memberservice.auth.oauth;
 
+import com.node5.memberservice.auth.application.dto.OAuthLoginCommand;
 import com.node5.memberservice.auth.exception.AuthErrorCode;
 import com.node5.memberservice.auth.exception.AuthException;
 import com.node5.memberservice.auth.oauth.dto.NaverTokenResponse;
@@ -34,8 +35,8 @@ public class NaverOAuthService implements OAuthProviderService {
     private final RestTemplate restTemplate;
 
     @Override
-    public OAuthUserInfo getUserInfo(String providerCode) {
-        String accessToken = getAccessToken(providerCode);
+    public OAuthUserInfo getUserInfo(OAuthLoginCommand command) {
+        String accessToken = getAccessToken(command.providerCode());
         return requestUserInfo(accessToken);
     }
 

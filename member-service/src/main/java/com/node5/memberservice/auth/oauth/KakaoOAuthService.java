@@ -1,5 +1,6 @@
 package com.node5.memberservice.auth.oauth;
 
+import com.node5.memberservice.auth.application.dto.OAuthLoginCommand;
 import com.node5.memberservice.auth.exception.AuthErrorCode;
 import com.node5.memberservice.auth.exception.AuthException;
 import com.node5.memberservice.auth.oauth.dto.KakaoTokenResponse;
@@ -22,9 +23,6 @@ public class KakaoOAuthService implements OAuthProviderService {
     private static final String KAKAO_TOKEN_REQUEST_URL = "https://kauth.kakao.com/oauth/token";
     private static final String KAKAO_USER_REQUEST_URL = "https://kapi.kakao.com/v2/user/me";
 
-    @Value("${oauth.redirect.url}")
-    private String OAUTH_REDIRECT_URL;
-
     @Value("${kakao.api.key}")
     private String apiKey;
 
@@ -36,19 +34,19 @@ public class KakaoOAuthService implements OAuthProviderService {
     }
 
     @Override
-    public OAuthUserInfo getUserInfo(String providerCode) {
-        String accessToken = getAccessToken(providerCode);
+    public OAuthUserInfo getUserInfo(OAuthLoginCommand command) {
+        String accessToken = getAccessToken(command.providerCode(), command.redirectUrl());
         return requestUserInfo(accessToken);
     }
 
-    private String getAccessToken(String providerCode) {
+    private String getAccessToken(String providerCode, String redirectUrl) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
         MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
         body.add("grant_type", "authorization_code");
         body.add("client_id", apiKey);
-        body.add("redirect_uri", OAUTH_REDIRECT_URL);
+        body.add("redirect_uri", redirectUrl);
         body.add("code", providerCode);
 
         HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(body, headers);

@@ -68,7 +68,7 @@ public class AuthService {
             throw new AuthException(AuthErrorCode.INVALID_PROVIDER);
         }
 
-        OAuthUserInfo oAuthUserInfo = providerService.getUserInfo(command.providerCode());
+        OAuthUserInfo oAuthUserInfo = providerService.getUserInfo(command);
 
         Optional<OAuth> oAuth = oAuthRepository.findByProviderAndProviderId(oAuthUserInfo.provider(), oAuthUserInfo.providerId());
 
