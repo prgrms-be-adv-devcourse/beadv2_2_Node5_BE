@@ -1,8 +1,6 @@
 spring:
   config:
     import: optional:configserver:http://localhost:8888
-  profiles:
-    active: default
   elasticsearch:
     uris: http://localhost:9200
     connection-timeout: 1s

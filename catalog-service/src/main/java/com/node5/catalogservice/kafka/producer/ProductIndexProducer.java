@@ -10,9 +10,6 @@ import com.node5.catalogservice.product.domain.Product;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * 상품 변경 이벤트를 Kafka로 발행합니다.
- */
 @Slf4j
 @Component
 @RequiredArgsConstructor
