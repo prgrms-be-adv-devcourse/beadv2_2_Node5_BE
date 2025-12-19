@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
+import static org.springframework.http.HttpStatus.CREATED;
+
 @RestController
 @RequestMapping("${api.v1}/wallets")
 @RequiredArgsConstructor
@@ -24,6 +26,12 @@ public class WalletController {
     @GetMapping
     public ResponseEntity<WalletInfo> getWallet(@RequestHeader("Member-Id") UUID memberId) {
         return ResponseEntity.ok(walletService.getWallet(memberId));
+    }
+
+    @Operation(summary = "예치금 생성", description = "회원의 예치금 계좌를 생성한다.")
+    @PostMapping
+    public ResponseEntity<WalletInfo> createWallet(@RequestHeader("Member-Id") UUID memberId) {
+        return ResponseEntity.status(CREATED).body(walletService.createWallet(memberId));
     }
 
     @Operation(summary = "예치금 입금 내역 조회", description = "회원의 예치금 입금 내역을 조회한다.")
