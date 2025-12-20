@@ -9,9 +9,9 @@ eureka:
     register-with-eureka: true # eureka 서버에 등록
     fetch-registry: true # 외부 검색 가능
     service-url:
-#      defaultZone: http://admin:admin@${eureka.instance.hostname:localhost}:8761/eureka
-      defaultZone: http://admin:admin@discovery-service:8761/eureka
+      defaultZone: http://admin:admin@${eureka.instance.hostname:localhost}:8761/eureka
+#      defaultZone: http://admin:admin@discovery-service:8761/eureka
 
 apigateway:
-#  host: http://localhost:8000
-  host: http://apigateway-service:8000
+  host: http://localhost:8000
+#  host: http://apigateway-service:8000

@@ -12,11 +12,12 @@ import org.springframework.security.authorization.ReactiveAuthorizationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.server.authorization.AuthorizationContext;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
+import java.util.UUID;
 
 
 @Slf4j
@@ -24,9 +25,11 @@ import java.util.List;
 public class ReactiveAuthorization implements ReactiveAuthorizationManager<AuthorizationContext> {
 
     private final SecretKey secretKey;
+    private final WebClient.Builder webClientBuilder;
 
-    public ReactiveAuthorization(@Value("${token.secret}") String secret) {
+    public ReactiveAuthorization(@Value("${token.secret}") String secret, WebClient.Builder builder) {
         this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        this.webClientBuilder = builder;
     }
 
     @Override
@@ -56,19 +59,37 @@ public class ReactiveAuthorization implements ReactiveAuthorizationManager<Autho
                 return Mono.just(new AuthorizationDecision(false));
             }
 
-            Object roleObj = claims.get("memberRoles");
-            if (!(roleObj instanceof List<?> roleList) || roleList.isEmpty()) {
-                return Mono.just(new AuthorizationDecision(false));
-            }
-
             if (!(claims.get("memberStatus") instanceof String memberStatus) || memberStatus.isBlank()) {
                 return Mono.just(new AuthorizationDecision(false));
             }
 
             context.getExchange().getAttributes().put("cached_claims", claims);
-            return Mono.just(new AuthorizationDecision(true));
+
+            return authorizeByMemberService(claims.getSubject(), request)
+                    .map(AuthorizationDecision::new)
+                    .onErrorReturn(new AuthorizationDecision(false));
         } catch (Exception e) {
             return Mono.just(new AuthorizationDecision(false));
         }
+    }
+
+    private Mono<Boolean> authorizeByMemberService(String memberId, ServerHttpRequest request) {
+        return webClientBuilder.build()
+                .post()
+                .uri("lb://member-service/internal/auth/authorize")
+                .bodyValue(new AuthorizeRequest(
+                        UUID.fromString(memberId),
+                        request.getMethod().name(),
+                        request.getPath().pathWithinApplication().value()
+                ))
+                .retrieve()
+                .bodyToMono(Boolean.class);
+    }
+
+    record AuthorizeRequest(
+            UUID memberId,
+            String method,
+            String path
+    ) {
     }
 }

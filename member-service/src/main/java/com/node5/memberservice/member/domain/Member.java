@@ -3,15 +3,15 @@ package com.node5.memberservice.member.domain;
 import com.node5.common.domain.BaseEntity;
 import com.node5.memberservice.auth.application.dto.OAuthRegisterCommand;
 import com.node5.memberservice.member.application.dto.MemberModifyCommand;
-import com.node5.memberservice.member.exception.MemberErrorCode;
-import com.node5.memberservice.member.exception.MemberException;
+import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Type;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -37,9 +37,9 @@ public class Member extends BaseEntity {
     @Column(nullable = false, length = 100)
     private String address;
 
-    @Column(nullable = false, length = 20)
-    @Convert(converter = MemberRoleSetConverter.class)
-    private Set<MemberRole> roles = new HashSet<>();
+    @Type(JsonType.class)
+    @Column(columnDefinition = "jsonb", nullable = false)
+    private Set<MemberRole> roles;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -53,7 +53,7 @@ public class Member extends BaseEntity {
         this.name = name;
         this.phoneNumber = phoneNumber;
         this.address = address;
-        this.roles.add(role);
+        this.roles = EnumSet.of(role);
         this.status = status;
         this.deletedAt = null;
     }
