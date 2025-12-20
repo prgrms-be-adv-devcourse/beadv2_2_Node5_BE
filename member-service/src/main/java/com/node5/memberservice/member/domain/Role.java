@@ -1,9 +1,6 @@
 package com.node5.memberservice.member.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,10 +11,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Role {
     @Id
+    @Enumerated(EnumType.STRING)
     @Column(length = 20)
-    private String name;
+    private MemberRole name;
 
-    protected Role(String name) {
-        this.name = name;
+    protected Role(MemberRole role) {
+        this.name = role;
     }
 }
