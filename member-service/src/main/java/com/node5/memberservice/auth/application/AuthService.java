@@ -1,6 +1,7 @@
 package com.node5.memberservice.auth.application;
 
 import com.node5.memberservice.auth.application.dto.*;
+import com.node5.memberservice.auth.domain.EndPointRepository;
 import com.node5.memberservice.auth.domain.OAuth;
 import com.node5.memberservice.auth.domain.OAuthRepository;
 import com.node5.memberservice.auth.exception.AuthErrorCode;
@@ -31,6 +32,7 @@ public class AuthService {
 
     private final OAuthRepository oAuthRepository;
     private final MemberRepository memberRepository;
+    private final EndPointRepository endPointRepository;
     private final Map<String, OAuthProviderService> providerMap;
     private final JwtProvider jwtProvider;
     private final MailService mailService;
@@ -43,6 +45,7 @@ public class AuthService {
     public AuthService(
             OAuthRepository oAuthRepository,
             MemberRepository memberRepository,
+            EndPointRepository endPointRepository,
             List<OAuthProviderService> providerList,
             JwtProvider jwtProvider,
             MailService mailService,
@@ -50,6 +53,7 @@ public class AuthService {
     ) {
         this.oAuthRepository = oAuthRepository;
         this.memberRepository = memberRepository;
+        this.endPointRepository = endPointRepository;
         this.providerMap = providerList.stream().collect(Collectors.toMap(OAuthProviderService::getProviderName, provider -> provider));
         this.jwtProvider = jwtProvider;
         this.mailService = mailService;
@@ -172,5 +176,9 @@ public class AuthService {
         SecureRandom random = new SecureRandom();
         int code = random.nextInt(1_000_000); // 0 ~ 999999
         return String.format("%06d", code);   // 항상 6자리로 패딩
+    }
+
+    public boolean authorize(AuthorizeCommand command) {
+        return endPointRepository.authorize(command);
     }
 }

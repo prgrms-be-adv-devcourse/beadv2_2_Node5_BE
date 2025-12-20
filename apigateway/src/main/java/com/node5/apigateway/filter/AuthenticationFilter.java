@@ -24,12 +24,10 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
 
             if(attribute instanceof Claims claims) {
                 String memberId = claims.getSubject();
-                Set<String> roles = new HashSet<>(claims.get("memberRoles", List.class));
                 String status = claims.get("memberStatus", String.class);
 
                 ServerHttpRequest request = exchange.getRequest().mutate()
                         .header("Member-Id", memberId)
-                        .header("Member-Roles", String.join(",", roles))
                         .header("Member-Status", status)
                         .build();
 

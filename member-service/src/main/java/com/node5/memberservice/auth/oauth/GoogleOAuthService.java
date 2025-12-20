@@ -5,7 +5,6 @@ import com.node5.memberservice.auth.application.dto.OAuthLoginCommand;
 import com.node5.memberservice.auth.exception.AuthErrorCode;
 import com.node5.memberservice.auth.exception.AuthException;
 import com.node5.memberservice.auth.oauth.dto.GoogleTokenResponse;
-import com.node5.memberservice.auth.oauth.dto.KakaoTokenResponse;
 import com.node5.memberservice.auth.oauth.dto.OAuthUserInfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;

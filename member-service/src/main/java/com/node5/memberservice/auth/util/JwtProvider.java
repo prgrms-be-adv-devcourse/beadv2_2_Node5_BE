@@ -39,7 +39,6 @@ public class JwtProvider {
         Date expirationDate = new Date(now.getTime() + accessTokenExpiration);
         return Jwts.builder()
                 .subject(memberInfo.memberId())
-                .claim("memberRoles", memberInfo.memberRoles())
                 .claim("memberStatus", memberInfo.memberStatus())
                 .claim("type", TokenType.ACCESS.name())
                 .issuedAt(now)
