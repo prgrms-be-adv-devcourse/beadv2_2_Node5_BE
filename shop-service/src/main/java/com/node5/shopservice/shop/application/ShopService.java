@@ -1,6 +1,7 @@
 package com.node5.shopservice.shop.application;
 
 import com.node5.shopservice.shop.application.dto.*;
+import com.node5.shopservice.shop.client.BillingClient;
 import com.node5.shopservice.shop.client.MemberClient;
 import com.node5.shopservice.shop.client.dto.RoleAction;
 import com.node5.shopservice.shop.client.dto.RoleModifyRequest;
@@ -9,6 +10,7 @@ import com.node5.shopservice.shop.domain.Shop;
 import com.node5.shopservice.shop.domain.ShopRepository;
 import com.node5.shopservice.shop.exception.ShopErrorCode;
 import com.node5.shopservice.shop.exception.ShopException;
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -29,6 +31,7 @@ public class ShopService {
 
     private final ShopRepository shopRepository;
     private final MemberClient memberClient;
+    private final BillingClient billingClient;
 
     public Page<ShopListResponse> findMyShopList(UUID memberId, Pageable pageable) {
         return shopRepository.findAllByMemberIdAndDeletedAtIsNull(memberId, pageable).map(ShopListResponse::from);
@@ -42,12 +45,26 @@ public class ShopService {
 
     @Transactional
     public ShopRegisterResponse registerShop(UUID memberId, ShopRegisterCommand command) {
+        checkWalletExists(memberId);
+
         Shop shop = Shop.create(memberId, command);
         shopRepository.save(shop);
 
+        // Todo - 보상 트랜잭션 필요
         RoleModifyResponse modifyMemberRoles = updateMemberRoles(memberId, RoleAction.ADD);
 
         return new ShopRegisterResponse(modifyMemberRoles.accessToken(), modifyMemberRoles.memberRoles());
+    }
+
+    private void checkWalletExists(UUID memberId) {
+        try {
+            billingClient.getWallet(memberId);
+        } catch (FeignException.NotFound e) {
+            throw new ShopException(ShopErrorCode.WALLET_REQUIRED);
+        } catch (Exception e) {
+            log.error("billingClient.getWallet error", e);
+            throw new ShopException(ShopErrorCode.UNCAUGHT_EXCEPTION);
+        }
     }
 
     @Transactional

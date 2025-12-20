@@ -1,7 +1,6 @@
 package com.node5.memberservice.auth.application;
 
 import com.node5.memberservice.auth.application.dto.*;
-import com.node5.memberservice.auth.client.BillingClient;
 import com.node5.memberservice.auth.domain.OAuth;
 import com.node5.memberservice.auth.domain.OAuthRepository;
 import com.node5.memberservice.auth.exception.AuthErrorCode;
@@ -36,7 +35,6 @@ public class AuthService {
     private final JwtProvider jwtProvider;
     private final MailService mailService;
     private final RedisService redisService;
-    private final BillingClient billingClient;
 
     @Value("${spring.mail.username}")
     private String sender;
@@ -48,8 +46,7 @@ public class AuthService {
             List<OAuthProviderService> providerList,
             JwtProvider jwtProvider,
             MailService mailService,
-            RedisService redisService,
-            BillingClient billingClient
+            RedisService redisService
     ) {
         this.oAuthRepository = oAuthRepository;
         this.memberRepository = memberRepository;
@@ -57,7 +54,6 @@ public class AuthService {
         this.jwtProvider = jwtProvider;
         this.mailService = mailService;
         this.redisService = redisService;
-        this.billingClient = billingClient;
     }
 
     public LoginInfoResponse login(OAuthLoginCommand command) {
@@ -99,15 +95,7 @@ public class AuthService {
 
         Optional<Member> existMember = memberRepository.findByEmailAndDeletedAtIsNull(email);
 
-        Member member = existMember.orElseGet(() -> {
-            Member newMember = memberRepository.save(Member.create(command));
-            try {
-                billingClient.createWallet(newMember.getId());
-            } catch (Exception e) {
-                throw new AuthException(AuthErrorCode.WALLET_CREATE_FAILED);
-            }
-            return newMember;
-        });
+        Member member = existMember.orElseGet(() -> memberRepository.save(Member.create(command)));
 
         Optional<OAuth> existOAuth = oAuthRepository.findByProviderAndMember(oAuthUserInfo.provider(), member);
 
