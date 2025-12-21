@@ -1,11 +1,13 @@
 package com.node5.shopservice.shop.application;
 
-import com.node5.shopservice.shop.application.dto.*;
+import com.node5.shopservice.shop.application.dto.ShopInfoResponse;
+import com.node5.shopservice.shop.application.dto.ShopListResponse;
+import com.node5.shopservice.shop.application.dto.ShopModifyCommand;
+import com.node5.shopservice.shop.application.dto.ShopRegisterCommand;
 import com.node5.shopservice.shop.client.BillingClient;
 import com.node5.shopservice.shop.client.MemberClient;
 import com.node5.shopservice.shop.client.dto.RoleAction;
 import com.node5.shopservice.shop.client.dto.RoleModifyRequest;
-import com.node5.shopservice.shop.client.dto.RoleModifyResponse;
 import com.node5.shopservice.shop.domain.Shop;
 import com.node5.shopservice.shop.domain.ShopRepository;
 import com.node5.shopservice.shop.exception.ShopErrorCode;
@@ -15,7 +17,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,16 +45,14 @@ public class ShopService {
     }
 
     @Transactional
-    public ShopRegisterResponse registerShop(UUID memberId, ShopRegisterCommand command) {
+    public void registerShop(UUID memberId, ShopRegisterCommand command) {
         checkWalletExists(memberId);
 
         Shop shop = Shop.create(memberId, command);
         shopRepository.save(shop);
 
         // Todo - 보상 트랜잭션 필요
-        RoleModifyResponse modifyMemberRoles = updateMemberRoles(memberId, RoleAction.ADD);
-
-        return new ShopRegisterResponse(modifyMemberRoles.accessToken(), modifyMemberRoles.memberRoles());
+        updateMemberRoles(memberId, RoleAction.ADD);
     }
 
     private void checkWalletExists(UUID memberId) {
@@ -76,7 +75,7 @@ public class ShopService {
     }
 
     @Transactional
-    public ShopDeleteResponse deleteMyShop(UUID memberId, UUID shopId) {
+    public void deleteMyShop(UUID memberId, UUID shopId) {
         Shop shop = shopRepository.findByIdAndMemberIdAndDeletedAtIsNull(shopId, memberId)
                 .orElseThrow(() -> new ShopException(ShopErrorCode.SHOP_NOT_FOUND));
         shop.delete();
@@ -84,26 +83,22 @@ public class ShopService {
 
         int shopCount = shopRepository.countByMemberIdAndDeletedAtIsNull(memberId);
         if (shopCount == 0) {
-            RoleModifyResponse modifyMemberRoles = updateMemberRoles(memberId, RoleAction.REMOVE);
-            return new ShopDeleteResponse(modifyMemberRoles.accessToken(), modifyMemberRoles.memberRoles());
+            updateMemberRoles(memberId, RoleAction.REMOVE);
         }
-
-        return new ShopDeleteResponse(null, null);
     }
 
-    private RoleModifyResponse updateMemberRoles(UUID memberId, RoleAction action) {
+    private void updateMemberRoles(UUID memberId, RoleAction action) {
         try {
-            return switch (action) {
+            switch (action) {
                 case ADD -> {
                     RoleModifyRequest request = new RoleModifyRequest(ROLE_SELLER);
-                    ResponseEntity<RoleModifyResponse> response = memberClient.addMemberRole(memberId, request);
-                    yield response.getBody();
+                    memberClient.addMemberRole(memberId, request);
                 }
                 case REMOVE -> {
-                    ResponseEntity<RoleModifyResponse> response = memberClient.deleteMemberRole(memberId, ROLE_SELLER);
-                    yield response.getBody();
+                    memberClient.deleteMemberRole(memberId, ROLE_SELLER);
                 }
-            };
+            }
+            ;
         } catch (Exception e) {
             log.error("memberClient.updateMemberRoles error : {}", e.getMessage());
             throw new ShopException(ShopErrorCode.ROLE_UPDATE_FAILED);

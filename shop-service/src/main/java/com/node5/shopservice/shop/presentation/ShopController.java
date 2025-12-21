@@ -1,10 +1,8 @@
 package com.node5.shopservice.shop.presentation;
 
 import com.node5.shopservice.shop.application.ShopService;
-import com.node5.shopservice.shop.application.dto.ShopDeleteResponse;
 import com.node5.shopservice.shop.application.dto.ShopInfoResponse;
 import com.node5.shopservice.shop.application.dto.ShopListResponse;
-import com.node5.shopservice.shop.application.dto.ShopRegisterResponse;
 import com.node5.shopservice.shop.presentation.dto.ShopModifyRequest;
 import com.node5.shopservice.shop.presentation.dto.ShopRegisterRequest;
 import io.swagger.v3.oas.annotations.Operation;
@@ -48,11 +46,12 @@ public class ShopController {
 
     @Operation(summary = "상점 등록", description = "인증된 회원을 위해 새 상점을 등록합니다.")
     @PostMapping
-    public ResponseEntity<ShopRegisterResponse> registerShop(
+    public ResponseEntity<Void> registerShop(
             @RequestHeader("Member-Id") UUID memberId,
             @Valid @RequestBody ShopRegisterRequest request
     ) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(shopService.registerShop(memberId, request.toCommand()));
+        shopService.registerShop(memberId, request.toCommand());
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @Operation(summary = "내 상점 정보 수정", description = "인증된 회원이 소유한 상점의 상세 정보를 수정합니다.")
@@ -67,11 +66,12 @@ public class ShopController {
 
     @Operation(summary = "내 상점 삭제", description = "인증된 회원이 소유한 상점을 삭제합니다.")
     @DeleteMapping("/{shopId}")
-    public ResponseEntity<ShopDeleteResponse> deleteMyShop(
+    public ResponseEntity<Void> deleteMyShop(
             @RequestHeader("Member-Id") UUID memberId,
             @PathVariable UUID shopId
     ) {
-        return ResponseEntity.ok(shopService.deleteMyShop(memberId, shopId));
+        shopService.deleteMyShop(memberId, shopId);
+        return ResponseEntity.ok().build();
     }
 
 }
