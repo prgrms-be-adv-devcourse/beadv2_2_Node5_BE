@@ -11,7 +11,6 @@ public record WalletSettleInfo(
         Long balance,
         LocalDateTime payoutAt
 ) {
-
     public static WalletSettleInfo from(Wallet wallet, LocalDateTime payoutAt) {
         return new WalletSettleInfo(
                 wallet.getId(),
