@@ -1,10 +1,10 @@
 package com.node5.memberservice.auth.oauth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.node5.memberservice.auth.application.dto.OAuthLoginCommand;
 import com.node5.memberservice.auth.exception.AuthErrorCode;
 import com.node5.memberservice.auth.exception.AuthException;
 import com.node5.memberservice.auth.oauth.dto.GoogleTokenResponse;
-import com.node5.memberservice.auth.oauth.dto.KakaoTokenResponse;
 import com.node5.memberservice.auth.oauth.dto.OAuthUserInfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,9 +26,6 @@ public class GoogleOAuthService implements OAuthProviderService {
 
     private static final String GOOGLE_TOKEN_REQUEST_URL = "https://oauth2.googleapis.com/token";
 
-    @Value("${oauth.redirect.url}")
-    private String OAUTH_REDIRECT_URL;
-
     @Value("${google.client.id}")
     private String clientId;
 
@@ -45,12 +42,12 @@ public class GoogleOAuthService implements OAuthProviderService {
     }
 
     @Override
-    public OAuthUserInfo getUserInfo(String providerCode) {
-        String idToken = getAccessToken(providerCode);
+    public OAuthUserInfo getUserInfo(OAuthLoginCommand command) {
+        String idToken = getAccessToken(command.providerCode(), command.redirectUrl());
         return parseIdToken(idToken);
     }
 
-    private String getAccessToken(String providerCode) {
+    private String getAccessToken(String providerCode, String redirectUrl) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
@@ -59,7 +56,7 @@ public class GoogleOAuthService implements OAuthProviderService {
         body.add("client_secret", clientSecret);
         body.add("code", providerCode);
         body.add("grant_type", "authorization_code");
-        body.add("redirect_uri", OAUTH_REDIRECT_URL);
+        body.add("redirect_uri", redirectUrl);
 
         HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(body, headers);
 

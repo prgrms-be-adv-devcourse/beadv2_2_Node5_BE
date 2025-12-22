@@ -1,2 +1,6 @@
 .env*
 .DS_Store
+loadtest
+
+src/test/resources
+src/test/java/com/node5/memberservice/

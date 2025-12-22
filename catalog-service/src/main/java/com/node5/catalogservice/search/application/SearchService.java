@@ -42,14 +42,6 @@ public class SearchService {
 
 	private final ElasticsearchOperations elasticsearchOperations;
 
-	/**
-	 * 상품을 검색합니다.
-	 * <p>
-	 * - 요청 조건을 조합하여 BoolQuery를 생성합니다.<br>
-	 * - 조건이 없더라도 status=ON_SALE 필터는 항상 적용됩니다.<br>
-	 * - 가격 범위(min/max)는 둘 중 하나만 전달되면 예외를 반환합니다.<br>
-	 * - 정렬 조건이 없으면 기본 정렬(LATEST)을 적용합니다.
-	 */
 	public Page<ProductSearchResponse> search(ProductSearchCommand command, Pageable pageable) {
 		validatePriceRange(command.minPrice(), command.maxPrice());
 
@@ -138,12 +130,6 @@ public class SearchService {
 		};
 	}
 
-	/**
-	 * 가격 범위(min/max) 요청 값의 유효성을 검증합니다.
-	 * <p>
-	 * - min/max 중 하나만 전달되면 PRICE_RANGE_INCOMPLETE 예외<br>
-	 * - min > max 인 경우 INVALID_PRICE_RANGE 예외
-	 */
 	private void validatePriceRange(Integer minPrice, Integer maxPrice) {
 		if ((minPrice == null) != (maxPrice == null)) {
 			throw new SearchException(SearchErrorCode.PRICE_RANGE_INCOMPLETE);

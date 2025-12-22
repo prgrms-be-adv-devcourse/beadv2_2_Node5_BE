@@ -1,7 +1,7 @@
 package com.node5.orderservice.order.application;
 
 import com.node5.orderservice.order.application.dto.OrderWithItems;
-import com.node5.orderservice.order.client.ProductClient;
+import com.node5.orderservice.order.client.CatalogClient;
 import com.node5.orderservice.order.client.SettlementClient;
 import com.node5.orderservice.order.client.dto.SettlementSourceItem;
 import com.node5.orderservice.order.domain.*;
@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 public class OrderTransactionService {
 
     private final OrderRepository orderRepository;
-    private final ProductClient productClient;
+    private final CatalogClient catalogClient;
     private final SettlementClient settlementClient;
     private final OrderItemRepository orderItemRepository;
 
@@ -74,10 +74,11 @@ public class OrderTransactionService {
         // 1. CONFIRMED 주문 목록 조회
         List<Order> confirmedOrders = orderRepository.findByStatus(OrderStatus.CONFIRMED);
         if (confirmedOrders.isEmpty()) {
-            log.info("정산 요청을 보낼 CONFIRMED 상태의 주문이 없습니다.");
+            log.info("정산 요청을 보낼 CONFIRMED 상태의 주문 없음");
             return;
         }
 
+        log.info("구매 확정된 주문을 정산 테이블에 적재");
         // 2. 모든 주문 ID 수집
         List<UUID> confirmedOrderIds = confirmedOrders.stream()
                 .map(Order::getId)
@@ -103,7 +104,7 @@ public class OrderTransactionService {
 
         // Product ID, Shop ID
         Map<UUID, UUID> productIdToShopIdMap;
-        ResponseEntity<Map<UUID, UUID>> responseEntity = productClient.getShopIdsByProductIds(allProductIds);
+        ResponseEntity<Map<UUID, UUID>> responseEntity = catalogClient.getShopIdsByProductIds(allProductIds);
 
         if (responseEntity.getStatusCode().is2xxSuccessful()) {
             productIdToShopIdMap = Optional.ofNullable(responseEntity.getBody())
@@ -136,7 +137,7 @@ public class OrderTransactionService {
             log.info("{}건의 주문을 정산 요청 상태로 업데이트 완료", confirmedOrders.size());
 
         } catch (FeignException e) {
-            log.error("정산 서비스 API 호출에 실패했습니다. 다음 실행 시 재시도됩니다.", e);
+            log.error("정산 서비스 API 호출 실패. 다음 실행 시 재시도 예정", e);
         }
     }
 }

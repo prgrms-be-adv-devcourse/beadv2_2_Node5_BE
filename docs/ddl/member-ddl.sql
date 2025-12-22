@@ -10,7 +10,7 @@ CREATE TABLE member."member" (
 	email varchar(100) NOT NULL,
 	phone_number varchar(20) NOT NULL,
 	address varchar(100) NOT NULL,
-	"roles" varchar(20) DEFAULT 'USER'::character varying NOT NULL,
+	roles jsonb NOT NULL,
 	status varchar(20) NOT NULL,
 	created_at timestamp NOT NULL,
 	modified_at timestamp NOT NULL,
@@ -28,6 +28,19 @@ CREATE TABLE member."o_auth" (
 	CONSTRAINT pk_o_auth PRIMARY KEY (id)
 );
 
+CREATE TABLE member.role (
+    name varchar(20) PRIMARY KEY
+);
+
+CREATE TABLE member.endpoint (
+    id uuid NOT NULL,
+    role varchar(20) NOT NULL,
+    http_method varchar(10) NOT NULL,
+    path_pattern varchar(200) NOT NULL,
+    CONSTRAINT pk_endpoint PRIMARY KEY (id),
+    CONSTRAINT uq_endpoint UNIQUE (role, http_method, path_pattern)
+);
+
 CREATE TABLE member."inquiry" (
 	id uuid NOT NULL,
 	member_id uuid NOT NULL,
@@ -38,3 +51,5 @@ CREATE TABLE member."inquiry" (
     modified_at timestamp NOT NULL,
 	CONSTRAINT pk_inquiry PRIMARY KEY (id)
 );
+
+-- CREATE INDEX idx_member_roles_gin ON member."member" USING gin (roles);

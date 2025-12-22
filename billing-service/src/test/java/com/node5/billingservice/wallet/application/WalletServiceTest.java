@@ -1,10 +1,7 @@
 package com.node5.billingservice.wallet.application;
 
 import com.node5.billingservice.IntegrationTestSupport;
-import com.node5.billingservice.wallet.application.dto.WalletInfo;
-import com.node5.billingservice.wallet.application.dto.WalletRefundCommand;
-import com.node5.billingservice.wallet.application.dto.WalletSettleCommand;
-import com.node5.billingservice.wallet.application.dto.WalletWithdrawCommand;
+import com.node5.billingservice.wallet.application.dto.*;
 import com.node5.billingservice.wallet.domain.Wallet;
 import com.node5.billingservice.wallet.domain.WalletWithdrawLog;
 import com.node5.billingservice.wallet.exception.WalletException;
@@ -87,7 +84,7 @@ public class WalletServiceTest extends IntegrationTestSupport {
         );
 
         //when
-        WalletInfo walletInfo = walletService.settleWallet(memberId, command);
+        WalletSettleInfo walletInfo = walletService.settleWallet(memberId, command);
 
         //then
         assertThat(walletInfo)

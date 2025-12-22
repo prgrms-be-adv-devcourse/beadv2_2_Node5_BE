@@ -2,7 +2,7 @@ package com.node5.settlementservice.settlement.batch;
 
 import com.node5.settlementservice.settlement.client.BillingClient;
 import com.node5.settlementservice.settlement.client.ShopClient;
-import com.node5.settlementservice.settlement.client.dto.WalletInfo;
+import com.node5.settlementservice.settlement.client.dto.WalletSettleInfo;
 import com.node5.settlementservice.settlement.client.dto.WalletSettleRequest;
 import com.node5.settlementservice.settlement.domain.*;
 import feign.FeignException;
@@ -74,15 +74,15 @@ public class SettlementBatchConfig {
 
                     if(shopParam != null && !shopParam.isEmpty()){
                         UUID shopId = UUID.fromString(shopParam);
-                        log.info("특정 판매자에 대한 정산 실행 - Shop: {}, Period: {} ~ {}", shopId, startDate, endDate);
+                        log.info("[BatchId: {}] 특정 판매자 정산 시작 (shopId: {}, period: {} ~ {})", batchId, shopId, startDate, endDate);
                         pendingData = sourceRepository.findPendingByShopAndPeriod(shopId, startDateTime, endDateTimePlusOneDay);
                     }else{
-                        log.info("전체 판매자에 대한 정산 실행 - Period: {} ~ {}", startDate, endDate);
+                        log.info("[BatchId: {}] 전체 판매자 정산 시작 (period: {} ~ {})", batchId, startDate, endDate);
                         pendingData = sourceRepository.findPendingByPeriod(startDateTime, endDateTimePlusOneDay);
                     }
 
                     if (pendingData.isEmpty()) {
-                        log.info("정산할 데이터 없음");
+                        log.info("[BatchId: {}] 정산할 데이터 없음", batchId);
                         return RepeatStatus.FINISHED;
                     }
 
@@ -93,7 +93,7 @@ public class SettlementBatchConfig {
                     // 3-1. 판매자 ID별로 SettlementSource 데이터 그룹핑
                     Map<UUID, List<SettlementSource>> groupedByShop = pendingData.stream()
                             .collect(Collectors.groupingBy(SettlementSource::getShopId));
-                    log.info("총 {}명의 판매자 정산 처리 중...", groupedByShop.size());
+                    log.info("[BatchId: {}] 총 {}명의 판매자 정산 처리 중...", batchId, groupedByShop.size());
 
                     // 3-2. 판매자별 정산 실행
                     groupedByShop.forEach((shopId, shopDataList) -> {
@@ -134,13 +134,16 @@ public class SettlementBatchConfig {
                         try {
                             // 에치금 정산 API 요청
                             BigDecimal roundedAmount = result.getPayoutAmount().setScale(0, RoundingMode.HALF_UP);
-                            ResponseEntity<String> shopResponse = shopClient.getMemberIdByShopId(UUID.fromString(shopParam));
+                            ResponseEntity<String> shopResponse = shopClient.getMemberIdByShopId(result.getShopId());
                             String memberId = null;
+
                             if(shopResponse.getStatusCode().is2xxSuccessful()){
                                 memberId = shopResponse.getBody();
                             }
-                            ResponseEntity<WalletInfo> walletResponse = billingClient.settle(UUID.fromString(memberId), new WalletSettleRequest(result.getId(), roundedAmount.longValue()));
+                            log.info("[BatchId: {}] 정산금 지급 예정 (shopId: {}, memberId: {})", batchId, result.getShopId(), memberId);
+                            ResponseEntity<WalletSettleInfo> walletResponse = billingClient.settle(UUID.fromString(memberId), new WalletSettleRequest(result.getId(), roundedAmount.longValue()));
 
+                            result.updatePayoutAt(walletResponse.getBody().payoutAt());
                             if (walletResponse.getStatusCode().is2xxSuccessful()) {
                                 result.markPaid();
                             }
@@ -158,14 +161,14 @@ public class SettlementBatchConfig {
                     // [6] 정산금 지급 결과 저장
                     resultRepository.saveAll(resultList);
 
-                    if (!failedResults.isEmpty()) {
-                        log.error("=== [정산금 지급] 총 성공: {}건, 총 실패: {}건 ===",
-                                resultList.size() - failedResults.size(), failedResults.size());
-                        failedResults.forEach(r -> {
-                            log.error("  - Settlement Id: {}, Shop Id: {}, errorMsg: {}", r.getId(), r.getShopId(), r.getErrorMsg());
-                        });
+                    if (failedResults.isEmpty()) {
+                        log.info("[BatchId: {}] 정산금 지급 완료 (총 {}건 전원 성공)", batchId, resultList.size());
                     } else {
-                        log.info("=== [정산금 지급] 전체 {}건 모두 성공 ===", resultList.size());
+                        log.error("BatchId: {}] 정산금 지급 종료 (성공: {}건, 실패: {}건)",
+                                batchId, resultList.size() - failedResults.size(), failedResults.size());
+                        failedResults.forEach(r -> {
+                            log.error("  - (지급 실패 정보) shopId: {}, errorMsg: {}", r.getShopId(), r.getErrorMsg());
+                        });
                     }
 
                     return RepeatStatus.FINISHED;

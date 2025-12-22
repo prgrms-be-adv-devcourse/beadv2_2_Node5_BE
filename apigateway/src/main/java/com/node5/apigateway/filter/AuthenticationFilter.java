@@ -7,10 +7,6 @@ import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFac
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 @Component
 public class AuthenticationFilter extends AbstractGatewayFilterFactory<AuthenticationFilter.Config> {
     public AuthenticationFilter() {
@@ -19,25 +15,23 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
 
     @Override
     public GatewayFilter apply(AuthenticationFilter.Config config) {
-        return ((exchange, chain) -> {
+        return (exchange, chain) -> {
             Object attribute = exchange.getAttribute("cached_claims");
 
-            if(attribute instanceof Claims claims) {
-                String memberId = claims.getSubject();
-                Set<String> roles = new HashSet<>(claims.get("memberRoles", List.class));
-                String status = claims.get("memberStatus", String.class);
-
-                ServerHttpRequest request = exchange.getRequest().mutate()
-                        .header("Member-Id", memberId)
-                        .header("Member-Roles", String.join(",", roles))
-                        .header("Member-Status", status)
-                        .build();
-
-                return chain.filter(exchange.mutate().request(request).build());
+            if (!(attribute instanceof Claims claims)) {
+                return chain.filter(exchange);
             }
 
-            return chain.filter(exchange);
-        });
+            String memberId = claims.getSubject();
+            String status = claims.get("memberStatus", String.class);
+
+            ServerHttpRequest request = exchange.getRequest().mutate()
+                    .header("Member-Id", memberId)
+                    .header("Member-Status", status)
+                    .build();
+
+            return chain.filter(exchange.mutate().request(request).build());
+        };
     }
 
     @Data

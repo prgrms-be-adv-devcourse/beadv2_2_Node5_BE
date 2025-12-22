@@ -40,6 +40,7 @@ public class SubscriptionOrderJobScheduler {
             List<UUID> subscriptionIds = page.getContent();
 
             if (subscriptionIds.isEmpty()) {
+                log.info("No subscriptions found for date {}", today);
                 break;
             }
 

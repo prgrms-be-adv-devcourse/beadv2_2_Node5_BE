@@ -16,7 +16,6 @@ import reactor.core.publisher.Mono;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 
 
 @Slf4j
@@ -56,16 +55,12 @@ public class ReactiveAuthorization implements ReactiveAuthorizationManager<Autho
                 return Mono.just(new AuthorizationDecision(false));
             }
 
-            Object roleObj = claims.get("memberRoles");
-            if (!(roleObj instanceof List<?> roleList) || roleList.isEmpty()) {
-                return Mono.just(new AuthorizationDecision(false));
-            }
-
             if (!(claims.get("memberStatus") instanceof String memberStatus) || memberStatus.isBlank()) {
                 return Mono.just(new AuthorizationDecision(false));
             }
 
             context.getExchange().getAttributes().put("cached_claims", claims);
+
             return Mono.just(new AuthorizationDecision(true));
         } catch (Exception e) {
             return Mono.just(new AuthorizationDecision(false));

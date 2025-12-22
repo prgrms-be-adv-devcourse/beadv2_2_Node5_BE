@@ -2,6 +2,7 @@ package com.node5.billingservice.wallet.presentation;
 
 import com.node5.billingservice.wallet.application.WalletService;
 import com.node5.billingservice.wallet.application.dto.WalletInfo;
+import com.node5.billingservice.wallet.application.dto.WalletSettleInfo;
 import com.node5.billingservice.wallet.presentation.dto.WalletRefundRequest;
 import com.node5.billingservice.wallet.presentation.dto.WalletSettleRequest;
 import com.node5.billingservice.wallet.presentation.dto.WalletWithdrawRequest;
@@ -13,8 +14,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
-import static org.springframework.http.HttpStatus.CREATED;
-
 @RestController
 @RequestMapping("/internal/wallets")
 @RequiredArgsConstructor
@@ -22,15 +21,15 @@ public class WalletInternalController {
 
     private final WalletService walletService;
 
-    @Operation(summary = "예치금 생성", description = "회원의 예치금 계좌를 생성한다.")
-    @PostMapping
-    public ResponseEntity<WalletInfo> createWallet(@RequestHeader("Member-Id") UUID memberId) {
-        return ResponseEntity.status(CREATED).body(walletService.createWallet(memberId));
+    @Operation(summary = "예치금 조회", description = "다른 도메인에서 회원의 예치금 정보를 조회한다.")
+    @GetMapping
+    public ResponseEntity<WalletInfo> getWallet(@RequestHeader("Member-Id") UUID memberId) {
+        return ResponseEntity.ok(walletService.getWallet(memberId));
     }
 
     @Operation(summary = "예치금 정산", description = "회원의 예치금을 정산받는다.")
     @PutMapping("/settle")
-    public ResponseEntity<WalletInfo> settle(@RequestHeader("Member-Id") UUID memberId, @Valid @RequestBody WalletSettleRequest request) {
+    public ResponseEntity<WalletSettleInfo> settle(@RequestHeader("Member-Id") UUID memberId, @Valid @RequestBody WalletSettleRequest request) {
         return ResponseEntity.ok(walletService.settleWallet(memberId, request.toCommand()));
     }
 

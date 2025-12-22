@@ -1,7 +1,5 @@
 package com.node5.catalogservice.search.domain;
 
-import org.springframework.data.domain.Sort;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "상품 검색 정렬 기준")

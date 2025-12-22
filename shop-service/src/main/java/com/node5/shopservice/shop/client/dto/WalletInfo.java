@@ -1,8 +1,8 @@
-package com.node5.settlementservice.settlement.client.dto;
+package com.node5.shopservice.shop.client.dto;
 
 import java.util.UUID;
 
-public record WalletInfo (
+public record WalletInfo(
         UUID id,
         UUID memberId,
         Long balance

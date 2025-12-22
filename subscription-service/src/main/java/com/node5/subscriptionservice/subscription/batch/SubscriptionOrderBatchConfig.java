@@ -78,10 +78,9 @@ public class SubscriptionOrderBatchConfig {
 
     private void requestOrder(Subscription subscription) {
         OrderCreateRequest request = new OrderCreateRequest(
-                subscription.getMemberId(),
                 "SUBSCRIPTION",
                 subscription.getId(),
-                "subscription-batch", // TODO: 주문자 이름
+                "subscription-batch",
                 subscription.getDeliveryAddress(),
                 List.of(
                         new OrderCreateRequest.OrderItemRequest(
@@ -96,8 +95,9 @@ public class SubscriptionOrderBatchConfig {
         );
 
         try {
-            ResponseEntity<OrderCreateInfo> response = orderClient.create(request);
+            ResponseEntity<OrderCreateInfo> response = orderClient.create(subscription.getMemberId(), request);
             if (!response.getStatusCode().is2xxSuccessful()) {
+                log.info("Order for SUBSCRIPTION {} is not success with status {}", subscription.getMemberId(), response.getStatusCode());
                 throw new SubscriptionException(SUBSCRIPTION_ORDER_REQUEST_FAILED);
             }
 

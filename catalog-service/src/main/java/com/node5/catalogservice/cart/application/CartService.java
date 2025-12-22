@@ -42,9 +42,6 @@ public class CartService {
 	private final CartItemRepository cartItemRepository;
 	private final ProductRepository productRepository;
 
-	/**
-	 * 사용자의 장바구니 목록을 조회하고, 응답에 상품 정보를 결합하여 반환합니다.
-	 */
 	public Page<CartItemInfo> getCartItems(UUID memberId, Pageable pageable) {
 		Page<CartItem> cartItems = cartItemRepository.findByMemberId(memberId, pageable);
 
@@ -91,13 +88,6 @@ public class CartService {
 		return CartItemInfo.from(saved, product);
 	}
 
-	/**
-	 * 장바구니 항목의 수량을 변경합니다.
-	 * <p>
-	 * - 장바구니 항목 존재 여부 확인<br>
-	 * - 요청자가 해당 장바구니 항목의 소유자인지 검증<br>
-	 * - 응답에 상품 정보 포함(상품 유실 시 예외)
-	 */
 	public CartItemInfo updateItem(UUID memberId, UUID cartItemId, CartItemUpdateCommand command) {
 		CartItem cartItem = getCartItemOrThrow(cartItemId);
 		validateOwnership(memberId, cartItem);
@@ -109,12 +99,6 @@ public class CartService {
 		return CartItemInfo.from(saved, product);
 	}
 
-	/**
-	 * 장바구니 항목을 삭제합니다.
-	 * <p>
-	 * - 장바구니 항목 존재 여부 확인<br>
-	 * - 요청자가 해당 장바구니 항목의 소유자인지 검증
-	 */
 	public void removeItem(UUID memberId, UUID cartItemId) {
 		CartItem cartItem = getCartItemOrThrow(cartItemId);
 		validateOwnership(memberId, cartItem);
@@ -122,11 +106,6 @@ public class CartService {
 		cartItemRepository.deleteById(cartItemId);
 	}
 
-	/**
-	 * 사용자의 장바구니를 전체 비웁니다.
-	 * <p>
-	 * - 장바구니 항목을 일괄 삭제하므로 트랜잭션으로 처리
-	 */
 	@Transactional
 	public void clearCart(UUID memberId) {
 		cartItemRepository.deleteByMemberId(memberId);

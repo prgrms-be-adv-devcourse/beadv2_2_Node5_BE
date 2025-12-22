@@ -46,24 +46,16 @@ public class SettlementScheduler {
         LocalDateTime startDateTime = startDate.atStartOfDay();
         LocalDateTime endDateTimePlusOneDay = endDate.plusDays(1).atStartOfDay();
 
-        log.info("** Starting monthly settlement jobs for period: {} to {}", startDate, endDate);
-
         // 1. SettlementSource에서 정산 대상 기간 동안 거래 기록이 있는 판매자 ID만 조회
         List<UUID> shopIds = settlementSourceRepository.findDistinctShopIds(startDateTime, endDateTimePlusOneDay);
 
-//        // 테스트
-//        List<UUID> shopIds = List.of(
-//                UUID.fromString("10000000-0000-0000-0000-000000000001"),
-//                UUID.fromString("20000000-0000-0000-0000-000000000002")
-//        );
-
         if (shopIds.isEmpty()) {
-            log.info("** No settlement source found for the period. Skipping job execution.");
+            log.info("** [월간 정산 스케줄러] 해당 기간 내 정산 대상 데이터가 없으므로 Job 실행없이 종료");
             return;
         }
 
         // 2. 판매자별 Job 호출
-        log.info("** Scheduled settlement jobs for {} shops", shopIds.size());
+        log.info("** [월간 정산 스케줄러] 시작 (period: {} ~ {}, target: {} shops)", startDate, endDate, shopIds.size());
         shopIds.forEach(shopId -> runJobForShop(shopId, startDateStr, endDateStr));
     }
 
@@ -79,9 +71,9 @@ public class SettlementScheduler {
                             .toJobParameters();
 
                     jobLauncher.run(shopSettlementJob, params);
-                    log.info("** Settlement job triggered for shop {} in period {} - {}", shopId, startDate, endDate);
+                    log.info("** [정산 Job 완료] shopId: {}, period: {} ~ {}", shopId, startDate, endDate);
                 } catch (Exception ex) {
-                    log.error("** Failed to run settlement job for shop {}", shopId, ex);
+                    log.error("** [정산 Job 오류] shopId: {}, period: {} ~ {}, errorMsg: {}", shopId, startDate, endDate, ex.getMessage(), ex);
                 }
             };
 
@@ -91,7 +83,7 @@ public class SettlementScheduler {
                 executeJob.run();
             }
         } catch (Exception ex) {
-            log.error("** Failed to run settlement job for shop {}", shopId, ex);
+            log.error("** [정산 스케줄링 실패] shopId: {}, errorMsg: {}", shopId, ex.getMessage(), ex);
         }
     }
 }

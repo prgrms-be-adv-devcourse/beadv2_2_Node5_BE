@@ -10,6 +10,4 @@ import java.util.UUID;
 @FeignClient(name = "billing-service")
 public interface BillingClient {
 
-    @PostMapping("/internal/wallets")
-    ResponseEntity<String> createWallet(@RequestHeader("Member-Id") UUID memberId);
 }

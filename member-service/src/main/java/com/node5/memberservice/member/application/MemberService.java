@@ -1,12 +1,9 @@
 package com.node5.memberservice.member.application;
 
-import com.node5.memberservice.auth.application.dto.JwtMemberInfo;
 import com.node5.memberservice.auth.domain.OAuthRepository;
-import com.node5.memberservice.auth.util.JwtProvider;
 import com.node5.memberservice.member.application.dto.MemberInfoResponse;
 import com.node5.memberservice.member.application.dto.MemberModifyCommand;
 import com.node5.memberservice.member.application.dto.RoleModifyCommand;
-import com.node5.memberservice.member.application.dto.RoleModifyResponse;
 import com.node5.memberservice.member.domain.Member;
 import com.node5.memberservice.member.domain.MemberRepository;
 import com.node5.memberservice.member.domain.MemberRole;
@@ -18,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -28,7 +24,6 @@ public class MemberService {
 
     private final MemberRepository memberRepository;
     private final OAuthRepository oAuthRepository;
-    private final JwtProvider jwtProvider;
     private final RedisService redisService;
 
     public MemberInfoResponse findById(UUID memberId) {
@@ -52,29 +47,19 @@ public class MemberService {
     }
 
     @Transactional
-    public RoleModifyResponse addMemberRole(UUID memberId, RoleModifyCommand command) {
+    public void addMemberRole(UUID memberId, RoleModifyCommand command) {
         Member member = getMemberOrThrow(memberId);
         member.addRole(command.role());
-
-        JwtMemberInfo jwtMemberInfo = JwtMemberInfo.from(member);
-        String accessToken = jwtProvider.generateAccessToken(jwtMemberInfo);
-        List<String> memberRoles = member.getRoles().stream().map(MemberRole::name).toList();
-        return new RoleModifyResponse(accessToken, memberRoles);
     }
 
     @Transactional
-    public RoleModifyResponse deleteMemberRole(UUID memberId, String role) {
+    public void deleteMemberRole(UUID memberId, String role) {
         Member member = getMemberOrThrow(memberId);
         MemberRole roleEnum = Arrays.stream(MemberRole.values())
                 .filter(r -> r.name().equalsIgnoreCase(role))
                 .findFirst()
                 .orElseThrow(() -> new MemberException(MemberErrorCode.INVALID_ROLE));
         member.deleteRole(roleEnum);
-
-        JwtMemberInfo jwtMemberInfo = JwtMemberInfo.from(member);
-        String accessToken = jwtProvider.generateAccessToken(jwtMemberInfo);
-        List<String> memberRoles = member.getRoles().stream().map(MemberRole::name).toList();
-        return new RoleModifyResponse(accessToken, memberRoles);
     }
 
     private Member getMemberOrThrow(UUID memberId) {

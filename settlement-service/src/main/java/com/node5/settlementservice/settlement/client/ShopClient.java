@@ -10,7 +10,7 @@ import java.util.UUID;
 @FeignClient(name = "shop-service")
 public interface ShopClient {
 
-    @GetMapping("internal/shops/{shopId}/member-id")
+    @GetMapping("/internal/shops/{shopId}/member-id")
     ResponseEntity<String> getMemberIdByShopId(@PathVariable UUID shopId);
 
 }
