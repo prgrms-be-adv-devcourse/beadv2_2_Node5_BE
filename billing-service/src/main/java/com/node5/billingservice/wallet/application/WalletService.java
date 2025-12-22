@@ -70,7 +70,7 @@ public class WalletService {
         walletDepositLogRepository.save(walletDepositLog);
 
         wallet.deposit(command.amount());
-        return WalletSettleInfo.from(wallet);
+        return WalletSettleInfo.from(wallet, walletDepositLog.getCreatedAt());
     }
 
     //예치금 사용
