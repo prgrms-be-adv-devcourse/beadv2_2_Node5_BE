@@ -54,6 +54,7 @@ spring:
                 preLogger: true
                 postLogger: true
             - name: AuthenticationFilter
+            - name: AuthorizationFilter
           discovery:
             locator:
               enabled: true
