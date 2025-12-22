@@ -1,5 +1,6 @@
 package com.node5.memberservice.auth.domain;
 
+import com.node5.memberservice.auth.application.dto.EndPointCommand;
 import com.node5.memberservice.member.domain.MemberRole;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -38,5 +39,19 @@ public class Endpoint {
         this.role = MemberRole.valueOf(role);
         this.httpMethod = httpMethod;
         this.pathPattern = pathPattern;
+    }
+
+    public static Endpoint create(EndPointCommand command) {
+        return new Endpoint(
+                command.role(),
+                command.HttpMethod(),
+                command.pathPattern()
+        );
+    }
+
+    public void modify(EndPointCommand command) {
+        this.role = command.role();
+        this.httpMethod = command.HttpMethod();
+        this.pathPattern = command.pathPattern();
     }
 }
