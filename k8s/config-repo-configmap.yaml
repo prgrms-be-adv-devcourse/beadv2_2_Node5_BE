@@ -1,0 +1,251 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-repo
+data:
+  application.yml: |
+    token:
+      secret: bqE8cz8S6bV4GzD2A1g7o1I2N7q9p+vTWlM3lBaEo+3gF5h4qXvBRvUj2bS7wQ0RzF1YkPb3pH8xq9kJz4ySXQ==
+    eureka:
+      instance:
+        instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+        preferIpAddress: true
+      client:
+        register-with-eureka: true
+        fetch-registry: true
+        service-url:
+          defaultZone: http://admin:admin@discovery-service:8761/eureka
+    apigateway:
+      host: http://apigateway-service:8000
+  billing-service.yaml: |
+    spring:
+      datasource:
+        url: ${SPRING_DATASOURCE_URL}
+        driver-class-name: org.postgresql.Driver
+        username: ${SPRING_DATASOURCE_USERNAME}
+        password: ${SPRING_DATASOURCE_PASSWORD}
+      jackson:
+        time-zone: Asia/Seoul
+      jpa:
+        hibernate:
+          ddl-auto: validate
+        show-sql: true
+        properties:
+          hibernate:
+            default_schema: billing
+            format_sql: true
+            jdbc:
+              time_zone: Asia/Seoul
+      batch:
+        jdbc:
+          initialize-schema: never
+    api:
+      v1: /api/v1
+    payment:
+      toss:
+        secret-key: ${TOSS_SECRET_KEY}
+        success-url: ${TOSS_SUCCESS_URL}
+        fail-url: ${TOSS_FAIL_URL}
+  catalog-service.yaml: |
+    spring:
+      datasource:
+        url: ${SPRING_DATASOURCE_URL}
+        driver-class-name: org.postgresql.Driver
+        username: ${SPRING_DATASOURCE_USERNAME}
+        password: ${SPRING_DATASOURCE_PASSWORD}
+      jackson:
+        time-zone: Asia/Seoul
+      jpa:
+        hibernate:
+          ddl-auto: validate
+        show-sql: true
+        properties:
+          hibernate:
+            default_schema: catalog
+            format_sql: true
+            jdbc:
+              time_zone: Asia/Seoul
+      batch:
+        jdbc:
+          initialize-schema: never
+    api:
+      v1: /api/v1
+  member-service.yaml: |
+    spring:
+      datasource:
+        url: ${SPRING_DATASOURCE_URL}
+        driver-class-name: org.postgresql.Driver
+        username: ${SPRING_DATASOURCE_USERNAME}
+        password: ${SPRING_DATASOURCE_PASSWORD}
+      jackson:
+        time-zone: Asia/Seoul
+      sql:
+        init:
+          mode: always
+      jpa:
+        hibernate:
+          ddl-auto: validate
+        show-sql: true
+        properties:
+          hibernate:
+            default_schema: member
+            format_sql: true
+            jdbc:
+              time_zone: Asia/Seoul
+      mail:
+        host: smtp.gmail.com
+        port: 587
+        username: ${MAIL_USERNAME}
+        password: ${MAIL_PASSWORD}
+        properties:
+          mail:
+            default-encoding: UTF-8
+            smtp:
+              auth: true
+              starttls:
+                enable: true
+      data:
+        redis:
+          host: ${REDIS_HOST}
+          port: 6379
+    api:
+      v1: /api/v1
+    management:
+      endpoints:
+        web:
+          exposure:
+            include: health
+    server:
+      port: 8081
+    token:
+      expiration:
+        access: 3600000
+        refresh: 604800000
+    kakao:
+      api:
+        key: ${KAKAO_API_KEY}
+    google:
+      client:
+        id: ${GOOGLE_CLIENT_ID}
+        secret: ${GOOGLE_CLIENT_SECRET}
+    naver:
+      client:
+        id: ${NAVER_CLIENT_ID}
+        secret: ${NAVER_CLIENT_SECRET}
+  order-service.yaml: |
+    spring:
+      datasource:
+        url: ${SPRING_DATASOURCE_URL}
+        driver-class-name: org.postgresql.Driver
+        username: ${SPRING_DATASOURCE_USERNAME}
+        password: ${SPRING_DATASOURCE_PASSWORD}
+      jackson:
+        time-zone: Asia/Seoul
+      jpa:
+        hibernate:
+          ddl-auto: validate
+        show-sql: true
+        properties:
+          hibernate:
+            format_sql: true
+            jdbc:
+              time_zone: Asia/Seoul
+      sql:
+        init:
+          mode: always
+    api:
+      v1: /api/v1
+    management:
+      endpoints:
+        web:
+          exposure:
+            include: health
+  settlement-service.yaml: |
+    spring:
+      datasource:
+        url: ${SPRING_DATASOURCE_URL}
+        driver-class-name: org.postgresql.Driver
+        username: ${SPRING_DATASOURCE_USERNAME}
+        password: ${SPRING_DATASOURCE_PASSWORD}
+      jackson:
+        time-zone: Asia/Seoul
+      jpa:
+        hibernate:
+          ddl-auto: validate
+        show-sql: true
+        properties:
+          hibernate:
+            default_schema: settlement
+            format_sql: true
+            jdbc:
+              time_zone: Asia/Seoul
+      batch:
+        jdbc:
+          initialize-schema: always
+          schema: public
+        job:
+          names: '*'
+      task:
+        scheduling:
+          cron:
+            settlement: ${SETTLEMENT_SCHEDULING_CRON}
+    management:
+      endpoints:
+        web:
+          exposure:
+            include: health
+    api:
+      v1: /api/v1
+  shop-service.yaml: |
+    spring:
+      datasource:
+        url: ${SPRING_DATASOURCE_URL}
+        driver-class-name: org.postgresql.Driver
+        username: ${SPRING_DATASOURCE_USERNAME}
+        password: ${SPRING_DATASOURCE_PASSWORD}
+      jackson:
+        time-zone: Asia/Seoul
+      jpa:
+        hibernate:
+          ddl-auto: validate
+        show-sql: true
+        properties:
+          hibernate:
+            default_schema: shop
+            format_sql: true
+            jdbc:
+              time_zone: Asia/Seoul
+    api:
+      v1: /api/v1
+    management:
+      endpoints:
+        web:
+          exposure:
+            include: health
+    server:
+      port: 8085
+  subscription-service.yml: |
+    spring:
+      datasource:
+        url: ${SPRING_DATASOURCE_URL}
+        driver-class-name: org.postgresql.Driver
+        username: ${SPRING_DATASOURCE_USERNAME}
+        password: ${SPRING_DATASOURCE_PASSWORD}
+      jackson:
+        time-zone: Asia/Seoul
+      jpa:
+        hibernate:
+          ddl-auto: validate
+        show-sql: true
+        properties:
+          hibernate:
+            default_schema: subscription
+            format_sql: true
+            jdbc:
+              time_zone: Asia/Seoul
+      task:
+        scheduling:
+          cron:
+            subscription-order: ${SUBSCRIPTION_ORDER_CRON}
+    api:
+      v1: /api/v1
