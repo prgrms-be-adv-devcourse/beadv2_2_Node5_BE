@@ -1,10 +1,10 @@
 package com.node5.memberservice.auth.domain;
 
+import com.node5.memberservice.member.domain.MemberRole;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.boot.actuate.endpoint.EndpointId;
 
 import java.util.UUID;
 
@@ -16,8 +16,9 @@ public class Endpoint {
     @Id
     private UUID id;
 
+    @Enumerated(EnumType.STRING)
     @Column(length = 20, nullable = false)
-    private String role;
+    private MemberRole role;
 
     @Column(name = "http_method", length = 10, nullable = false)
     private String httpMethod;
@@ -25,9 +26,16 @@ public class Endpoint {
     @Column(name = "path_pattern", length = 200, nullable = false)
     private String pathPattern;
 
-    protected Endpoint(String role, String httpMethod, String pathPattern) {
+    private Endpoint(MemberRole role, String httpMethod, String pathPattern) {
         this.id = UUID.randomUUID();
         this.role = role;
+        this.httpMethod = httpMethod;
+        this.pathPattern = pathPattern;
+    }
+
+    public Endpoint(String role, String httpMethod, String pathPattern) {
+        this.id = UUID.randomUUID();
+        this.role = MemberRole.valueOf(role);
         this.httpMethod = httpMethod;
         this.pathPattern = pathPattern;
     }

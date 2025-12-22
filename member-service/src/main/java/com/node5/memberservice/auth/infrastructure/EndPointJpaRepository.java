@@ -1,11 +1,13 @@
 package com.node5.memberservice.auth.infrastructure;
 
 import com.node5.memberservice.auth.domain.Endpoint;
+import com.node5.memberservice.member.domain.MemberRole;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 public interface EndPointJpaRepository extends JpaRepository<Endpoint, UUID> {
@@ -14,15 +16,13 @@ public interface EndPointJpaRepository extends JpaRepository<Endpoint, UUID> {
             value = """
                     SELECT e.*
                     FROM member.endpoint e
-                    JOIN member.member m ON m.id = :memberId
-                    WHERE m.deleted_at IS NULL
-                      AND e.http_method = :method
-                      AND jsonb_exists(m.roles, e.role)
+                    WHERE e.http_method = :method
+                      AND jsonb_exists(:roles, e.role)
                     """,
             nativeQuery = true
     )
     List<Endpoint> findAllowedEndpoints(
-            @Param("memberId") UUID memberId,
+            @Param("roles") Set<MemberRole> roles,
             @Param("method") String method
     );
 }

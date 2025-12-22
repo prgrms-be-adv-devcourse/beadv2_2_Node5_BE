@@ -14,18 +14,17 @@ import com.node5.memberservice.auth.util.TokenType;
 import com.node5.memberservice.mail.application.MailService;
 import com.node5.memberservice.member.domain.Member;
 import com.node5.memberservice.member.domain.MemberRepository;
+import com.node5.memberservice.member.domain.MemberRole;
 import com.node5.memberservice.redis.application.RedisService;
 import io.jsonwebtoken.Claims;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.AntPathMatcher;
 
 import java.security.SecureRandom;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -33,6 +32,7 @@ import java.util.stream.Collectors;
 public class AuthService {
 
     private static final AntPathMatcher matcher = new AntPathMatcher();
+    private volatile Map<EndpointKey, List<Endpoint>> allowedEndpointCache;
 
     private final OAuthRepository oAuthRepository;
     private final MemberRepository memberRepository;
@@ -62,6 +62,31 @@ public class AuthService {
         this.jwtProvider = jwtProvider;
         this.mailService = mailService;
         this.redisService = redisService;
+    }
+
+    @PostConstruct
+    public void init() {
+        refreshCache();
+    }
+
+    public void refreshCache() {
+        this.allowedEndpointCache = loadAllowedEndpoint();
+    }
+
+    private Map<EndpointKey, List<Endpoint>> loadAllowedEndpoint() {
+        Map<EndpointKey, List<Endpoint>> newCache = new HashMap<>();
+        List<Endpoint> endpoints = endPointRepository.findAll();
+        for (Endpoint endpoint : endpoints) {
+            EndpointKey key = new EndpointKey(endpoint.getRole(), endpoint.getHttpMethod());
+            newCache.computeIfAbsent(key, k -> new ArrayList<>())
+                    .add(endpoint);
+        }
+
+        return newCache.entrySet().stream()
+                .collect(Collectors.toUnmodifiableMap(
+                        Map.Entry::getKey,
+                        e -> List.copyOf(e.getValue())
+                ));
     }
 
     public LoginInfoResponse login(OAuthLoginCommand command) {
@@ -183,8 +208,26 @@ public class AuthService {
     }
 
     public boolean authorize(AuthorizeCommand command) {
+        Member member = memberRepository.findByIdAndDeletedAtIsNull(command.memberId())
+                .orElseThrow(() -> new AuthException(AuthErrorCode.MEMBER_NOT_FOUND));
 
-        List<Endpoint> allowedEndpoints = endPointRepository.findAllowedEndpoints(command.memberId(), command.method());
+        Set<MemberRole> roles = member.getRoles();
+
+        // 스냅샷
+        Map<EndpointKey, List<Endpoint>> currentCache = this.allowedEndpointCache;
+
+        List<Endpoint> allowedEndpoints = roles.stream()
+                .flatMap(role -> currentCache.getOrDefault(
+                        new EndpointKey(role, command.method()),
+                        List.of()
+                ).stream())
+                .distinct()
+                .toList();
+
+        // 필요한가?
+        if (allowedEndpoints.isEmpty()) {
+            allowedEndpoints = endPointRepository.findAllowedEndpoints(member.getRoles(), command.method());
+        }
 
         if (allowedEndpoints.isEmpty()) {
             return false;
