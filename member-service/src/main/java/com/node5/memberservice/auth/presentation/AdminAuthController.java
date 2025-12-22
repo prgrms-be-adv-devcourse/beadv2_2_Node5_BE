@@ -15,7 +15,7 @@ import java.util.UUID;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("${api.v1}/admin")
-public class AdminController {
+public class AdminAuthController {
 
     private final EndPointService endPointService;
 
