@@ -51,19 +51,34 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKER_REPO }}/${{ matrix.service }}:latest
 
-    # EC2 배포
   deploy:
-    name: Deploy to EC2
+    name: Deploy to Kubernetes
     runs-on: self-hosted
     needs: build-and-push
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Docker login & deploy
+      - name: Verify kubectl
+        run: kubectl version --client
+
+      - name: Deploy to Kubernetes
         run: |
-          echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
-          docker compose down
-          docker compose pull
-          docker compose up --build -d
-          docker image prune -a -f
+          kubectl apply -k k8s/
+
+    # EC2 배포
+#  deploy:
+#    name: Deploy to EC2
+#    runs-on: self-hosted
+#    needs: build-and-push
+#
+#    steps:
+#      - uses: actions/checkout@v4
+#
+#      - name: Docker login & deploy
+#        run: |
+#          echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+#          docker compose down
+#          docker compose pull
+#          docker compose up --build -d
+#          docker image prune -a -f
