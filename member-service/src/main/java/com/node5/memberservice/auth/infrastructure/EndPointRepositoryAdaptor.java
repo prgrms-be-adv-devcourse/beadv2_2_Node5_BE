@@ -6,6 +6,9 @@ import com.node5.memberservice.auth.domain.Endpoint;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+import java.util.UUID;
+
 @Repository
 @RequiredArgsConstructor
 public class EndPointRepositoryAdaptor implements EndPointRepository {
@@ -13,8 +16,8 @@ public class EndPointRepositoryAdaptor implements EndPointRepository {
     private final EndPointJpaRepository endPointJpaRepository;
 
     @Override
-    public boolean authorize(AuthorizeCommand command) {
-        return endPointJpaRepository.authorize(command.memberId(), command.method(), command.path());
+    public List<Endpoint> findAllowedEndpoints(UUID memberId, String method) {
+        return endPointJpaRepository.findAllowedEndpoints(memberId, method);
     }
 
     @Override

@@ -5,27 +5,24 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface EndPointJpaRepository extends JpaRepository<Endpoint, UUID> {
 
     @Query(
             value = """
-                    select exists (
-                        SELECT 1
-                        FROM member.endpoint e
-                        JOIN member.member m ON m.id = :memberId
-                        WHERE m.deleted_at IS NULL
-                        AND e.http_method = :method
-                        AND jsonb_exists(m.roles, e.role)
-                        AND :path LIKE e.path_pattern
-                    )
+                    SELECT e.*
+                    FROM member.endpoint e
+                    JOIN member.member m ON m.id = :memberId
+                    WHERE m.deleted_at IS NULL
+                      AND e.http_method = :method
+                      AND jsonb_exists(m.roles, e.role)
                     """,
             nativeQuery = true
     )
-    boolean authorize(
+    List<Endpoint> findAllowedEndpoints(
             @Param("memberId") UUID memberId,
-            @Param("method") String method,
-            @Param("path") String path
+            @Param("method") String method
     );
 }

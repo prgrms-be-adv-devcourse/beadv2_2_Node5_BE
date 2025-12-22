@@ -2,6 +2,7 @@ package com.node5.memberservice.auth.application;
 
 import com.node5.memberservice.auth.application.dto.*;
 import com.node5.memberservice.auth.domain.EndPointRepository;
+import com.node5.memberservice.auth.domain.Endpoint;
 import com.node5.memberservice.auth.domain.OAuth;
 import com.node5.memberservice.auth.domain.OAuthRepository;
 import com.node5.memberservice.auth.exception.AuthErrorCode;
@@ -18,6 +19,7 @@ import io.jsonwebtoken.Claims;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.AntPathMatcher;
 
 import java.security.SecureRandom;
 import java.util.List;
@@ -29,6 +31,8 @@ import java.util.stream.Collectors;
 @Service
 @Transactional(readOnly = true)
 public class AuthService {
+
+    private static final AntPathMatcher matcher = new AntPathMatcher();
 
     private final OAuthRepository oAuthRepository;
     private final MemberRepository memberRepository;
@@ -179,6 +183,18 @@ public class AuthService {
     }
 
     public boolean authorize(AuthorizeCommand command) {
-        return endPointRepository.authorize(command);
+
+        List<Endpoint> allowedEndpoints = endPointRepository.findAllowedEndpoints(command.memberId(), command.method());
+
+        if (allowedEndpoints.isEmpty()) {
+            return false;
+        }
+
+        for (Endpoint endpoint : allowedEndpoints) {
+            if (matcher.match(endpoint.getPathPattern(), command.path())) {
+                return true;
+            }
+        }
+        return false;
     }
 }
