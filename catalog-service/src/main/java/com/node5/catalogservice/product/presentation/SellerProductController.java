@@ -18,14 +18,10 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.node5.catalogservice.product.application.ProductImageService;
 import com.node5.catalogservice.product.application.ProductService;
-import com.node5.catalogservice.product.application.dto.PresignedUrlInfo;
 import com.node5.catalogservice.product.application.dto.ProductCommand;
 import com.node5.catalogservice.product.application.dto.ProductInfo;
 import com.node5.catalogservice.product.application.dto.ProductUpdateCommand;
-import com.node5.catalogservice.product.presentation.dto.PresignedUrlRequest;
-import com.node5.catalogservice.product.presentation.dto.PresignedUrlResponse;
 import com.node5.catalogservice.product.presentation.dto.ProductRequest;
 import com.node5.catalogservice.product.presentation.dto.ProductUpdateRequest;
 import com.node5.catalogservice.product.presentation.dto.StatusRequest;
@@ -44,7 +40,6 @@ import lombok.RequiredArgsConstructor;
 public class SellerProductController {
 
 	private final ProductService productService;
-	private final ProductImageService productImageService;
 
 	@GetMapping("/{shopId}/products")
 	@Operation(
@@ -140,21 +135,5 @@ public class SellerProductController {
 	) {
 		productService.discontinueProduct(memberId, productId);
 		return ResponseEntity.noContent().build();
-	}
-
-	@PostMapping("/products/images/presigned-url")
-	@Operation(
-		summary = "상품 이미지 업로드 URL 발급",
-		description = "상품 이미지 업로드용 presigned URL을 발급합니다."
-	)
-	@ApiResponses({
-		@ApiResponse(responseCode = "200", description = "presigned URL 발급 성공"),
-		@ApiResponse(responseCode = "400", description = "요청 값이 유효하지 않습니다.")
-	})
-	public ResponseEntity<PresignedUrlResponse> createPresignedUrl(
-		@Valid @RequestBody PresignedUrlRequest request
-	) {
-		PresignedUrlInfo info = productImageService.createUploadUrl(request.contentType());
-		return ResponseEntity.ok(new PresignedUrlResponse(info.url(), info.key()));
 	}
 }
