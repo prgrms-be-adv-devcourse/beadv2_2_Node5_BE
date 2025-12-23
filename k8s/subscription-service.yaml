@@ -25,7 +25,7 @@ spec:
               value: prod
           envFrom:
             - secretRef:
-                name: subcription-secret
+                name: subscription-secret
           readinessProbe:
             httpGet:
               path: /actuator/health
