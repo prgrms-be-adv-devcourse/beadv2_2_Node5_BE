@@ -23,6 +23,9 @@ spec:
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: prod
+          envFrom:
+            - secretRef:
+                name: member-secret
           readinessProbe:
             httpGet:
               path: /actuator/health
