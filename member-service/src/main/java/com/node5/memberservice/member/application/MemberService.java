@@ -1,6 +1,7 @@
 package com.node5.memberservice.member.application;
 
 import com.node5.memberservice.auth.domain.OAuthRepository;
+import com.node5.memberservice.member.application.dto.MemberInfoAdminResponse;
 import com.node5.memberservice.member.application.dto.MemberInfoResponse;
 import com.node5.memberservice.member.application.dto.MemberModifyCommand;
 import com.node5.memberservice.member.application.dto.RoleModifyCommand;
@@ -11,6 +12,8 @@ import com.node5.memberservice.member.exception.MemberErrorCode;
 import com.node5.memberservice.member.exception.MemberException;
 import com.node5.memberservice.redis.application.RedisService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -65,5 +68,9 @@ public class MemberService {
     private Member getMemberOrThrow(UUID memberId) {
         return memberRepository.findByIdAndDeletedAtIsNull(memberId)
                 .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
+    }
+
+    public Page<MemberInfoAdminResponse> getMembers(Pageable pageable) {
+        return memberRepository.findAll(pageable).map(MemberInfoAdminResponse::from);
     }
 }

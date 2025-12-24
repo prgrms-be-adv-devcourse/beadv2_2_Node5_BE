@@ -15,7 +15,4 @@ public class Role {
     @Column(length = 20)
     private MemberRole name;
 
-    protected Role(MemberRole role) {
-        this.name = role;
-    }
 }
