@@ -6,6 +6,7 @@ metadata:
     app: catalog-service
 spec:
   replicas: 1
+  revisionHistoryLimit: 2
   selector:
     matchLabels:
       app: catalog-service
