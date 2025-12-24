@@ -1,5 +1,6 @@
 package com.node5.memberservice.member.application;
 
+import com.node5.memberservice.member.application.dto.RoleResponse;
 import com.node5.memberservice.member.domain.Role;
 import com.node5.memberservice.member.domain.RoleRepository;
 import lombok.RequiredArgsConstructor;
@@ -13,8 +14,8 @@ public class RoleService {
 
     private final RoleRepository roleRepository;
 
-    public List<String> getRoles() {
+    public RoleResponse getRoles() {
         List<Role> roles = roleRepository.findAll();
-        return roles.stream().map(Role::getName).map(Enum::name).toList();
+        return RoleResponse.from(roles);
     }
 }

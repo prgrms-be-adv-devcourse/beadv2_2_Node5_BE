@@ -2,6 +2,7 @@ package com.node5.memberservice.member.application.dto;
 
 import com.node5.memberservice.member.domain.Member;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -12,7 +13,8 @@ public record MemberInfoAdminResponse(
         String phoneNumber,
         String address,
         List<String> roles,
-        String status
+        String status,
+        LocalDateTime createdAt
 ) {
 
     public static MemberInfoAdminResponse from(Member member) {
@@ -23,7 +25,8 @@ public record MemberInfoAdminResponse(
                 member.getPhoneNumber(),
                 member.getAddress(),
                 member.getRoles().stream().map(Enum::name).toList(),
-                member.getStatus().name()
+                member.getStatus().name(),
+                member.getCreatedAt()
         );
     }
 }
