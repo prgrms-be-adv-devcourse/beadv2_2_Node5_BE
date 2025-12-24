@@ -65,7 +65,7 @@ public class AuthorizationFilter extends AbstractGatewayFilterFactory<Authorizat
 
     record AuthorizeRequest(
             UUID memberId,
-            String method,
+            String httpMethod,
             String path
     ) {
     }

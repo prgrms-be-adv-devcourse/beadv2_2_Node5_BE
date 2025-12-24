@@ -1,13 +1,13 @@
-package com.node5.memberservice.auth.application.dto;
+package com.node5.memberservice.endpoint.application.dto;
 
-import com.node5.memberservice.auth.domain.Endpoint;
+import com.node5.memberservice.endpoint.domain.Endpoint;
 
 import java.util.UUID;
 
 public record EndPointInfoResponse(
         UUID id,
         String role,
-        String method,
+        String httpMethod,
         String pathPattern
 ) {
     public static EndPointInfoResponse from(Endpoint endpoint) {

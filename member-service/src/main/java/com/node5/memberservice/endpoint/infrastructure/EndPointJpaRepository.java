@@ -1,6 +1,6 @@
 package com.node5.memberservice.auth.infrastructure;
 
-import com.node5.memberservice.auth.domain.Endpoint;
+import com.node5.memberservice.endpoint.domain.Endpoint;
 import com.node5.memberservice.member.domain.MemberRole;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

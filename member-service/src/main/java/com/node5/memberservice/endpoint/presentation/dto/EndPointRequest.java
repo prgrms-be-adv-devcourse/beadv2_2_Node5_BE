@@ -1,6 +1,6 @@
-package com.node5.memberservice.auth.presentation.dto;
+package com.node5.memberservice.endpoint.presentation.dto;
 
-import com.node5.memberservice.auth.application.dto.EndPointCommand;
+import com.node5.memberservice.endpoint.application.dto.EndPointCommand;
 import com.node5.memberservice.auth.exception.AuthErrorCode;
 import com.node5.memberservice.auth.exception.AuthException;
 import com.node5.memberservice.member.domain.MemberRole;
@@ -12,7 +12,7 @@ public record EndPointRequest(
         @NotBlank(message = "role은 필수입니다.")
         String role,
         @NotBlank(message = "httpMethod는 필수입니다.")
-        String HttpMethod,
+        String httpMethod,
         @NotBlank(message = "pathPattern는 필수입니다.")
         String pathPattern
 ) {
@@ -22,6 +22,6 @@ public record EndPointRequest(
                 .findFirst()
                 .orElseThrow(() -> new AuthException(AuthErrorCode.INVALID_ROLE));
 
-        return new EndPointCommand(memberRole, this.HttpMethod, this.pathPattern);
+        return new EndPointCommand(memberRole, this.httpMethod, this.pathPattern);
     }
 }

@@ -1,7 +1,7 @@
 package com.node5.memberservice.auth.infrastructure;
 
-import com.node5.memberservice.auth.domain.EndPointRepository;
-import com.node5.memberservice.auth.domain.Endpoint;
+import com.node5.memberservice.endpoint.domain.EndPointRepository;
+import com.node5.memberservice.endpoint.domain.Endpoint;
 import com.node5.memberservice.member.domain.MemberRole;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
