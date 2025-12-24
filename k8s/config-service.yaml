@@ -17,7 +17,7 @@ spec:
       containers:
         - name: config-service
           image: node5dev/config:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           ports:
             - containerPort: 8888
           readinessProbe:

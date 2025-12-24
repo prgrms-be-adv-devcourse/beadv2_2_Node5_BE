@@ -17,7 +17,7 @@ spec:
       containers:
         - name: apigateway
           image: node5dev/apigateway:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           ports:
             - containerPort: 8000
           env:

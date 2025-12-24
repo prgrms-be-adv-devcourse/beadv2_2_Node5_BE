@@ -17,7 +17,7 @@ spec:
       containers:
         - name: settlement-service
           image: node5dev/settlement-service:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           ports:
             - containerPort: 8080
           env:

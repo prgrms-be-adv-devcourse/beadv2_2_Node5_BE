@@ -17,7 +17,7 @@ spec:
       containers:
         - name: shop-service
           image: node5dev/shop-service:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           ports:
             - containerPort: 8085
           env:
