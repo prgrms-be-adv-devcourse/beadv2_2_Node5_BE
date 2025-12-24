@@ -17,7 +17,7 @@ spec:
       containers:
         - name: order-service
           image: node5dev/order-service:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           ports:
             - containerPort: 8080
           env:
