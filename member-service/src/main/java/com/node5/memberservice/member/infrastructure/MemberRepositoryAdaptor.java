@@ -3,6 +3,8 @@ package com.node5.memberservice.member.infrastructure;
 import com.node5.memberservice.member.domain.Member;
 import com.node5.memberservice.member.domain.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -27,5 +29,10 @@ public class MemberRepositoryAdaptor implements MemberRepository {
     @Override
     public Member save(Member member) {
         return memberJpaRepository.save(member);
+    }
+
+    @Override
+    public Page<Member> findAll(Pageable pageable) {
+        return memberJpaRepository.findAll(pageable);
     }
 }

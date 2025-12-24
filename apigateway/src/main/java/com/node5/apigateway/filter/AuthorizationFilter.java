@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.util.UUID;
 
 @Component
@@ -58,12 +59,13 @@ public class AuthorizationFilter extends AbstractGatewayFilterFactory<Authorizat
                         request.getPath().pathWithinApplication().value()
                 ))
                 .retrieve()
-                .bodyToMono(Boolean.class);
+                .bodyToMono(Boolean.class)
+                .timeout(Duration.ofMillis(500));
     }
 
     record AuthorizeRequest(
             UUID memberId,
-            String method,
+            String httpMethod,
             String path
     ) {
     }
