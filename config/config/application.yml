@@ -15,13 +15,3 @@ eureka:
 apigateway:
 #  host: http://localhost:8000
   host: http://apigateway-service:8000
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health, info
-  endpoint:
-    health:
-      probes:
-        enabled: true

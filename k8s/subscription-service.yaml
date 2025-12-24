@@ -5,6 +5,8 @@ metadata:
   labels:
     app: subscription-service
 spec:
+  strategy:
+    type: Recreate
   replicas: 1
   revisionHistoryLimit: 2
   selector:
