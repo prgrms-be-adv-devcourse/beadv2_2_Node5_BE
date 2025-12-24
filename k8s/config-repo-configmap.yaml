@@ -17,6 +17,15 @@ data:
           defaultZone: http://admin:admin@discovery-service:8761/eureka
     apigateway:
       host: http://apigateway-service:8000
+    management:
+      endpoints:
+        web:
+          exposure:
+            include: health, info
+      endpoint:
+        health:
+          probes:
+            enabled: true
   billing-service.yaml: |
     spring:
       datasource:

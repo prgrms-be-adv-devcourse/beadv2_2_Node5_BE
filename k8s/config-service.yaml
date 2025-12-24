@@ -5,6 +5,8 @@ metadata:
   labels:
     app: config-service
 spec:
+  strategy:
+    type: Recreate
   replicas: 1
   revisionHistoryLimit: 2
   selector:
@@ -25,22 +27,25 @@ spec:
             httpGet:
               path: /actuator/health
               port: 8888
-            failureThreshold: 30
+            failureThreshold: 60
             periodSeconds: 10
+            timeoutSeconds: 5
           readinessProbe:
             httpGet:
               path: /actuator/health/readiness
               port: 8888
-            initialDelaySeconds: 10
+            initialDelaySeconds: 30
             periodSeconds: 10
-            timeoutSeconds: 3
+            timeoutSeconds: 5
+            failureThreshold: 6
           livenessProbe:
             httpGet:
               path: /actuator/health/liveness
               port: 8888
-            initialDelaySeconds: 20
+            initialDelaySeconds: 60
             periodSeconds: 20
-            timeoutSeconds: 3
+            timeoutSeconds: 5
+            failureThreshold: 6
           volumeMounts:
             - name: config-repo
               mountPath: /app/config/config
