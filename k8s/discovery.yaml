@@ -17,7 +17,7 @@ spec:
       containers:
         - name: discovery
           image: node5dev/discovery:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           ports:
             - containerPort: 8761
           readinessProbe:
