@@ -8,21 +8,79 @@ on:
   workflow_dispatch:
 
 jobs:
+  detect:
+    runs-on: ubuntu-24.04
+    outputs:
+      matrix: ${{ steps.out.outputs.matrix }}
+      has_changes: ${{ steps.out.outputs.has_changes }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Detect changes
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            common: ["common/**"]
+            config: ["config/**"]
+            discovery: ["discovery/**"]
+
+            apigateway: ["apigateway/**"]
+            billing: ["billing-service/**"]
+            catalog: ["catalog-service/**"]
+            member: ["member-service/**"]
+            order: ["order-service/**"]
+            settlement: ["settlement-service/**"]
+            shop: ["shop-service/**"]
+            subscription: ["subscription-service/**"]
+
+      - id: out
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          ALL='["apigateway","billing-service","catalog-service","member-service","order-service","settlement-service","shop-service","subscription-service"]'
+
+          # B안: common/config/discovery 중 하나라도 true면 전체
+          if [ "${{ steps.filter.outputs.common }}" = "true" ] || \
+             [ "${{ steps.filter.outputs.config }}" = "true" ] || \
+             [ "${{ steps.filter.outputs.discovery }}" = "true" ]; then
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+            echo "matrix={\"service\":$ALL}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # 개별 서비스만 모으기
+          SVC=()
+          [ "${{ steps.filter.outputs.apigateway }}" = "true" ] && SVC+=("apigateway")
+          [ "${{ steps.filter.outputs.billing }}" = "true" ] && SVC+=("billing-service")
+          [ "${{ steps.filter.outputs.catalog }}" = "true" ] && SVC+=("catalog-service")
+          [ "${{ steps.filter.outputs.member }}" = "true" ] && SVC+=("member-service")
+          [ "${{ steps.filter.outputs.order }}" = "true" ] && SVC+=("order-service")
+          [ "${{ steps.filter.outputs.settlement }}" = "true" ] && SVC+=("settlement-service")
+          [ "${{ steps.filter.outputs.shop }}" = "true" ] && SVC+=("shop-service")
+          [ "${{ steps.filter.outputs.subscription }}" = "true" ] && SVC+=("subscription-service")
+
+          if [ "${#SVC[@]}" -eq 0 ]; then
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+            echo 'matrix={"service":[]}' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # bash 배열 -> JSON
+          JSON=$(printf '%s\n' "${SVC[@]}" | jq -R . | jq -s .)
+
+          echo "has_changes=true" >> "$GITHUB_OUTPUT"
+          echo "matrix={\"service\":$JSON}" >> "$GITHUB_OUTPUT"
+
   build-and-push:
     name: build application and make jar file
     runs-on: ubuntu-24.04
+    needs: detect
+    if: needs.detect.outputs.has_changes == 'true'
     strategy:
-      matrix:
-        service: [
-          "apigateway",
-          "billing-service",
-          "catalog-service",
-          "member-service",
-          "order-service",
-          "settlement-service",
-          "shop-service",
-          "subscription-service"
-        ]
+      fail-fast: false
+      matrix: ${{ fromJson(needs.detect.outputs.matrix) }}
 
     steps:
       - uses: actions/checkout@v4
@@ -64,7 +122,8 @@ jobs:
   deploy:
     name: Deploy to Kubernetes
     runs-on: self-hosted
-    needs: build-and-push
+    needs: [detect, build-and-push]
+    if: needs.detect.outputs.has_changes == 'true'
 
     steps:
       - uses: actions/checkout@v4
