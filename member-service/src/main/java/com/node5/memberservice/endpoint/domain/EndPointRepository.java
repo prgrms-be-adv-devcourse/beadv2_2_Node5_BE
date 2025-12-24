@@ -1,4 +1,4 @@
-package com.node5.memberservice.auth.domain;
+package com.node5.memberservice.endpoint.domain;
 
 import com.node5.memberservice.member.domain.MemberRole;
 import org.springframework.data.domain.Page;
@@ -10,7 +10,7 @@ import java.util.Set;
 import java.util.UUID;
 
 public interface EndPointRepository {
-    List<Endpoint> findAllowedEndpoints(Set<MemberRole> roles, String method);
+    List<Endpoint> findAllowedEndpoints(Set<MemberRole> roles, String httpMethod);
     Page<Endpoint> findAll(Pageable pageable);
     Endpoint save(Endpoint endpoint);
     List<Endpoint> findAll();

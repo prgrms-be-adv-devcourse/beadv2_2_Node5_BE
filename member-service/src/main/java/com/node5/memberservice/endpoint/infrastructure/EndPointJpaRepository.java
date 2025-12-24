@@ -1,4 +1,4 @@
-package com.node5.memberservice.auth.infrastructure;
+package com.node5.memberservice.endpoint.infrastructure;
 
 import com.node5.memberservice.endpoint.domain.Endpoint;
 import com.node5.memberservice.member.domain.MemberRole;
@@ -16,13 +16,13 @@ public interface EndPointJpaRepository extends JpaRepository<Endpoint, UUID> {
             value = """
                     SELECT e.*
                     FROM member.endpoint e
-                    WHERE e.http_method = :method
-                      AND jsonb_exists(:roles, e.role)
+                    WHERE e.http_method = :httpMethod
+                      AND jsonb_exists(CAST(:roles AS jsonb), e.role)
                     """,
             nativeQuery = true
     )
     List<Endpoint> findAllowedEndpoints(
-            @Param("roles") Set<MemberRole> roles,
-            @Param("method") String method
+            @Param("roles") String roles,
+            @Param("httpMethod") String httpMethod
     );
 }

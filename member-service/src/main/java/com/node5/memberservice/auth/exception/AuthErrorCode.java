@@ -27,8 +27,7 @@ public enum AuthErrorCode implements BaseErrorCode {
     TOKEN_TYPE_MISMATCH(HttpStatus.UNAUTHORIZED.value(), "AUTH_016", "토큰 타입이 올바르지 않습니다."),
     WALLET_CREATE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR.value(), "AUTH_017", "지갑 생성 중 오류가 발생했습니다."),
 
-    INVALID_ROLE(HttpStatus.BAD_REQUEST.value(), "AUTH_018", "잘못된 role 값입니다."),
-    ENDPOINT_NOT_FOUND(HttpStatus.BAD_REQUEST.value(), "AUTH_019", "존재하지 않은 EndPoint 입니다.");
+    INVALID_ROLE(HttpStatus.BAD_REQUEST.value(), "AUTH_018", "잘못된 role 값입니다.");
 
     private final int status;
     private final String code;

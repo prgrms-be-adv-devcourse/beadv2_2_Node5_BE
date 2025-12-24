@@ -1,8 +1,8 @@
 package com.node5.memberservice.auth.application;
 
 import com.node5.memberservice.auth.application.dto.*;
-import com.node5.memberservice.auth.domain.EndPointRepository;
-import com.node5.memberservice.auth.domain.Endpoint;
+import com.node5.memberservice.endpoint.application.EndPointService;
+import com.node5.memberservice.endpoint.domain.Endpoint;
 import com.node5.memberservice.auth.domain.OAuth;
 import com.node5.memberservice.auth.domain.OAuthRepository;
 import com.node5.memberservice.auth.exception.AuthErrorCode;
@@ -17,7 +17,6 @@ import com.node5.memberservice.member.domain.MemberRepository;
 import com.node5.memberservice.member.domain.MemberRole;
 import com.node5.memberservice.redis.application.RedisService;
 import io.jsonwebtoken.Claims;
-import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,11 +31,10 @@ import java.util.stream.Collectors;
 public class AuthService {
 
     private static final AntPathMatcher matcher = new AntPathMatcher();
-    private volatile Map<EndpointKey, List<Endpoint>> allowedEndpointCache;
 
+    private final EndPointService endPointService;
     private final OAuthRepository oAuthRepository;
     private final MemberRepository memberRepository;
-    private final EndPointRepository endPointRepository;
     private final Map<String, OAuthProviderService> providerMap;
     private final JwtProvider jwtProvider;
     private final MailService mailService;
@@ -47,46 +45,21 @@ public class AuthService {
 
 
     public AuthService(
+            EndPointService endPointService,
             OAuthRepository oAuthRepository,
             MemberRepository memberRepository,
-            EndPointRepository endPointRepository,
             List<OAuthProviderService> providerList,
             JwtProvider jwtProvider,
             MailService mailService,
             RedisService redisService
     ) {
+        this.endPointService = endPointService;
         this.oAuthRepository = oAuthRepository;
         this.memberRepository = memberRepository;
-        this.endPointRepository = endPointRepository;
         this.providerMap = providerList.stream().collect(Collectors.toMap(OAuthProviderService::getProviderName, provider -> provider));
         this.jwtProvider = jwtProvider;
         this.mailService = mailService;
         this.redisService = redisService;
-    }
-
-    @PostConstruct
-    public void init() {
-        refreshCache();
-    }
-
-    public void refreshCache() {
-        this.allowedEndpointCache = loadAllowedEndpoint();
-    }
-
-    private Map<EndpointKey, List<Endpoint>> loadAllowedEndpoint() {
-        Map<EndpointKey, List<Endpoint>> newCache = new HashMap<>();
-        List<Endpoint> endpoints = endPointRepository.findAll();
-        for (Endpoint endpoint : endpoints) {
-            EndpointKey key = new EndpointKey(endpoint.getRole(), endpoint.getHttpMethod());
-            newCache.computeIfAbsent(key, k -> new ArrayList<>())
-                    .add(endpoint);
-        }
-
-        return newCache.entrySet().stream()
-                .collect(Collectors.toUnmodifiableMap(
-                        Map.Entry::getKey,
-                        e -> List.copyOf(e.getValue())
-                ));
     }
 
     public LoginInfoResponse login(OAuthLoginCommand command) {
@@ -213,21 +186,7 @@ public class AuthService {
 
         Set<MemberRole> roles = member.getRoles();
 
-        // 스냅샷
-        Map<EndpointKey, List<Endpoint>> currentCache = this.allowedEndpointCache;
-
-        List<Endpoint> allowedEndpoints = roles.stream()
-                .flatMap(role -> currentCache.getOrDefault(
-                        new EndpointKey(role, command.method()),
-                        List.of()
-                ).stream())
-                .distinct()
-                .toList();
-
-        // 필요한가?
-        if (allowedEndpoints.isEmpty()) {
-            allowedEndpoints = endPointRepository.findAllowedEndpoints(member.getRoles(), command.method());
-        }
+        List<Endpoint> allowedEndpoints = endPointService.findAllowedEndpoints(roles, command.httpMethod());
 
         if (allowedEndpoints.isEmpty()) {
             return false;

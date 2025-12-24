@@ -1,4 +1,4 @@
-package com.node5.memberservice.auth.application.dto;
+package com.node5.memberservice.endpoint.application.dto;
 
 import com.node5.memberservice.member.domain.MemberRole;
 
