@@ -53,8 +53,6 @@ jobs:
 
           # 3. 개별 서비스 변경 시 해당 서비스만 빌드 대상으로 수집
           SVC=()
-          [ "${{ steps.filter.outputs.config }}" = "true" ] && SVC+=("config")
-          [ "${{ steps.filter.outputs.discovery }}" = "true" ] && SVC+=("discovery")
           [ "${{ steps.filter.outputs.apigateway }}" = "true" ] && SVC+=("apigateway")
           [ "${{ steps.filter.outputs.billing }}" = "true" ] && SVC+=("billing-service")
           [ "${{ steps.filter.outputs.catalog }}" = "true" ] && SVC+=("catalog-service")
