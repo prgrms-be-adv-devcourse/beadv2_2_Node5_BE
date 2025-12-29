@@ -30,6 +30,8 @@ spec:
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: prod
+            - name: JAVA_TOOL_OPTIONS
+              value: "-Xms128m -Xmx256m"
           envFrom:
             - secretRef:
                 name: billing-secret

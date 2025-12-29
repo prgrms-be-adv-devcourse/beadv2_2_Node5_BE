@@ -24,6 +24,9 @@ spec:
           imagePullPolicy: Always
           ports:
             - containerPort: 8888
+          env:
+            - name: JAVA_TOOL_OPTIONS
+              value: "-Xms128m -Xmx256m"
           resources:
             requests:
               memory: "256Mi"

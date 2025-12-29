@@ -32,6 +32,8 @@ spec:
               value: prod
             - name: SERVER_PORT
               value: "8080"
+            - name: JAVA_TOOL_OPTIONS
+              value: "-Xms128m -Xmx256m"
           envFrom:
             - secretRef:
                 name: catalog-secret
