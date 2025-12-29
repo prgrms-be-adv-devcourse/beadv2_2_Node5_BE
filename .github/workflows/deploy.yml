@@ -121,19 +121,24 @@ jobs:
 
   deploy:
     name: Deploy to Kubernetes
-    runs-on: self-hosted
+    runs-on: self-hosted  # EC2에서 직접 명령 실행
     needs: [detect, build-and-push]
     if: needs.detect.outputs.has_changes == 'true'
+    strategy:
+      fail-fast: false # 한 서비스가 실패해도 다른 서비스 배포는 진행
+      matrix: ${{ fromJson(needs.detect.outputs.matrix) }} # 변경된 서비스만 배포 대상
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Verify kubectl
-        run: kubectl version --client
-
-      - name: Deploy to Kubernetes
+      - name: Deploy & Zero-Downtime Rollout
         run: |
-          kubectl apply -k k8s/
+          # 1. 변경된 특정 서비스의 설정만 적용 (또는 전체 적용)
+          kubectl apply -f k8s/${{ matrix.service }}.yaml
+          
+          # 2. latest 태그 사용 시 필수: 이미지 강제 갱신 및 무중단 배포 시작
+          # Deployment 이름이 서비스명과 같다고 가정합니다.
+          kubectl rollout restart deployment/${{ matrix.service }}
 
     # EC2 배포
 #  deploy:
