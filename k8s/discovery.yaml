@@ -6,10 +6,7 @@ metadata:
     app: discovery
 spec:
   strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 0
-      maxSurge: 1
+    type: Recreate
   replicas: 1
   revisionHistoryLimit: 2
   selector:
