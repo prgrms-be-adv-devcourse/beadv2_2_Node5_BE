@@ -1,7 +1,8 @@
 package com.node5.memberservice.auth.application;
 
 import com.node5.memberservice.auth.application.dto.*;
-import com.node5.memberservice.auth.domain.EndPointRepository;
+import com.node5.memberservice.endpoint.application.EndPointService;
+import com.node5.memberservice.endpoint.domain.Endpoint;
 import com.node5.memberservice.auth.domain.OAuth;
 import com.node5.memberservice.auth.domain.OAuthRepository;
 import com.node5.memberservice.auth.exception.AuthErrorCode;
@@ -13,26 +14,27 @@ import com.node5.memberservice.auth.util.TokenType;
 import com.node5.memberservice.mail.application.MailService;
 import com.node5.memberservice.member.domain.Member;
 import com.node5.memberservice.member.domain.MemberRepository;
+import com.node5.memberservice.member.domain.MemberRole;
 import com.node5.memberservice.redis.application.RedisService;
 import io.jsonwebtoken.Claims;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.AntPathMatcher;
 
 import java.security.SecureRandom;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
 public class AuthService {
 
+    private static final AntPathMatcher matcher = new AntPathMatcher();
+
+    private final EndPointService endPointService;
     private final OAuthRepository oAuthRepository;
     private final MemberRepository memberRepository;
-    private final EndPointRepository endPointRepository;
     private final Map<String, OAuthProviderService> providerMap;
     private final JwtProvider jwtProvider;
     private final MailService mailService;
@@ -43,17 +45,17 @@ public class AuthService {
 
 
     public AuthService(
+            EndPointService endPointService,
             OAuthRepository oAuthRepository,
             MemberRepository memberRepository,
-            EndPointRepository endPointRepository,
             List<OAuthProviderService> providerList,
             JwtProvider jwtProvider,
             MailService mailService,
             RedisService redisService
     ) {
+        this.endPointService = endPointService;
         this.oAuthRepository = oAuthRepository;
         this.memberRepository = memberRepository;
-        this.endPointRepository = endPointRepository;
         this.providerMap = providerList.stream().collect(Collectors.toMap(OAuthProviderService::getProviderName, provider -> provider));
         this.jwtProvider = jwtProvider;
         this.mailService = mailService;
@@ -179,6 +181,22 @@ public class AuthService {
     }
 
     public boolean authorize(AuthorizeCommand command) {
-        return endPointRepository.authorize(command);
+        Member member = memberRepository.findByIdAndDeletedAtIsNull(command.memberId())
+                .orElseThrow(() -> new AuthException(AuthErrorCode.MEMBER_NOT_FOUND));
+
+        Set<MemberRole> roles = member.getRoles();
+
+        List<Endpoint> allowedEndpoints = endPointService.findAllowedEndpoints(roles, command.httpMethod());
+
+        if (allowedEndpoints.isEmpty()) {
+            return false;
+        }
+
+        for (Endpoint endpoint : allowedEndpoints) {
+            if (matcher.match(endpoint.getPathPattern(), command.path())) {
+                return true;
+            }
+        }
+        return false;
     }
 }

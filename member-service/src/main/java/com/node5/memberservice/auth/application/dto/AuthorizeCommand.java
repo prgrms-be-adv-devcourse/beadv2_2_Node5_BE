@@ -4,7 +4,7 @@ import java.util.UUID;
 
 public record AuthorizeCommand(
         UUID memberId,
-        String method,
+        String httpMethod,
         String path
 ) {
 }

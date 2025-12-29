@@ -11,13 +11,12 @@ public record WalletSettleInfo(
         Long balance,
         LocalDateTime payoutAt
 ) {
-
-    public static WalletSettleInfo from(Wallet wallet) {
+    public static WalletSettleInfo from(Wallet wallet, LocalDateTime payoutAt) {
         return new WalletSettleInfo(
                 wallet.getId(),
                 wallet.getMemberId(),
                 wallet.getBalance(),
-                LocalDateTime.now()
+                payoutAt
         );
     }
 }

@@ -15,3 +15,14 @@ spring:
           search-locations: file:./config/config
 #          search-locations: ${search.location:file:///${user.home}/workspace.edu/egovframe-msa-edu/config} # Windows
 #           search-locations: file://${user.home}/workspace.edu/egovframe-msa-edu/config # MacOS
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+

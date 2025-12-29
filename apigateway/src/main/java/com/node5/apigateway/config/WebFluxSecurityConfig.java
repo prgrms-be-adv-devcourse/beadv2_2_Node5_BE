@@ -27,7 +27,7 @@ public class WebFluxSecurityConfig {
             "/member-service/api/v1/auth/email/**",
             "/member-service/api/v1/auth/refresh-token",
             "/?*-service/swagger-ui/**",
-            "/?*-service/actuator/?*", "/actuator/?*",
+            "/?*-service/actuator/**", "/actuator/**",
             "/v3/api-docs/**", "/?*-service/v3/api-docs", "/swagger*/**", "/webjars/**"
     };
     private final static String[] GUEST_PERMITALL_ANTPATTERNS = {

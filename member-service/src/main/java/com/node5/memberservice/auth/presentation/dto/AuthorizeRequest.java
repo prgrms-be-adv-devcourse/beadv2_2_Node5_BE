@@ -6,10 +6,10 @@ import java.util.UUID;
 
 public record AuthorizeRequest(
         UUID memberId,
-        String method,
+        String httpMethod,
         String path
 ) {
     public AuthorizeCommand toCommand() {
-        return new AuthorizeCommand(memberId, method, path);
+        return new AuthorizeCommand(memberId, httpMethod, path);
     }
 }

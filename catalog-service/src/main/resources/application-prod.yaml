@@ -2,14 +2,14 @@ spring:
   config:
     import: optional:configserver:http://config-service:8888
   elasticsearch:
-    uris: http://elasticsearch:9200
+    uris: http://${ES_HOST}:9200
     connection-timeout: 1s
     socket-timeout: 3s
   cloud:
     config:
       fail-fast: true
   kafka:
-    bootstrap-servers: kafka:9092
+    bootstrap-servers: ${KAFKA_HOST}:9092
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
