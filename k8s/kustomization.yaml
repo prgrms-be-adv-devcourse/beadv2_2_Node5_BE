@@ -6,7 +6,7 @@ resources:
   - billing-service.yaml
   - catalog-service.yaml
   - config-repo-configmap.yaml
-  - config-service.yaml
+  - config.yaml
   - discovery.yaml
   - member-service.yaml
   - order-service.yaml
