@@ -38,10 +38,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          
+          # 1. 인프라 포함 전체 리스트
+          ALL='["apigateway","config","discovery","billing-service","catalog-service","member-service","order-service","settlement-service","shop-service","subscription-service"]'
 
-          ALL='["apigateway","billing-service","catalog-service","member-service","order-service","settlement-service","shop-service","subscription-service"]'
-
-          # B안: common/config/discovery 중 하나라도 true면 전체
+          # 2. 인프라 성격의 폴더 변경 시 전체 배포
           if [ "${{ steps.filter.outputs.common }}" = "true" ] || \
              [ "${{ steps.filter.outputs.config }}" = "true" ] || \
              [ "${{ steps.filter.outputs.discovery }}" = "true" ]; then
@@ -50,7 +51,7 @@ jobs:
             exit 0
           fi
 
-          # 개별 서비스만 모으기
+          # 3. 개별 서비스 변경 시 해당 서비스만 빌드 대상으로 수집
           SVC=()
           [ "${{ steps.filter.outputs.apigateway }}" = "true" ] && SVC+=("apigateway")
           [ "${{ steps.filter.outputs.billing }}" = "true" ] && SVC+=("billing-service")
