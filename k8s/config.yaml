@@ -1,9 +1,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: config-service
+  name: config
   labels:
-    app: config-service
+    app: config
 spec:
   strategy:
     type: Recreate
@@ -11,14 +11,14 @@ spec:
   revisionHistoryLimit: 2
   selector:
     matchLabels:
-      app: config-service
+      app: config
   template:
     metadata:
       labels:
-        app: config-service
+        app: config
     spec:
       containers:
-        - name: config-service
+        - name: config
           image: node5dev/config:latest
           imagePullPolicy: Always
           ports:
@@ -26,14 +26,15 @@ spec:
           resources:
             requests:
               memory: "256Mi"
-              cpu: "200m"
+              cpu: "100m"
             limits:
               memory: "512Mi"
-              cpu: "500m"
+              cpu: "400m"
           startupProbe:
             httpGet:
               path: /actuator/health
               port: 8888
+            initialDelaySeconds: 60
             failureThreshold: 60
             periodSeconds: 10
             timeoutSeconds: 5
@@ -66,11 +67,11 @@ kind: Service
 metadata:
   name: config-service
   labels:
-    app: config-service
+    app: config
 spec:
   type: ClusterIP
   selector:
-    app: config-service
+    app: config
   ports:
     - name: http
       port: 8888
