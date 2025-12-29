@@ -26,6 +26,11 @@ data:
         health:
           probes:
             enabled: true
+    server:
+      shutdown: graceful
+    spring:
+      lifecycle:
+        timeout-per-shutdown-phase: 30s
   billing-service.yaml: |
     spring:
       datasource:
