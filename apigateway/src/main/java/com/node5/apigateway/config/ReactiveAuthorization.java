@@ -55,10 +55,6 @@ public class ReactiveAuthorization implements ReactiveAuthorizationManager<Autho
                 return Mono.just(new AuthorizationDecision(false));
             }
 
-            if (!(claims.get("memberStatus") instanceof String memberStatus) || memberStatus.isBlank()) {
-                return Mono.just(new AuthorizationDecision(false));
-            }
-
             context.getExchange().getAttributes().put("cached_claims", claims);
 
             return Mono.just(new AuthorizationDecision(true));
