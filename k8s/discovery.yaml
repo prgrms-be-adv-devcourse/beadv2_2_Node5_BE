@@ -6,7 +6,10 @@ metadata:
     app: discovery
 spec:
   strategy:
-    type: Recreate
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
   replicas: 1
   revisionHistoryLimit: 2
   selector:
@@ -17,6 +20,7 @@ spec:
       labels:
         app: discovery
     spec:
+      terminationGracePeriodSeconds: 30
       containers:
         - name: discovery
           image: node5dev/discovery:latest
