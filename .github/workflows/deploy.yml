@@ -23,8 +23,8 @@ jobs:
         uses: dorny/paths-filter@v3
         with:
           # 핵심 수정: PR 머지 시에는 머지 전(before)과 비교하고,
-          # 수동 실행 시에는 현재 main의 부모(main^)와 비교합니다.
-          base: ${{ github.event.before || 'main^' }}
+          # 수동 실행 시에는 이전 커밋과 비교합니다.
+          base: ${{ github.event.before || 'HEAD~1' }}
           filters: |
             common: ["common/**"]
             config: ["config/**"]
