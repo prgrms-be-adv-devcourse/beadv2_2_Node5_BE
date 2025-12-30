@@ -21,7 +21,7 @@ import com.node5.catalogservice.product.exception.OnSaleProductNotFoundException
 import com.node5.catalogservice.product.exception.ProductNotFoundException;
 import com.node5.catalogservice.product.exception.ShopForbiddenException;
 import com.node5.catalogservice.product.exception.ShopNotFoundException;
-import com.node5.catalogservice.shop.client.ShopServiceClient;
+import com.node5.catalogservice.shop.client.ShopOwnershipClient;
 
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
@@ -39,7 +39,7 @@ public class ProductService {
 
 	private final ProductRepository productRepository;
 	private final ProductIndexProducer productIndexProducer;
-	private final ShopServiceClient shopServiceClient;
+	private final ShopOwnershipClient shopOwnershipClient;
 
 	public Page<ProductInfo> getOnSaleProducts(Pageable pageable) {
 		return productRepository.findByStatus(ProductStatus.ON_SALE, pageable)
@@ -159,11 +159,13 @@ public class ProductService {
 
 	private void validateShopOwnership(UUID memberId, UUID shopId) {
 		try {
-			shopServiceClient.getShopInfo(memberId, shopId);
+			UUID ownerMemberId = shopOwnershipClient.getOwnerMemberId(shopId);
+
+			if (!ownerMemberId.equals(memberId)) {
+				throw new ShopForbiddenException();
+			}
 		} catch (FeignException.NotFound e) {
 			throw new ShopNotFoundException();
-		} catch (FeignException.Forbidden e) {
-			throw new ShopForbiddenException();
 		}
 	}
 }
