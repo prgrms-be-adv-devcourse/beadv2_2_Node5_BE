@@ -51,11 +51,11 @@ public class ProductService {
 	}
 
 	@Transactional
-	public ProductInfo createProduct(UUID memberId, ProductCommand command) {
-		validateShopOwnership(memberId, command.shopId());
+	public ProductInfo createProduct(UUID memberId, UUID shopId, ProductCommand command) {
+		validateShopOwnership(memberId, shopId);
 
 		Product product = Product.create(
-			command.shopId(),
+			shopId,
 			command.name(),
 			command.description(),
 			command.price(),

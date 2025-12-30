@@ -44,9 +44,8 @@ public record ProductRequest(
 	String thumbnailUrl
 ) {
 
-	public ProductCommand toCommand(UUID shopId) {
+	public ProductCommand toCommand() {
 		return new ProductCommand(
-			shopId,
 			name,
 			description,
 			price,

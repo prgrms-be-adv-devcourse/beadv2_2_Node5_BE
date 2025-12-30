@@ -15,7 +15,7 @@ import com.node5.catalogservice.product.application.ProductService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("${api.v1}/internal/products")
+@RequestMapping("internal/products")
 @RequiredArgsConstructor
 public class ProductInternalController {
 
