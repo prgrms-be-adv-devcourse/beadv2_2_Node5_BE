@@ -18,10 +18,10 @@ import com.node5.catalogservice.product.domain.Product;
 import com.node5.catalogservice.product.domain.ProductRepository;
 import com.node5.catalogservice.product.domain.ProductStatus;
 import com.node5.catalogservice.product.exception.OnSaleProductNotFoundException;
+import com.node5.catalogservice.product.exception.ProductErrorCode;
 import com.node5.catalogservice.product.exception.ProductNotFoundException;
-import com.node5.catalogservice.product.exception.ShopForbiddenException;
-import com.node5.catalogservice.product.exception.ShopNotFoundException;
 import com.node5.catalogservice.shop.client.ShopOwnershipClient;
+import com.node5.common.exception.BaseException;
 
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
@@ -162,10 +162,12 @@ public class ProductService {
 			UUID ownerMemberId = shopOwnershipClient.getOwnerMemberId(shopId);
 
 			if (!ownerMemberId.equals(memberId)) {
-				throw new ShopForbiddenException();
+				throw new BaseException(ProductErrorCode.SHOP_FORBIDDEN);
 			}
 		} catch (FeignException.NotFound e) {
-			throw new ShopNotFoundException();
+			throw new BaseException(ProductErrorCode.SHOP_NOT_FOUND);
+		} catch (FeignException e) {
+			throw new BaseException(ProductErrorCode.SHOP_SERVICE_UNAVAILABLE);
 		}
 	}
 }
