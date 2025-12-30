@@ -31,10 +31,10 @@ import com.node5.catalogservice.product.domain.ProductStatus;
 import com.node5.catalogservice.product.exception.OnSaleProductNotFoundException;
 import com.node5.catalogservice.product.exception.ProductNotFoundException;
 import com.node5.catalogservice.product.exception.ProductStatusChangeNotAllowedException;
-import com.node5.catalogservice.product.exception.ShopForbiddenException;
-import com.node5.catalogservice.product.exception.ShopNotFoundException;
-import com.node5.catalogservice.shop.client.ShopServiceClient;
+import com.node5.catalogservice.product.exception.ProductErrorCode;
+import com.node5.catalogservice.shop.client.ShopOwnershipClient;
 import com.node5.catalogservice.testsupport.ProductTestFactory;
+import com.node5.common.exception.BaseException;
 
 import feign.FeignException;
 import feign.Request;
@@ -50,7 +50,7 @@ class ProductServiceTest {
 	private ProductIndexProducer productIndexProducer;
 
 	@Mock
-	private ShopServiceClient shopServiceClient;
+	private ShopOwnershipClient shopOwnershipClient;
 
 	@InjectMocks
 	private ProductService productService;
@@ -64,7 +64,6 @@ class ProductServiceTest {
 		UUID shopId = uuid();
 
 		ProductCommand command = new ProductCommand(
-			shopId,
 			"name",
 			"desc",
 			BigDecimal.valueOf(1000),
@@ -74,29 +73,28 @@ class ProductServiceTest {
 			"thumb.png"
 		);
 
-		given(shopServiceClient.getShopInfo(memberId, shopId)).willReturn(null);
+		given(shopOwnershipClient.getOwnerMemberId(shopId)).willReturn(memberId);
 
 		Product saved = ProductTestFactory.onSale();
 		given(productRepository.save(any(Product.class))).willReturn(saved);
 
 		// when
-		ProductInfo result = productService.createProduct(memberId, command);
+		ProductInfo result = productService.createProduct(memberId, shopId, command);
 
 		// then
 		assertThat(result).isNotNull();
-		then(shopServiceClient).should().getShopInfo(memberId, shopId);
+		then(shopOwnershipClient).should().getOwnerMemberId(shopId);
 		then(productRepository).should().save(any(Product.class));
 		then(productIndexProducer).should().sendProductIndexEvent(saved);
 	}
 
 	@Test
-	void 상품_생성시_존재하지_않는_상점이면_ShopNotFoundException() {
+	void 상품_생성시_존재하지_않는_상점이면_SHOP_NOT_FOUND_BaseException() {
 		// given
 		UUID memberId = uuid();
 		UUID shopId = uuid();
 
 		ProductCommand command = new ProductCommand(
-			shopId,
 			"name",
 			"desc",
 			BigDecimal.valueOf(1000),
@@ -106,24 +104,27 @@ class ProductServiceTest {
 			"thumb.png"
 		);
 
-		given(shopServiceClient.getShopInfo(memberId, shopId)).willThrow(feignNotFound());
+		given(shopOwnershipClient.getOwnerMemberId(shopId)).willThrow(feignNotFound());
 
 		// when & then
-		assertThatThrownBy(() -> productService.createProduct(memberId, command))
-			.isInstanceOf(ShopNotFoundException.class);
+		assertThatThrownBy(() -> productService.createProduct(memberId, shopId, command))
+			.isInstanceOf(BaseException.class)
+			.satisfies(ex -> {
+				BaseException be = (BaseException) ex;
+				assertThat(be.getErrorCode()).isEqualTo(ProductErrorCode.SHOP_NOT_FOUND);
+			});
 
 		then(productRepository).shouldHaveNoInteractions();
 		then(productIndexProducer).shouldHaveNoInteractions();
 	}
 
 	@Test
-	void 상품_생성시_상점_소유자가_아니면_ShopForbiddenException() {
+	void 상품_생성시_상점_소유자가_아니면_SHOP_FORBIDDEN_BaseException() {
 		// given
 		UUID memberId = uuid();
 		UUID shopId = uuid();
 
 		ProductCommand command = new ProductCommand(
-			shopId,
 			"name",
 			"desc",
 			BigDecimal.valueOf(1000),
@@ -133,11 +134,46 @@ class ProductServiceTest {
 			"thumb.png"
 		);
 
-		given(shopServiceClient.getShopInfo(memberId, shopId)).willThrow(feignForbidden());
+		UUID otherOwner = uuid();
+		given(shopOwnershipClient.getOwnerMemberId(shopId)).willReturn(otherOwner);
 
 		// when & then
-		assertThatThrownBy(() -> productService.createProduct(memberId, command))
-			.isInstanceOf(ShopForbiddenException.class);
+		assertThatThrownBy(() -> productService.createProduct(memberId, shopId, command))
+			.isInstanceOf(BaseException.class)
+			.satisfies(ex -> {
+				BaseException be = (BaseException) ex;
+				assertThat(be.getErrorCode()).isEqualTo(ProductErrorCode.SHOP_FORBIDDEN);
+			});
+
+		then(productRepository).shouldHaveNoInteractions();
+		then(productIndexProducer).shouldHaveNoInteractions();
+	}
+
+	@Test
+	void 상품_생성시_상점서비스_장애면_SHOP_SERVICE_UNAVAILABLE_BaseException() {
+		// given
+		UUID memberId = uuid();
+		UUID shopId = uuid();
+
+		ProductCommand command = new ProductCommand(
+			"name",
+			"desc",
+			BigDecimal.valueOf(1000),
+			10,
+			ProductStatus.ON_SALE,
+			anyCategory(),
+			"thumb.png"
+		);
+
+		given(shopOwnershipClient.getOwnerMemberId(shopId)).willThrow(feignInternalServerError());
+
+		// when & then
+		assertThatThrownBy(() -> productService.createProduct(memberId, shopId, command))
+			.isInstanceOf(BaseException.class)
+			.satisfies(ex -> {
+				BaseException be = (BaseException) ex;
+				assertThat(be.getErrorCode()).isEqualTo(ProductErrorCode.SHOP_SERVICE_UNAVAILABLE);
+			});
 
 		then(productRepository).shouldHaveNoInteractions();
 		then(productIndexProducer).shouldHaveNoInteractions();
@@ -162,7 +198,7 @@ class ProductServiceTest {
 		);
 
 		given(productRepository.findById(productId)).willReturn(Optional.of(existing));
-		given(shopServiceClient.getShopInfo(memberId, shopId)).willReturn(null);
+		given(shopOwnershipClient.getOwnerMemberId(shopId)).willReturn(memberId);
 		given(productRepository.save(existing)).willReturn(existing);
 
 		// when
@@ -170,7 +206,7 @@ class ProductServiceTest {
 
 		// then
 		assertThat(result).isNotNull();
-		then(shopServiceClient).should().getShopInfo(memberId, shopId);
+		then(shopOwnershipClient).should().getOwnerMemberId(shopId);
 		then(productRepository).should().save(existing);
 		then(productIndexProducer).should().sendProductUpdateEvent(existing);
 	}
@@ -196,7 +232,7 @@ class ProductServiceTest {
 		assertThatThrownBy(() -> productService.updateProduct(memberId, productId, patch))
 			.isInstanceOf(ProductNotFoundException.class);
 
-		then(shopServiceClient).shouldHaveNoInteractions();
+		then(shopOwnershipClient).shouldHaveNoInteractions();
 		then(productRepository).should(never()).save(any());
 		then(productIndexProducer).shouldHaveNoInteractions();
 	}
@@ -211,7 +247,7 @@ class ProductServiceTest {
 		UUID shopId = existing.getShopId();
 
 		given(productRepository.findById(productId)).willReturn(Optional.of(existing));
-		given(shopServiceClient.getShopInfo(memberId, shopId)).willReturn(null);
+		given(shopOwnershipClient.getOwnerMemberId(shopId)).willReturn(memberId);
 		given(productRepository.save(existing)).willReturn(existing);
 
 		// when
@@ -233,7 +269,7 @@ class ProductServiceTest {
 		UUID shopId = existing.getShopId();
 
 		given(productRepository.findById(productId)).willReturn(Optional.of(existing));
-		given(shopServiceClient.getShopInfo(memberId, shopId)).willReturn(null);
+		given(shopOwnershipClient.getOwnerMemberId(shopId)).willReturn(memberId);
 		given(productRepository.save(existing)).willReturn(existing);
 
 		// when
@@ -337,7 +373,7 @@ class ProductServiceTest {
 		UUID memberId = uuid();
 		UUID shopId = uuid();
 
-		given(shopServiceClient.getShopInfo(memberId, shopId)).willReturn(null);
+		given(shopOwnershipClient.getOwnerMemberId(shopId)).willReturn(memberId);
 
 		Page<Product> page = new PageImpl<>(
 			List.of(ProductTestFactory.onSale()),
@@ -351,7 +387,7 @@ class ProductServiceTest {
 
 		// then
 		assertThat(result.getTotalElements()).isEqualTo(1);
-		then(shopServiceClient).should().getShopInfo(memberId, shopId);
+		then(shopOwnershipClient).should().getOwnerMemberId(shopId);
 		then(productRepository).should().findByShopId(shopId, DEFAULT_PAGE);
 	}
 
@@ -365,7 +401,7 @@ class ProductServiceTest {
 		UUID shopId = discontinued.getShopId();
 
 		given(productRepository.findById(productId)).willReturn(Optional.of(discontinued));
-		given(shopServiceClient.getShopInfo(memberId, shopId)).willReturn(null);
+		given(shopOwnershipClient.getOwnerMemberId(shopId)).willReturn(memberId);
 
 		// when & then
 		assertThatThrownBy(() -> productService.updateStatus(memberId, productId, ProductStatus.HIDDEN))
@@ -376,16 +412,21 @@ class ProductServiceTest {
 	}
 
 	@Test
-	void 특정상점_상품조회시_소유자가_아니면_ShopForbiddenException() {
+	void 특정상점_상품조회시_소유자가_아니면_SHOP_FORBIDDEN_BaseException() {
 		// given
 		UUID memberId = uuid();
 		UUID shopId = uuid();
 
-		given(shopServiceClient.getShopInfo(memberId, shopId)).willThrow(feignForbidden());
+		UUID otherOwner = uuid();
+		given(shopOwnershipClient.getOwnerMemberId(shopId)).willReturn(otherOwner);
 
 		// when & then
 		assertThatThrownBy(() -> productService.getProductsByShop(memberId, shopId, PageRequest.of(0, 10)))
-			.isInstanceOf(ShopForbiddenException.class);
+			.isInstanceOf(BaseException.class)
+			.satisfies(ex -> {
+				BaseException be = (BaseException) ex;
+				assertThat(be.getErrorCode()).isEqualTo(ProductErrorCode.SHOP_FORBIDDEN);
+			});
 
 		then(productRepository).shouldHaveNoInteractions();
 	}
@@ -406,8 +447,8 @@ class ProductServiceTest {
 		return new FeignException.NotFound("NOT_FOUND", request(), null, null);
 	}
 
-	private static FeignException.Forbidden feignForbidden() {
-		return new FeignException.Forbidden("FORBIDDEN", request(), null, null);
+	private static FeignException.InternalServerError feignInternalServerError() {
+		return new FeignException.InternalServerError("INTERNAL_SERVER_ERROR", request(), null, null);
 	}
 
 	private static Request request() {
