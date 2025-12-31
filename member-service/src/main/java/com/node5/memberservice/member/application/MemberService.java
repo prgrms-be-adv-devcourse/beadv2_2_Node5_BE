@@ -2,10 +2,7 @@ package com.node5.memberservice.member.application;
 
 import com.node5.memberservice.auth.domain.OAuthRepository;
 import com.node5.memberservice.member.application.dto.*;
-import com.node5.memberservice.member.domain.Member;
-import com.node5.memberservice.member.domain.MemberRepository;
-import com.node5.memberservice.member.domain.MemberRole;
-import com.node5.memberservice.member.domain.MemberStatus;
+import com.node5.memberservice.member.domain.*;
 import com.node5.memberservice.member.exception.MemberErrorCode;
 import com.node5.memberservice.member.exception.MemberException;
 import com.node5.memberservice.redis.application.RedisService;
@@ -16,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -25,6 +23,7 @@ public class MemberService {
 
     private final MemberRepository memberRepository;
     private final OAuthRepository oAuthRepository;
+    private final RoleRepository roleRepository;
     private final RedisService redisService;
 
     public MemberInfoResponse findById(UUID memberId) {
@@ -70,6 +69,11 @@ public class MemberService {
 
     public Page<MemberInfoAdminResponse> getMembers(UUID adminId, Pageable pageable) {
         return memberRepository.findAllByIdNot(adminId, pageable).map(MemberInfoAdminResponse::from);
+    }
+
+    public RoleResponse getMemberRoles() {
+        List<Role> roles = roleRepository.findAll();
+        return RoleResponse.from(roles);
     }
 
     @Transactional

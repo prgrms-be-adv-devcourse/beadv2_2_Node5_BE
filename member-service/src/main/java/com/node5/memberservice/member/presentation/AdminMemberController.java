@@ -1,7 +1,6 @@
 package com.node5.memberservice.member.presentation;
 
 import com.node5.memberservice.member.application.MemberService;
-import com.node5.memberservice.member.application.RoleService;
 import com.node5.memberservice.member.application.dto.MemberInfoAdminResponse;
 import com.node5.memberservice.member.application.dto.MemberStatusResponse;
 import com.node5.memberservice.member.application.dto.RoleResponse;
@@ -18,29 +17,28 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("${api.v1}/admin")
+@RequestMapping("${api.v1}/admin/members")
 public class AdminMemberController {
 
-    private final RoleService roleService;
     private final MemberService memberService;
 
-    @GetMapping("/roles")
-    public ResponseEntity<RoleResponse> getRoles() {
-        return ResponseEntity.ok(roleService.getRoles());
-    }
-
-    @GetMapping("/members")
+    @GetMapping
     public ResponseEntity<Page<MemberInfoAdminResponse>> getMembers(@RequestHeader("Member-Id") UUID adminId, Pageable pageable) {
         return ResponseEntity.ok(memberService.getMembers(adminId, pageable));
     }
 
-    @GetMapping("/members/statuses")
+    @GetMapping("/roles")
+    public ResponseEntity<RoleResponse> getMemberRoles() {
+        return ResponseEntity.ok(memberService.getMemberRoles());
+    }
+
+    @GetMapping("/statuses")
     public ResponseEntity<MemberStatusResponse> getMemberStatuses() {
         return ResponseEntity.ok(memberService.getMemberStatuses());
     }
 
 
-    @PatchMapping("/members/{memberId}/status")
+    @PatchMapping("/{memberId}/status")
     public ResponseEntity<Void> modifyMemberStatus(
             @RequestHeader("Member-Id") UUID adminId,
             @PathVariable UUID memberId,
