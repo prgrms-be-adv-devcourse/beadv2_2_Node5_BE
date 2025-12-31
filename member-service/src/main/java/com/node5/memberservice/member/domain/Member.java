@@ -12,7 +12,6 @@ import org.hibernate.annotations.Type;
 
 import java.time.LocalDateTime;
 import java.util.EnumSet;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
@@ -72,6 +71,17 @@ public class Member extends BaseEntity {
 
     public void deleteRole(MemberRole role) {
         this.roles.remove(role);
+    }
+
+    public void modifyStatus(MemberStatus status) {
+        if (this.status == status) return;
+        if (this.status == MemberStatus.DELETED) {
+            this.deletedAt = null;
+        }
+        this.status = status;
+        if (status == MemberStatus.DELETED) {
+            this.deletedAt = LocalDateTime.now();
+        }
     }
 
     public void modifyInfo(MemberModifyCommand command) {

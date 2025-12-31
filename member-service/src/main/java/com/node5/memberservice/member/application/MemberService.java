@@ -1,13 +1,11 @@
 package com.node5.memberservice.member.application;
 
 import com.node5.memberservice.auth.domain.OAuthRepository;
-import com.node5.memberservice.member.application.dto.MemberInfoAdminResponse;
-import com.node5.memberservice.member.application.dto.MemberInfoResponse;
-import com.node5.memberservice.member.application.dto.MemberModifyCommand;
-import com.node5.memberservice.member.application.dto.RoleModifyCommand;
+import com.node5.memberservice.member.application.dto.*;
 import com.node5.memberservice.member.domain.Member;
 import com.node5.memberservice.member.domain.MemberRepository;
 import com.node5.memberservice.member.domain.MemberRole;
+import com.node5.memberservice.member.domain.MemberStatus;
 import com.node5.memberservice.member.exception.MemberErrorCode;
 import com.node5.memberservice.member.exception.MemberException;
 import com.node5.memberservice.redis.application.RedisService;
@@ -72,5 +70,15 @@ public class MemberService {
 
     public Page<MemberInfoAdminResponse> getMembers(Pageable pageable) {
         return memberRepository.findAll(pageable).map(MemberInfoAdminResponse::from);
+    }
+
+    @Transactional
+    public void modifyMemberStatus(UUID memberId, MemberStatusModifyCommand command) {
+        Member member = memberRepository.findById(memberId).orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
+        member.modifyStatus(command.status());
+    }
+
+    public MemberStatusResponse getMemberStatuses() {
+        return MemberStatusResponse.from(MemberStatus.values());
     }
 }

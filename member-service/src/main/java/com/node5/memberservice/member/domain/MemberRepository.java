@@ -12,4 +12,6 @@ public interface MemberRepository {
 
     Member save(Member member);
     Page<Member> findAll(Pageable pageable);
+
+    Optional<Member> findById(UUID id);
 }

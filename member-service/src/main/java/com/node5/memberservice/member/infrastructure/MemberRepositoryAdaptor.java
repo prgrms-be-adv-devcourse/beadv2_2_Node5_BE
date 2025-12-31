@@ -35,4 +35,9 @@ public class MemberRepositoryAdaptor implements MemberRepository {
     public Page<Member> findAll(Pageable pageable) {
         return memberJpaRepository.findAll(pageable);
     }
+
+    @Override
+    public Optional<Member> findById(UUID id) {
+        return memberJpaRepository.findById(id);
+    }
 }
