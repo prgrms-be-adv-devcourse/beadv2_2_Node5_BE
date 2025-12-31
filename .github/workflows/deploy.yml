@@ -11,72 +11,65 @@ jobs:
   detect:
     runs-on: ubuntu-24.04
     outputs:
-      matrix: ${{ steps.out.outputs.matrix }}
-      has_changes: ${{ steps.out.outputs.has_changes }}
+      matrix: ${{ steps.detect.outputs.matrix }}
+      has_changes: ${{ steps.detect.outputs.has_changes }}
+      cloud_changed: ${{ steps.detect.outputs.cloud_changed }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0  # 전체 히스토리를 가져와야 PR 이전 시점과 비교가 가능합니다.
 
-      - name: Detect changes
-        id: filter
-        uses: dorny/paths-filter@v3
-        with:
-          # 핵심 수정: PR 머지 시에는 머지 전(before)과 비교하고,
-          # 수동 실행 시에는 이전 커밋과 비교합니다.
-          base: ${{ github.event.before || 'HEAD~1' }}
-          filters: |
-            common: ["common/**"]
-            config: ["config/**"]
-            discovery: ["discovery/**"]
-            apigateway: ["apigateway/**"]
-            billing: ["billing-service/**"]
-            catalog: ["catalog-service/**"]
-            member: ["member-service/**"]
-            order: ["order-service/**"]
-            settlement: ["settlement-service/**"]
-            shop: ["shop-service/**"]
-            subscription: ["subscription-service/**"]
-
-      - id: out
+      - id: detect
         shell: bash
         run: |
           set -euo pipefail
           
-          # 1. 인프라 포함 전체 리스트
-          ALL='["apigateway","config","discovery","billing-service","catalog-service","member-service","order-service","settlement-service","shop-service","subscription-service"]'
+          ALL='["billing-service","catalog-service","member-service","order-service","settlement-service","shop-service","subscription-service"]'
 
-          # 2. 인프라 성격의 폴더 변경 시 전체 배포
-          if [ "${{ steps.filter.outputs.common }}" = "true" ] || \
-             [ "${{ steps.filter.outputs.config }}" = "true" ] || \
-             [ "${{ steps.filter.outputs.discovery }}" = "true" ]; then
+          # 수동 실행 시 전체 배포
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "has_changes=true" >> "$GITHUB_OUTPUT"
+            echo "cloud_changed=true" >> "$GITHUB_OUTPUT"
             echo "matrix={\"service\":$ALL}" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
-          # 3. 개별 서비스 변경 시 (PR에 포함된 모든 커밋의 변경사항이 수집됨)
-          SVC=()
-          [ "${{ steps.filter.outputs.apigateway }}" = "true" ] && SVC+=("apigateway")
-          [ "${{ steps.filter.outputs.billing }}" = "true" ] && SVC+=("billing-service")
-          [ "${{ steps.filter.outputs.catalog }}" = "true" ] && SVC+=("catalog-service")
-          [ "${{ steps.filter.outputs.member }}" = "true" ] && SVC+=("member-service")
-          [ "${{ steps.filter.outputs.order }}" = "true" ] && SVC+=("order-service")
-          [ "${{ steps.filter.outputs.settlement }}" = "true" ] && SVC+=("settlement-service")
-          [ "${{ steps.filter.outputs.shop }}" = "true" ] && SVC+=("shop-service")
-          [ "${{ steps.filter.outputs.subscription }}" = "true" ] && SVC+=("subscription-service")
+          BASE="${{ github.event.before }}"
+          HEAD="${{ github.sha }}"
+          CHANGED="$(git diff --name-only "$BASE" "$HEAD")"
 
-          if [ "${#SVC[@]}" -eq 0 ]; then
+          if [ -z "$CHANGED" ]; then
             echo "has_changes=false" >> "$GITHUB_OUTPUT"
+            echo "cloud_changed=false" >> "$GITHUB_OUTPUT"
             echo 'matrix={"service":[]}' >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
-          # bash 배열 -> JSON
-          JSON=$(printf '%s\n' "${SVC[@]}" | jq -R . | jq -s .)
-
+          # cloud/common 중 하나라도 바뀌면 전체 배포
+          if echo "$CHANGED" | grep -qE '^(common/|config/|discovery/|apigateway/)'; then
           echo "has_changes=true" >> "$GITHUB_OUTPUT"
-          echo "matrix={\"service\":$JSON}" >> "$GITHUB_OUTPUT"
+          echo "cloud_changed=true"  >> "$GITHUB_OUTPUT"
+          echo "matrix={\"service\":$ALL}" >> "$GITHUB_OUTPUT"
+          exit 0
+          fi
+  
+          # 변경된 도메인 서비스 추출
+          SVC_JSON=$(echo "$CHANGED" \
+          | awk -F/ '{print $1}' \
+          | sort -u \
+          | grep -E '^(billing-service|catalog-service|member-service|order-service|settlement-service|shop-service|subscription-service)$' \
+          | jq -R . | jq -s .)
+          
+          echo "cloud_changed=false" >> "$GITHUB_OUTPUT"
+          
+          if [ "$SVC_JSON" = "[]" ]; then
+          echo "has_changes=false" >> "$GITHUB_OUTPUT"
+          echo 'matrix={"service":[]}' >> "$GITHUB_OUTPUT"
+          exit 0
+          
+          fi
+          echo "has_changes=true" >> "$GITHUB_OUTPUT"
+          echo "matrix={\"service\":$SVC_JSON}" >> "$GITHUB_OUTPUT"
 
   build-and-push:
     name: build application and make jar file
