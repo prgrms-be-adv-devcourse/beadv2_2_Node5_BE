@@ -30,8 +30,8 @@ public class AdminMemberController {
     }
 
     @GetMapping("/members")
-    public ResponseEntity<Page<MemberInfoAdminResponse>> getMembers(Pageable pageable) {
-        return ResponseEntity.ok(memberService.getMembers(pageable));
+    public ResponseEntity<Page<MemberInfoAdminResponse>> getMembers(@RequestHeader("Member-Id") UUID adminId, Pageable pageable) {
+        return ResponseEntity.ok(memberService.getMembers(adminId, pageable));
     }
 
     @GetMapping("/members/statuses")
@@ -41,8 +41,12 @@ public class AdminMemberController {
 
 
     @PatchMapping("/members/{memberId}/status")
-    public ResponseEntity<Void> modifyMemberStatus(@PathVariable UUID memberId, @Valid @RequestBody MemberStatusModifyRequest request) {
-        memberService.modifyMemberStatus(memberId, request.toCommand());
+    public ResponseEntity<Void> modifyMemberStatus(
+            @RequestHeader("Member-Id") UUID adminId,
+            @PathVariable UUID memberId,
+            @Valid @RequestBody MemberStatusModifyRequest request
+    ) {
+        memberService.modifyMemberStatus(adminId, memberId, request.toCommand());
         return ResponseEntity.ok().build();
     }
 }

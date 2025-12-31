@@ -68,17 +68,29 @@ public class MemberService {
                 .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
     }
 
-    public Page<MemberInfoAdminResponse> getMembers(Pageable pageable) {
-        return memberRepository.findAll(pageable).map(MemberInfoAdminResponse::from);
+    public Page<MemberInfoAdminResponse> getMembers(UUID adminId, Pageable pageable) {
+        return memberRepository.findAllByIdNot(adminId, pageable).map(MemberInfoAdminResponse::from);
     }
 
     @Transactional
-    public void modifyMemberStatus(UUID memberId, MemberStatusModifyCommand command) {
+    public void modifyMemberStatus(UUID adminId, UUID memberId, MemberStatusModifyCommand command) {
+        if (adminId.equals(memberId)) {
+            throw new MemberException(MemberErrorCode.CANNOT_MODIFY_SELF);
+        }
         Member member = memberRepository.findById(memberId).orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
+
+        if (member.getStatus() == MemberStatus.DELETED) {
+            throw new MemberException(MemberErrorCode.DELETED_MEMBER_CANNOT_BE_MODIFIED);
+        }
+
         member.modifyStatus(command.status());
     }
 
     public MemberStatusResponse getMemberStatuses() {
-        return MemberStatusResponse.from(MemberStatus.values());
+        return MemberStatusResponse.from(
+                Arrays.stream(MemberStatus.values())
+                        .filter(s -> s != MemberStatus.DELETED)
+                        .toArray(MemberStatus[]::new)
+        );
     }
 }

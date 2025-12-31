@@ -11,7 +11,7 @@ public interface MemberRepository {
     Optional<Member> findByEmailAndDeletedAtIsNull(String email);
 
     Member save(Member member);
-    Page<Member> findAll(Pageable pageable);
+    Page<Member> findAllByIdNot(UUID id, Pageable pageable);
 
     Optional<Member> findById(UUID id);
 }
