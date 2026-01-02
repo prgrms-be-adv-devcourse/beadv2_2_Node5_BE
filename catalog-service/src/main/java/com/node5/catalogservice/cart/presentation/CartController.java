@@ -30,7 +30,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("${api.v1}/carts")
+@RequestMapping("${api.v1}/carts/items")
 @RequiredArgsConstructor
 @Tag(name = "Cart", description = "회원의 장바구니를 관리하는 API")
 public class CartController {
@@ -38,7 +38,7 @@ public class CartController {
 	private final CartService cartService;
 
 	@GetMapping
-	@Operation(summary = "장바구니 조회", description = "회원의 장바구니 목록을 페이징 조회합니다.")
+	@Operation(summary = "장바구니 조회", description = "회원의 장바구니 항목 목록을 페이징 조회합니다.")
 	@ApiResponses({
 		@ApiResponse(responseCode = "200", description = "장바구니 조회 성공")
 	})
@@ -59,7 +59,7 @@ public class CartController {
 		@RequestHeader("Member-Id") UUID memberId,
 		@Valid @RequestBody CartItemRequest request
 	) {
-		CartItemInfo result = cartService.addItem(request.toCommand(memberId));
+		CartItemInfo result = cartService.addItem(memberId, request.toCommand());
 		return ResponseEntity.status(HttpStatus.CREATED).body(result);
 	}
 
@@ -73,7 +73,7 @@ public class CartController {
 	})
 	public ResponseEntity<CartItemInfo> updateCartItem(
 		@RequestHeader("Member-Id") UUID memberId,
-		@PathVariable UUID cartItemId,
+		@PathVariable("cartItemId") UUID cartItemId,
 		@Valid @RequestBody CartItemUpdateRequest request
 	) {
 		return ResponseEntity.ok(cartService.updateItem(memberId, cartItemId, request.toCommand()));
@@ -88,14 +88,14 @@ public class CartController {
 	})
 	public ResponseEntity<Void> removeItem(
 		@RequestHeader("Member-Id") UUID memberId,
-		@PathVariable UUID cartItemId
+		@PathVariable("cartItemId") UUID cartItemId
 	) {
 		cartService.removeItem(memberId, cartItemId);
 		return ResponseEntity.noContent().build();
 	}
 
 	@DeleteMapping
-	@Operation(summary = "장바구니 비우기", description = "회원의 장바구니를 모두 비웁니다.")
+	@Operation(summary = "장바구니 비우기", description = "회원의 장바구니 항목을 모두 삭제합니다.")
 	@ApiResponses({
 		@ApiResponse(responseCode = "204", description = "장바구니 비우기 성공")
 	})
