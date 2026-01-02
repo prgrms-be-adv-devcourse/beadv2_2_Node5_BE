@@ -2,7 +2,7 @@ package com.node5.memberservice.inquiry.application.dto;
 
 import com.node5.memberservice.inquiry.domain.InquiryCategory;
 
-public record InquiryRegisterCommand(
+public record InquiryCommand(
         String title,
         String message,
         InquiryCategory inquiryCategory

@@ -1,9 +1,6 @@
 package com.node5.memberservice.inquiry.application;
 
-import com.node5.memberservice.inquiry.application.dto.InquiryAnswerResponse;
-import com.node5.memberservice.inquiry.application.dto.InquiryInfoResponse;
-import com.node5.memberservice.inquiry.application.dto.InquiryListResponse;
-import com.node5.memberservice.inquiry.application.dto.InquiryRegisterCommand;
+import com.node5.memberservice.inquiry.application.dto.*;
 import com.node5.memberservice.inquiry.domain.*;
 import com.node5.memberservice.inquiry.exception.InquiryErrorCode;
 import com.node5.memberservice.inquiry.exception.InquiryException;
@@ -39,13 +36,13 @@ public class InquiryService {
     }
 
     @Transactional
-    public void createInquiry(UUID memberId, InquiryRegisterCommand command) {
+    public void createInquiry(UUID memberId, InquiryCommand command) {
         Inquiry inquiry = Inquiry.create(memberId, command);
         inquiryRepository.save(inquiry);
     }
 
     @Transactional
-    public void modifyInquiry(UUID memberId, UUID inquiryId, InquiryRegisterCommand command) {
+    public void modifyInquiry(UUID memberId, UUID inquiryId, InquiryCommand command) {
         Inquiry inquiry = inquiryRepository.findByIdAndMemberId(inquiryId, memberId).orElseThrow(
                 () -> new InquiryException(InquiryErrorCode.INQUIRY_NOT_FOUND)
         );
@@ -84,5 +81,21 @@ public class InquiryService {
                 .orElse(null);
 
         return InquiryInfoResponse.from(inquiry, inquiryAnswer);
+    }
+
+    // Todo - lock 고려
+    @Transactional
+    public void createInquiryAnswer(UUID inquiryId, UUID adminId, InquiryAnswerCommand command) {
+        Inquiry inquiry = inquiryRepository.findById(inquiryId).orElseThrow(
+                () -> new InquiryException(InquiryErrorCode.INQUIRY_NOT_FOUND)
+        );
+
+        if(inquiry.getStatus() == InquiryStatus.ANSWERED) {
+            throw new InquiryException(InquiryErrorCode.INQUIRY_ALREADY_ANSWERED);
+        }
+
+        InquiryAnswer inquiryAnswer = InquiryAnswer.create(inquiry.getId(), adminId, command.message());
+        inquiryAnswerRepository.save(inquiryAnswer);
+        inquiry.inquiryAnswered();
     }
 }

@@ -27,4 +27,15 @@ public class InquiryAnswer extends BaseEntity {
 
     @Column(nullable = false, columnDefinition = "TEXT")
     private String message;
+
+    private InquiryAnswer(UUID id, UUID inquiryId, UUID answeredAdminId, String message) {
+        this.id = id;
+        this.inquiryId = inquiryId;
+        this.answeredAdminId = answeredAdminId;
+        this.message = message;
+    }
+
+    public static InquiryAnswer create(UUID inquiryId, UUID answeredAdminId, String message) {
+        return new InquiryAnswer(UUID.randomUUID(), inquiryId, answeredAdminId, message);
+    }
 }

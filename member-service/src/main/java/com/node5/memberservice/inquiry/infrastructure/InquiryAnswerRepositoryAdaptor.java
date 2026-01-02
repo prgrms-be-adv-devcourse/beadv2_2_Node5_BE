@@ -22,4 +22,9 @@ public class InquiryAnswerRepositoryAdaptor implements InquiryAnswerRepository {
     public void deleteByInquiryId(UUID inquiryId) {
         inquiryAnswerJpaRepository.deleteByInquiryId(inquiryId);
     }
+
+    @Override
+    public void save(InquiryAnswer inquiryAnswer) {
+        inquiryAnswerJpaRepository.save(inquiryAnswer);
+    }
 }

@@ -1,7 +1,7 @@
 package com.node5.memberservice.inquiry.domain;
 
 import com.node5.common.domain.BaseEntity;
-import com.node5.memberservice.inquiry.application.dto.InquiryRegisterCommand;
+import com.node5.memberservice.inquiry.application.dto.InquiryCommand;
 import com.node5.memberservice.inquiry.exception.InquiryErrorCode;
 import com.node5.memberservice.inquiry.exception.InquiryException;
 import jakarta.persistence.*;
@@ -45,7 +45,7 @@ public class Inquiry extends BaseEntity {
         this.status = status;
     }
 
-    public static Inquiry create(UUID memberId, InquiryRegisterCommand command) {
+    public static Inquiry create(UUID memberId, InquiryCommand command) {
         return new Inquiry(
                 UUID.randomUUID(),
                 memberId,
@@ -56,12 +56,16 @@ public class Inquiry extends BaseEntity {
         );
     }
 
-    public void modify(InquiryRegisterCommand command) {
+    public void modify(InquiryCommand command) {
         if (this.status != InquiryStatus.RECEIVED) {
             throw new InquiryException(InquiryErrorCode.INQUIRY_ALREADY_PROCESSED);
         }
         this.title = command.title();
         this.message = command.message();
         this.inquiryCategory = command.inquiryCategory();
+    }
+
+    public void inquiryAnswered() {
+        this.status = InquiryStatus.ANSWERED;
     }
 }
