@@ -5,7 +5,6 @@ import java.util.UUID;
 
 public interface InquiryAnswerRepository {
     Optional<InquiryAnswer> findByInquiryId(UUID inquiryId);
-    void deleteByInquiryId(UUID inquiryId);
     void delete(InquiryAnswer inquiryAnswer);
     void save(InquiryAnswer inquiryAnswer);
 }

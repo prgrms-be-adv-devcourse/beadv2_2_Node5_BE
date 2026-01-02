@@ -58,7 +58,6 @@ public class InquiryService {
             throw new InquiryException(InquiryErrorCode.INQUIRY_ALREADY_ANSWERED);
         }
 
-        inquiryAnswerRepository.deleteByInquiryId(inquiryId);
         inquiryRepository.delete(inquiry);
     }
 

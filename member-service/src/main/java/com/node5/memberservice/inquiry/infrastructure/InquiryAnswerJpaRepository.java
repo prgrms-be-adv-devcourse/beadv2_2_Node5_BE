@@ -7,7 +7,5 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface InquiryAnswerJpaRepository extends JpaRepository<InquiryAnswer, UUID> {
-    void deleteByInquiryId(UUID inquiryId);
-
     Optional<InquiryAnswer> findByInquiryId(UUID inquiryId);
 }
