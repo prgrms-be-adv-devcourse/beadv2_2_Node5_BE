@@ -65,7 +65,11 @@ public class Inquiry extends BaseEntity {
         this.inquiryCategory = command.inquiryCategory();
     }
 
-    public void inquiryAnswered() {
+    public void markAnswered() {
         this.status = InquiryStatus.ANSWERED;
+    }
+
+    public void markInProgress() {
+        this.status = InquiryStatus.IN_PROGRESS;
     }
 }

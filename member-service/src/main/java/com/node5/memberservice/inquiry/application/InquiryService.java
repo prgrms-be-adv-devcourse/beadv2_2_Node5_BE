@@ -96,7 +96,7 @@ public class InquiryService {
 
         InquiryAnswer inquiryAnswer = InquiryAnswer.create(inquiry.getId(), adminId, command.message());
         inquiryAnswerRepository.save(inquiryAnswer);
-        inquiry.inquiryAnswered();
+        inquiry.markAnswered();
     }
 
     // Todo - lock 고려
@@ -106,5 +106,19 @@ public class InquiryService {
                 () -> new InquiryException(InquiryErrorCode.INQUIRY_ANSWER_NOT_FOUND)
         );
         inquiryAnswer.modify(adminId, command);
+    }
+
+    @Transactional
+    public void deleteInquiryAnswer(UUID inquiryId) {
+        Inquiry inquiry = inquiryRepository.findById(inquiryId).orElseThrow(
+                () -> new InquiryException(InquiryErrorCode.INQUIRY_NOT_FOUND)
+        );
+
+        InquiryAnswer inquiryAnswer = inquiryAnswerRepository.findByInquiryId(inquiryId).orElseThrow(
+                () -> new InquiryException(InquiryErrorCode.INQUIRY_ANSWER_NOT_FOUND)
+        );
+
+        inquiryAnswerRepository.delete(inquiryAnswer);
+        inquiry.markInProgress();
     }
 }

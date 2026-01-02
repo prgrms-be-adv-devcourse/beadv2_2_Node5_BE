@@ -24,6 +24,11 @@ public class InquiryAnswerRepositoryAdaptor implements InquiryAnswerRepository {
     }
 
     @Override
+    public void delete(InquiryAnswer inquiryAnswer) {
+        inquiryAnswerJpaRepository.delete(inquiryAnswer);
+    }
+
+    @Override
     public void save(InquiryAnswer inquiryAnswer) {
         inquiryAnswerJpaRepository.save(inquiryAnswer);
     }

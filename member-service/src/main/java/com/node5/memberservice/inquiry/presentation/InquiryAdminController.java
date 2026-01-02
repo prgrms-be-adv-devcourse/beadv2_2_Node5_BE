@@ -55,4 +55,12 @@ public class InquiryAdminController {
         return ResponseEntity.ok().build();
     }
 
+    @DeleteMapping("/{inquiryId}/answer")
+    public ResponseEntity<Void> deleteInquiryAnswer(
+            @PathVariable UUID inquiryId
+    ){
+        inquiryService.deleteInquiryAnswer(inquiryId);
+        return ResponseEntity.ok().build();
+    }
+
 }
