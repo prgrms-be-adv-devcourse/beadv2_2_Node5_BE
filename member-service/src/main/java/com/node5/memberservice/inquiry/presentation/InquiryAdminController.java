@@ -45,4 +45,14 @@ public class InquiryAdminController {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
+    @PutMapping("/{inquiryId}/answer")
+    public ResponseEntity<Void> modifyInquiryAnswer(
+            @PathVariable UUID inquiryId,
+            @RequestHeader("Member-Id") UUID adminId,
+            @RequestBody InquiryAnswerRequest request
+    ){
+        inquiryService.modifyInquiryAnswer(inquiryId, adminId, request.toCommand());
+        return ResponseEntity.ok().build();
+    }
+
 }

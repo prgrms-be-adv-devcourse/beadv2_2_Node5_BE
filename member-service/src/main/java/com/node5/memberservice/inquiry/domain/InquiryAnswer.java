@@ -1,6 +1,7 @@
 package com.node5.memberservice.inquiry.domain;
 
 import com.node5.common.domain.BaseEntity;
+import com.node5.memberservice.inquiry.application.dto.InquiryAnswerCommand;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -28,14 +29,19 @@ public class InquiryAnswer extends BaseEntity {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String message;
 
-    private InquiryAnswer(UUID id, UUID inquiryId, UUID answeredAdminId, String message) {
+    private InquiryAnswer(UUID id, UUID inquiryId, UUID adminId, String message) {
         this.id = id;
         this.inquiryId = inquiryId;
-        this.answeredAdminId = answeredAdminId;
+        this.answeredAdminId = adminId;
         this.message = message;
     }
 
-    public static InquiryAnswer create(UUID inquiryId, UUID answeredAdminId, String message) {
-        return new InquiryAnswer(UUID.randomUUID(), inquiryId, answeredAdminId, message);
+    public static InquiryAnswer create(UUID inquiryId, UUID adminId, String message) {
+        return new InquiryAnswer(UUID.randomUUID(), inquiryId, adminId, message);
+    }
+
+    public void modify(UUID adminId, InquiryAnswerCommand command) {
+        this.answeredAdminId = adminId;
+        this.message = command.message();
     }
 }

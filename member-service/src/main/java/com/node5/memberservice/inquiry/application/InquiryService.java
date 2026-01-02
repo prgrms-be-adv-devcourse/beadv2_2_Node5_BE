@@ -98,4 +98,13 @@ public class InquiryService {
         inquiryAnswerRepository.save(inquiryAnswer);
         inquiry.inquiryAnswered();
     }
+
+    // Todo - lock 고려
+    @Transactional
+    public void modifyInquiryAnswer(UUID inquiryId, UUID adminId, InquiryAnswerCommand command) {
+        InquiryAnswer inquiryAnswer = inquiryAnswerRepository.findByInquiryId(inquiryId).orElseThrow(
+                () -> new InquiryException(InquiryErrorCode.INQUIRY_ANSWER_NOT_FOUND)
+        );
+        inquiryAnswer.modify(adminId, command);
+    }
 }
