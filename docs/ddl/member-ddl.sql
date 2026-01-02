@@ -53,4 +53,13 @@ CREATE TABLE member."inquiry" (
 	CONSTRAINT pk_inquiry PRIMARY KEY (id)
 );
 
--- CREATE INDEX idx_member_roles_gin ON member."member" USING gin (roles);
+CREATE TABLE member."inquiry_answer" (
+	id uuid NOT NULL,
+    inquiry_id uuid NOT NULL,
+	answered_admin_id uuid NOT NULL,
+    message text NOT NULL,
+	created_at timestamp NOT NULL,
+    modified_at timestamp NOT NULL,
+	CONSTRAINT pk_inquiry_answer PRIMARY KEY (id),
+    CONSTRAINT uq_inquiry_answer UNIQUE (inquiry_id)
+);
