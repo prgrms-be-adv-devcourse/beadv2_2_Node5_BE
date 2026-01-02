@@ -4,6 +4,7 @@ import com.node5.memberservice.inquiry.application.dto.InquiryInfoResponse;
 import com.node5.memberservice.inquiry.application.dto.InquiryListResponse;
 import com.node5.memberservice.inquiry.application.dto.InquiryRegisterCommand;
 import com.node5.memberservice.inquiry.domain.Inquiry;
+import com.node5.memberservice.inquiry.domain.InquiryAnswerRepository;
 import com.node5.memberservice.inquiry.domain.InquiryRepository;
 import com.node5.memberservice.inquiry.domain.InquiryStatus;
 import com.node5.memberservice.inquiry.exception.InquiryErrorCode;
@@ -21,8 +22,9 @@ import java.util.UUID;
 @Transactional(readOnly = true)
 public class InquiryService {
     private final InquiryRepository inquiryRepository;
+    private final InquiryAnswerRepository inquiryAnswerRepository;
 
-    public Page<InquiryListResponse> getInquiryListForMember(UUID memberId, Pageable pageable) {
+    public Page<InquiryListResponse> getInquiryListByMember(UUID memberId, Pageable pageable) {
         Page<Inquiry> inquiries = inquiryRepository.findAllByMemberId(memberId, pageable);
         return inquiries.map(InquiryListResponse::from);
     }
@@ -58,7 +60,17 @@ public class InquiryService {
             throw new InquiryException(InquiryErrorCode.INQUIRY_ALREADY_ANSWERED);
         }
 
-        // Todo - 답변도 삭제
+        inquiryAnswerRepository.deleteByInquiryId(inquiryId);
         inquiryRepository.delete(inquiry);
+    }
+
+    public Page<InquiryListResponse> getInquiryList(InquiryStatus status, Pageable pageable) {
+        Page<Inquiry> inquiries;
+        if (status == null) {
+            inquiries = inquiryRepository.findAll(pageable);
+        } else {
+            inquiries = inquiryRepository.findAllByStatus(status, pageable);
+        }
+        return inquiries.map(InquiryListResponse::from);
     }
 }

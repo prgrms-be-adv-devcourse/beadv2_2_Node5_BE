@@ -11,4 +11,7 @@ public interface InquiryRepository {
     void save(Inquiry inquiry);
     Optional<Inquiry> findByIdAndMemberId(UUID inquiryId, UUID memberId);
     void delete(Inquiry inquiry);
+
+    Page<Inquiry> findAll(Pageable pageable);
+    Page<Inquiry> findAllByStatus(InquiryStatus status, Pageable pageable);
 }
