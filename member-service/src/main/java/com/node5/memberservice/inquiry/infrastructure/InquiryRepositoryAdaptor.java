@@ -21,11 +21,6 @@ public class InquiryRepositoryAdaptor implements InquiryRepository {
     }
 
     @Override
-    public Optional<Inquiry> findById(UUID id) {
-        return inquiryJpaRepository.findById(id);
-    }
-
-    @Override
     public void save(Inquiry inquiry) {
         inquiryJpaRepository.save(inquiry);
     }

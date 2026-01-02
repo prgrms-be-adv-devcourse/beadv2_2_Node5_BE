@@ -21,19 +21,6 @@ public class InquiryController {
 
     private final InquiryService inquiryService;
 
-    // 관리자용 문의 목록 api admin용 controller 로 이동
-//    @GetMapping
-//    public ResponseEntity<Page<InquiryListResponse>> getInquiryListForAdmin(
-//            @RequestHeader("Member-Roles") String memberRoles,
-//            @PageableDefault(size = 10, page = 0, sort = "createdAt") Pageable pageable
-//    ) {
-//        if (!memberRoles.contains(MemberRole.ADMIN.name())) { // Todo - contains 로 권한 체크 X
-//            throw new InquiryException(InquiryErrorCode.INQUIRY_FORBIDDEN);
-//        }
-//        return ResponseEntity.ok(inquiryService.getInquiryListForAdmin(memberRoles, pageable));
-//    }
-
-    // 회원용 자기 문의 목록 api
     @GetMapping
     public ResponseEntity<Page<InquiryListResponse>> getInquiryListForMember(
             @RequestHeader("Member-Id") UUID memberId,
@@ -45,10 +32,9 @@ public class InquiryController {
     @GetMapping("/{inquiryId}")
     public ResponseEntity<InquiryInfoResponse> getInquiryInfo(
             @RequestHeader("Member-Id") UUID memberId,
-            @RequestHeader("Member-Roles") String memberRoles,
             @PathVariable UUID inquiryId
     ) {
-        return ResponseEntity.ok(inquiryService.getInquiryInfo(inquiryId, memberId, memberRoles));
+        return ResponseEntity.ok(inquiryService.getInquiryInfo(inquiryId, memberId));
     }
 
     @PostMapping

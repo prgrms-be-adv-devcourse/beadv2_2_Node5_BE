@@ -7,7 +7,6 @@ import com.node5.memberservice.inquiry.domain.Inquiry;
 import com.node5.memberservice.inquiry.domain.InquiryRepository;
 import com.node5.memberservice.inquiry.exception.InquiryErrorCode;
 import com.node5.memberservice.inquiry.exception.InquiryException;
-import com.node5.memberservice.member.domain.MemberRole;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,25 +21,15 @@ import java.util.UUID;
 public class InquiryService {
     private final InquiryRepository inquiryRepository;
 
-//    public Page<InquiryListResponse> getInquiryListForAdmin(String memberRoles, Pageable pageable) {
-//        Page<Inquiry> inquiries = inquiryRepository.findAll(pageable);
-//        return inquiries.map(InquiryListResponse::from);
-//    }
-
     public Page<InquiryListResponse> getInquiryListForMember(UUID memberId, Pageable pageable) {
         Page<Inquiry> inquiries = inquiryRepository.findAllByMemberId(memberId, pageable);
         return inquiries.map(InquiryListResponse::from);
     }
 
-    public InquiryInfoResponse getInquiryInfo(UUID inquiryId, UUID memberId, String memberRoles) {
-        Inquiry inquiry = inquiryRepository.findById(inquiryId).orElseThrow(() -> new InquiryException(InquiryErrorCode.INQUIRY_NOT_FOUND));
-
-        boolean isOwner = inquiry.getMemberId().equals(memberId);
-        boolean isAdmin = memberRoles.contains(MemberRole.ADMIN.name()); // Todo - contains 로 권한 체크 X
-
-        if (!isOwner && !isAdmin) {
-            throw new InquiryException(InquiryErrorCode.INQUIRY_FORBIDDEN);
-        }
+    public InquiryInfoResponse getInquiryInfo(UUID inquiryId, UUID memberId) {
+        Inquiry inquiry = inquiryRepository.findByIdAndMemberId(inquiryId, memberId).orElseThrow(
+                () -> new InquiryException(InquiryErrorCode.INQUIRY_NOT_FOUND)
+        );
 
         return InquiryInfoResponse.from(inquiry);
     }

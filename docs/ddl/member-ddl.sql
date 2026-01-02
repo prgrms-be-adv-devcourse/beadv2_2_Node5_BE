@@ -47,6 +47,7 @@ CREATE TABLE member."inquiry" (
     title varchar(100) NOT NULL,
     message text NOT NULL,
     inquiry_category varchar(100) NOT NULL,
+    status           varchar(20) default 'RECEIVED'::character varying not null,
 	created_at timestamp NOT NULL,
     modified_at timestamp NOT NULL,
 	CONSTRAINT pk_inquiry PRIMARY KEY (id)

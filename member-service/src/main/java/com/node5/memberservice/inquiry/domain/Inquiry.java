@@ -2,6 +2,8 @@ package com.node5.memberservice.inquiry.domain;
 
 import com.node5.common.domain.BaseEntity;
 import com.node5.memberservice.inquiry.application.dto.InquiryRegisterCommand;
+import com.node5.memberservice.inquiry.exception.InquiryErrorCode;
+import com.node5.memberservice.inquiry.exception.InquiryException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -30,12 +32,17 @@ public class Inquiry extends BaseEntity {
     @Column(name = "inquiry_category", nullable = false, length = 100)
     private InquiryCategory inquiryCategory;
 
-    private Inquiry(UUID id, UUID memberId, String title, String message, InquiryCategory inquiryCategory) {
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private InquiryStatus status;
+
+    private Inquiry(UUID id, UUID memberId, String title, String message, InquiryCategory inquiryCategory, InquiryStatus status) {
         this.id = id;
         this.memberId = memberId;
         this.title = title;
         this.message = message;
         this.inquiryCategory = inquiryCategory;
+        this.status = status;
     }
 
     public static Inquiry create(UUID memberId, InquiryRegisterCommand command) {
@@ -44,11 +51,15 @@ public class Inquiry extends BaseEntity {
                 memberId,
                 command.title(),
                 command.message(),
-                command.inquiryCategory()
+                command.inquiryCategory(),
+                InquiryStatus.RECEIVED
         );
     }
 
     public void modify(InquiryRegisterCommand command) {
+        if (this.status != InquiryStatus.RECEIVED) {
+            throw new InquiryException(InquiryErrorCode.INQUIRY_ALREADY_PROCESSED);
+        }
         this.title = command.title();
         this.message = command.message();
         this.inquiryCategory = command.inquiryCategory();
