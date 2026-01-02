@@ -22,12 +22,12 @@ public class InquiryService {
     private final InquiryRepository inquiryRepository;
     private final InquiryAnswerRepository inquiryAnswerRepository;
 
-    public Page<InquiryListResponse> getInquiryListByMember(UUID memberId, Pageable pageable) {
+    public Page<InquiryListResponse> getMyInquiryList(UUID memberId, Pageable pageable) {
         Page<Inquiry> inquiries = inquiryRepository.findAllByMemberId(memberId, pageable);
         return inquiries.map(InquiryListResponse::from);
     }
 
-    public InquiryInfoResponse getInquiryInfo(UUID inquiryId, UUID memberId) {
+    public InquiryInfoResponse getMyInquiryInfo(UUID inquiryId, UUID memberId) {
         Inquiry inquiry = inquiryRepository.findByIdAndMemberId(inquiryId, memberId).orElseThrow(
                 () -> new InquiryException(InquiryErrorCode.INQUIRY_NOT_FOUND)
         );
@@ -65,7 +65,7 @@ public class InquiryService {
         inquiryRepository.delete(inquiry);
     }
 
-    public Page<InquiryListResponse> getInquiryList(InquiryStatus status, Pageable pageable) {
+    public Page<InquiryListResponse> getInquiryListForAdmin(InquiryStatus status, Pageable pageable) {
         Page<Inquiry> inquiries;
         if (status == null) {
             inquiries = inquiryRepository.findAll(pageable);
@@ -73,5 +73,16 @@ public class InquiryService {
             inquiries = inquiryRepository.findAllByStatus(status, pageable);
         }
         return inquiries.map(InquiryListResponse::from);
+    }
+
+    public InquiryInfoResponse getInquiryInfoForAdmin(UUID inquiryId) {
+        Inquiry inquiry = inquiryRepository.findById(inquiryId).orElseThrow(
+                () -> new InquiryException(InquiryErrorCode.INQUIRY_NOT_FOUND)
+        );
+        InquiryAnswerResponse inquiryAnswer = inquiryAnswerRepository.findByInquiryId(inquiry.getId())
+                .map(InquiryAnswerResponse::from)
+                .orElse(null);
+
+        return InquiryInfoResponse.from(inquiry, inquiryAnswer);
     }
 }

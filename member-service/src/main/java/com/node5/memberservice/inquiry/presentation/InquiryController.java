@@ -22,19 +22,19 @@ public class InquiryController {
     private final InquiryService inquiryService;
 
     @GetMapping
-    public ResponseEntity<Page<InquiryListResponse>> getInquiryListByMember(
+    public ResponseEntity<Page<InquiryListResponse>> getMyInquiryList(
             @RequestHeader("Member-Id") UUID memberId,
             @PageableDefault(size = 10, page = 0, sort = "createdAt") Pageable pageable
     ) {
-        return ResponseEntity.ok(inquiryService.getInquiryListByMember(memberId, pageable));
+        return ResponseEntity.ok(inquiryService.getMyInquiryList(memberId, pageable));
     }
 
     @GetMapping("/{inquiryId}")
-    public ResponseEntity<InquiryInfoResponse> getInquiryInfo(
+    public ResponseEntity<InquiryInfoResponse> getMyInquiryInfo(
             @RequestHeader("Member-Id") UUID memberId,
             @PathVariable UUID inquiryId
     ) {
-        return ResponseEntity.ok(inquiryService.getInquiryInfo(inquiryId, memberId));
+        return ResponseEntity.ok(inquiryService.getMyInquiryInfo(inquiryId, memberId));
     }
 
     @PostMapping

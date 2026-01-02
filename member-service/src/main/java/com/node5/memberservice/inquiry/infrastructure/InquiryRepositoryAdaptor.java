@@ -32,6 +32,11 @@ public class InquiryRepositoryAdaptor implements InquiryRepository {
     }
 
     @Override
+    public Optional<Inquiry> findById(UUID inquiryId) {
+        return inquiryJpaRepository.findById(inquiryId);
+    }
+
+    @Override
     public void delete(Inquiry inquiry) {
         inquiryJpaRepository.delete(inquiry);
     }
