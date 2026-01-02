@@ -11,5 +11,4 @@ import java.util.UUID;
 public interface InquiryJpaRepository extends JpaRepository<Inquiry, UUID> {
     Page<Inquiry> findAllByMemberId(UUID memberId, Pageable pageable);
     Optional<Inquiry> findByIdAndMemberId(UUID inquiryId, UUID memberId);
-    void deleteByIdAndMemberId(UUID inquiryId, UUID memberId);
 }

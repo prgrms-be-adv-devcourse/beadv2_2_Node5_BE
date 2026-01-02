@@ -31,7 +31,7 @@ public class InquiryRepositoryAdaptor implements InquiryRepository {
     }
 
     @Override
-    public void deleteByIdAndMemberId(UUID inquiryId, UUID memberId) {
-        inquiryJpaRepository.deleteByIdAndMemberId(inquiryId, memberId);
+    public void delete(Inquiry inquiry) {
+        inquiryJpaRepository.delete(inquiry);
     }
 }

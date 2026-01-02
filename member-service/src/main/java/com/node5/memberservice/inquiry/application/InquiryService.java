@@ -5,6 +5,7 @@ import com.node5.memberservice.inquiry.application.dto.InquiryListResponse;
 import com.node5.memberservice.inquiry.application.dto.InquiryRegisterCommand;
 import com.node5.memberservice.inquiry.domain.Inquiry;
 import com.node5.memberservice.inquiry.domain.InquiryRepository;
+import com.node5.memberservice.inquiry.domain.InquiryStatus;
 import com.node5.memberservice.inquiry.exception.InquiryErrorCode;
 import com.node5.memberservice.inquiry.exception.InquiryException;
 import lombok.RequiredArgsConstructor;
@@ -50,6 +51,14 @@ public class InquiryService {
 
     @Transactional
     public void deleteInquiry(UUID memberId, UUID inquiryId) {
-        inquiryRepository.deleteByIdAndMemberId(inquiryId, memberId);
+        Inquiry inquiry = inquiryRepository.findByIdAndMemberId(inquiryId, memberId).orElseThrow(
+                () -> new InquiryException(InquiryErrorCode.INQUIRY_NOT_FOUND)
+        );
+        if (inquiry.getStatus() == InquiryStatus.ANSWERED) {
+            throw new InquiryException(InquiryErrorCode.INQUIRY_ALREADY_ANSWERED);
+        }
+
+        // Todo - 답변도 삭제
+        inquiryRepository.delete(inquiry);
     }
 }
