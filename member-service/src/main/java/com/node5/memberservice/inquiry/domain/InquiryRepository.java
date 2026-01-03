@@ -8,8 +8,11 @@ import java.util.UUID;
 
 public interface InquiryRepository {
     Page<Inquiry> findAllByMemberId(UUID memberId, Pageable pageable);
-    Optional<Inquiry> findById(UUID id);
     void save(Inquiry inquiry);
     Optional<Inquiry> findByIdAndMemberId(UUID inquiryId, UUID memberId);
-    void deleteByIdAndMemberId(UUID inquiryId, UUID memberId);
+    Optional<Inquiry> findById(UUID inquiryId);
+    void delete(Inquiry inquiry);
+
+    Page<Inquiry> findAll(Pageable pageable);
+    Page<Inquiry> findAllByStatus(InquiryStatus status, Pageable pageable);
 }

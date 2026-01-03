@@ -2,6 +2,7 @@ package com.node5.memberservice.inquiry.infrastructure;
 
 import com.node5.memberservice.inquiry.domain.Inquiry;
 import com.node5.memberservice.inquiry.domain.InquiryRepository;
+import com.node5.memberservice.inquiry.domain.InquiryStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,11 +22,6 @@ public class InquiryRepositoryAdaptor implements InquiryRepository {
     }
 
     @Override
-    public Optional<Inquiry> findById(UUID id) {
-        return inquiryJpaRepository.findById(id);
-    }
-
-    @Override
     public void save(Inquiry inquiry) {
         inquiryJpaRepository.save(inquiry);
     }
@@ -36,7 +32,22 @@ public class InquiryRepositoryAdaptor implements InquiryRepository {
     }
 
     @Override
-    public void deleteByIdAndMemberId(UUID inquiryId, UUID memberId) {
-        inquiryJpaRepository.deleteByIdAndMemberId(inquiryId, memberId);
+    public Optional<Inquiry> findById(UUID inquiryId) {
+        return inquiryJpaRepository.findById(inquiryId);
+    }
+
+    @Override
+    public void delete(Inquiry inquiry) {
+        inquiryJpaRepository.delete(inquiry);
+    }
+
+    @Override
+    public Page<Inquiry> findAll(Pageable pageable) {
+        return inquiryJpaRepository.findAll(pageable);
+    }
+
+    @Override
+    public Page<Inquiry> findAllByStatus(InquiryStatus status, Pageable pageable) {
+        return inquiryJpaRepository.findAllByStatus(status, pageable);
     }
 }

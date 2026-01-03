@@ -11,18 +11,23 @@ public record InquiryInfoResponse(
         String title,
         String message,
         String inquiryCategory,
+        String status,
         LocalDateTime createdAt,
-        LocalDateTime modifiedAt
+        LocalDateTime modifiedAt,
+
+        InquiryAnswerResponse inquiryAnswer
 ) {
-    public static InquiryInfoResponse from(Inquiry inquiry) {
+    public static InquiryInfoResponse from(Inquiry inquiry, InquiryAnswerResponse inquiryAnswer) {
         return new InquiryInfoResponse(
                 inquiry.getId(),
                 inquiry.getMemberId(),
                 inquiry.getTitle(),
                 inquiry.getMessage(),
                 inquiry.getInquiryCategory().name(),
+                inquiry.getStatus().name(),
                 inquiry.getCreatedAt(),
-                inquiry.getModifiedAt()
+                inquiry.getModifiedAt(),
+                inquiryAnswer
         );
     }
 }
