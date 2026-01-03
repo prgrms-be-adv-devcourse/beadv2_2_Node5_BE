@@ -2,16 +2,15 @@ name: Deploy
 
 on:
   push:
-    branches:
-      - main
-
+    branches: [main]
   workflow_dispatch:
 
 jobs:
   detect:
     runs-on: ubuntu-24.04
     outputs:
-      matrix: ${{ steps.detect.outputs.matrix }}
+      build_matrix: ${{ steps.detect.outputs.build_matrix }}
+      domain_matrix: ${{ steps.detect.outputs.domain_matrix }}
       has_changes: ${{ steps.detect.outputs.has_changes }}
       cloud_changed: ${{ steps.detect.outputs.cloud_changed }}
     steps:
@@ -43,18 +42,21 @@ jobs:
           CHANGED=$(git diff --name-only $BASE $HEAD || echo "")
           
           # common이 변경되면 전체 서비스, 아니면 해당 디렉토리 서비스만 추출
-          if echo "$CHANGED" | grep -qE "^(common/|($INFRA_PATTERN)/)"; then
-            SVC_LIST="$ALL"
+          if echo "$CHANGED" | grep -qE "^((common|$INFRA_PATTERN)/)"; then
+            BUILD_LIST="$ALL"
+            DOMAIN_LIST="$DOMAINS"
             CLOUD_CHANGED="true"
           else
-            SVC_LIST=$(echo "$CHANGED" | awk -F/ '{print $1}' | sort -u | grep -E "^($ALL_PATTERN)$" | jq -R . | jq -s -c . || echo "[]")
+            BUILD_LIST=$(echo "$CHANGED" | awk -F/ '{print $1}' | sort -u | grep -E "^($ALL_PATTERN)$" | jq -R . | jq -s -c . || echo "[]")
+            DOMAIN_LIST="$BUILD_LIST"
             CLOUD_CHANGED="false"
           fi
           
           # 4. 결과 출력
-          HAS_CHANGES=$([ "$SVC_LIST" != "[]" ] && echo "true" || echo "false")
+          HAS_CHANGES=$([ "$BUILD_LIST" != "[]" ] && echo "true" || echo "false")
           
-          echo "matrix={\"service\":$SVC_LIST}" >> "$GITHUB_OUTPUT"
+          echo "build_matrix={\"service\":$BUILD_LIST}" >> "$GITHUB_OUTPUT"
+          echo "domain_matrix={\"service\":$DOMAIN_LIST}" >> "$GITHUB_OUTPUT"
           echo "has_changes=$HAS_CHANGES" >> "$GITHUB_OUTPUT"
           echo "cloud_changed=$CLOUD_CHANGED" >> "$GITHUB_OUTPUT"
 
@@ -65,8 +67,7 @@ jobs:
     if: needs.detect.outputs.has_changes == 'true'
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.detect.outputs.matrix) }}
-
+      matrix: ${{ fromJson(needs.detect.outputs.build_matrix) }}
     steps:
       - uses: actions/checkout@v4
 
@@ -82,9 +83,15 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          key: ${{ runner.os }}-gradle-${{ matrix.service }}-${{ hashFiles(format('{0}/*.gradle*', matrix.service), 'common/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
+            ${{ runner.os }}-gradle-${{ matrix.service }}-
             ${{ runner.os }}-gradle-
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-disabled: true # 수동 캐시와 충돌 방지
 
       - name: Build bootJar
         run: ./gradlew :${{ matrix.service }}:bootJar
@@ -107,55 +114,31 @@ jobs:
   deploy-cloud:
     name: Deploy Cloud (config → discovery → apigateway)
     runs-on: self-hosted
-    needs: detect
+    needs: [detect, build-and-push]
     if: needs.detect.outputs.cloud_changed == 'true'
     steps:
       - uses: actions/checkout@v4
 
-      - name: Deploy config
+      - name: Deploy Core Infra
         run: |
-          kubectl apply -f k8s/config.yaml
-          kubectl rollout restart deployment/config
-          kubectl rollout status deployment/config --timeout=300s
+          for svc in config discovery apigateway; do
+            kubectl apply -f k8s/$svc.yaml
+            kubectl rollout restart deployment/$svc
+            kubectl rollout status deployment/$svc --timeout=300s
+          done
 
-      - name: Deploy discovery
-        run: |
-          kubectl apply -f k8s/discovery.yaml
-          kubectl rollout restart deployment/discovery
-          kubectl rollout status deployment/discovery --timeout=300s
-
-      - name: Deploy apigateway
-        run: |
-          kubectl apply -f k8s/apigateway.yaml
-          kubectl rollout restart deployment/apigateway
-          kubectl rollout status deployment/apigateway --timeout=300s
-
-  deploy-domains-after-cloud:
-    name: Deploy Domains (after cloud)
+  deploy-domains:
+    name: Deploy Domains
     runs-on: self-hosted
     needs: [detect, build-and-push, deploy-cloud]
-    if: needs.detect.outputs.cloud_changed == 'true' && needs.detect.outputs.matrix != '{"service":[]}'
+    if: |
+      always() && 
+      needs.detect.outputs.has_changes == 'true' &&
+      (needs.deploy-cloud.result == 'success' || needs.deploy-cloud.result == 'skipped')
     strategy:
       fail-fast: false
       max-parallel: 1
-      matrix: ${{ fromJson(needs.detect.outputs.matrix) }}
-    steps:
-      - uses: actions/checkout@v4
-      - name: Deploy & Rollout
-        run: |
-          kubectl apply -f k8s/${{ matrix.service }}.yaml
-          kubectl rollout restart deployment/${{ matrix.service }}
-          kubectl rollout status deployment/${{ matrix.service }} --timeout=300s
-
-  deploy-domains-direct:
-    name: Deploy Domains (direct)
-    runs-on: self-hosted
-    needs: [detect, build-and-push]
-    if: needs.detect.outputs.cloud_changed == 'false' && needs.detect.outputs.matrix != '{"service":[]}'
-    strategy:
-      fail-fast: false
-      max-parallel: 1
-      matrix: ${{ fromJson(needs.detect.outputs.matrix) }}
+      matrix: ${{ fromJson(needs.detect.outputs.domain_matrix) }}
     steps:
       - uses: actions/checkout@v4
       - name: Deploy & Rollout
