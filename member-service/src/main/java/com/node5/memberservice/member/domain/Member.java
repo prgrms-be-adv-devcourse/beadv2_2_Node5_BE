@@ -3,6 +3,8 @@ package com.node5.memberservice.member.domain;
 import com.node5.common.domain.BaseEntity;
 import com.node5.memberservice.auth.application.dto.OAuthRegisterCommand;
 import com.node5.memberservice.member.application.dto.MemberModifyCommand;
+import com.node5.memberservice.member.exception.MemberErrorCode;
+import com.node5.memberservice.member.exception.MemberException;
 import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -12,7 +14,6 @@ import org.hibernate.annotations.Type;
 
 import java.time.LocalDateTime;
 import java.util.EnumSet;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
@@ -72,6 +73,23 @@ public class Member extends BaseEntity {
 
     public void deleteRole(MemberRole role) {
         this.roles.remove(role);
+    }
+
+    public void modifyStatus(MemberStatus status) {
+        if (this.status == status) return;
+        switch (status) {
+            case ACTIVE -> activate();
+            case BANNED -> ban();
+            default -> throw new MemberException(MemberErrorCode.INVALID_STATUS);
+        }
+    }
+
+    private void activate() {
+        status = MemberStatus.ACTIVE;
+    }
+
+    private void ban() {
+        status = MemberStatus.BANNED;
     }
 
     public void modifyInfo(MemberModifyCommand command) {
