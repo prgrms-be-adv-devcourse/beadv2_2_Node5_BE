@@ -1,0 +1,49 @@
+name: Config CI
+
+on:
+  pull_request:
+    branches:
+      - develop
+    paths:
+      - "common/**"
+      - "config/**"
+      - "discovery/**"
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+
+      - name: Gradle 종속성 캐시
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-config-${{ hashFiles('config/*.gradle*', 'common/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-config-
+            ${{ runner.os }}-gradle-
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-disabled: true
+
+      - name: Set Permission to gradlew
+        run: chmod +x ./gradlew
+
+      - name: Gradle Build
+        run: ./gradlew :config:build
+
+      - name: Run Tests
+        run: ./gradlew :config:test
