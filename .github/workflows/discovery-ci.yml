@@ -1,11 +1,10 @@
-name: Order Service CI
+name: Discovery CI
 
 on:
   pull_request:
     branches:
       - develop
     paths:
-      - "order-service/**"
       - "common/**"
       - "config/**"
       - "discovery/**"
@@ -30,9 +29,9 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-order-service-${{ hashFiles('order-service/*.gradle*', 'common/*.gradle*', '**/gradle-wrapper.properties') }}
+          key: ${{ runner.os }}-gradle-discovery-${{ hashFiles('discovery/*.gradle*', 'common/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
-            ${{ runner.os }}-gradle-order-service-
+            ${{ runner.os }}-gradle-discovery-
             ${{ runner.os }}-gradle-
 
       - name: Setup Gradle
@@ -44,7 +43,7 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Gradle Build
-        run: ./gradlew :order-service:build
+        run: ./gradlew :discovery:build
 
       - name: Run Tests
-        run: ./gradlew :order-service:test
+        run: ./gradlew :discovery:test

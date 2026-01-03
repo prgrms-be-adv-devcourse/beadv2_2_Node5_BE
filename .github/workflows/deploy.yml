@@ -2,81 +2,63 @@ name: Deploy
 
 on:
   push:
-    branches:
-      - main
-
+    branches: [main]
   workflow_dispatch:
 
 jobs:
   detect:
     runs-on: ubuntu-24.04
     outputs:
-      matrix: ${{ steps.out.outputs.matrix }}
-      has_changes: ${{ steps.out.outputs.has_changes }}
+      build_matrix: ${{ steps.detect.outputs.build_matrix }}
+      domain_matrix: ${{ steps.detect.outputs.domain_matrix }}
+      has_changes: ${{ steps.detect.outputs.has_changes }}
+      cloud_changed: ${{ steps.detect.outputs.cloud_changed }}
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # 전체 히스토리를 가져와야 PR 이전 시점과 비교가 가능합니다.
+          fetch-depth: 0
 
-      - name: Detect changes
-        id: filter
-        uses: dorny/paths-filter@v3
-        with:
-          # 핵심 수정: PR 머지 시에는 머지 전(before)과 비교하고,
-          # 수동 실행 시에는 이전 커밋과 비교합니다.
-          base: ${{ github.event.before || 'HEAD~1' }}
-          filters: |
-            common: ["common/**"]
-            config: ["config/**"]
-            discovery: ["discovery/**"]
-            apigateway: ["apigateway/**"]
-            billing: ["billing-service/**"]
-            catalog: ["catalog-service/**"]
-            member: ["member-service/**"]
-            order: ["order-service/**"]
-            settlement: ["settlement-service/**"]
-            shop: ["shop-service/**"]
-            subscription: ["subscription-service/**"]
-
-      - id: out
+      - id: detect
         shell: bash
         run: |
           set -euo pipefail
           
-          # 1. 인프라 포함 전체 리스트
-          ALL='["apigateway","config","discovery","billing-service","catalog-service","member-service","order-service","settlement-service","shop-service","subscription-service"]'
-
-          # 2. 인프라 성격의 폴더 변경 시 전체 배포
-          if [ "${{ steps.filter.outputs.common }}" = "true" ] || \
-             [ "${{ steps.filter.outputs.config }}" = "true" ] || \
-             [ "${{ steps.filter.outputs.discovery }}" = "true" ]; then
-            echo "has_changes=true" >> "$GITHUB_OUTPUT"
-            echo "matrix={\"service\":$ALL}" >> "$GITHUB_OUTPUT"
-            exit 0
+          # 1. 환경 변수 로드 및 통합 목록 생성
+          DOMAINS='${{ vars.DOMAIN_SERVICES }}'
+          INFRA='${{ vars.INFRA_SERVICES }}'
+          ALL=$(echo "$DOMAINS $INFRA" | jq -s -c '.[0] + .[1] | unique')
+          INFRA_PATTERN=$(echo "$INFRA" | jq -r '. | join("|")')
+          ALL_PATTERN=$(echo "$ALL" | jq -r '. | join("|")')
+          
+          # 2. 비교 대상 설정 (수동: main..develop / 자동: before..sha)
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            git fetch origin main develop
+            BASE="origin/main"; HEAD="origin/develop"
+          else
+            BASE="${{ github.event.before }}"; HEAD="${{ github.sha }}"
           fi
-
-          # 3. 개별 서비스 변경 시 (PR에 포함된 모든 커밋의 변경사항이 수집됨)
-          SVC=()
-          [ "${{ steps.filter.outputs.apigateway }}" = "true" ] && SVC+=("apigateway")
-          [ "${{ steps.filter.outputs.billing }}" = "true" ] && SVC+=("billing-service")
-          [ "${{ steps.filter.outputs.catalog }}" = "true" ] && SVC+=("catalog-service")
-          [ "${{ steps.filter.outputs.member }}" = "true" ] && SVC+=("member-service")
-          [ "${{ steps.filter.outputs.order }}" = "true" ] && SVC+=("order-service")
-          [ "${{ steps.filter.outputs.settlement }}" = "true" ] && SVC+=("settlement-service")
-          [ "${{ steps.filter.outputs.shop }}" = "true" ] && SVC+=("shop-service")
-          [ "${{ steps.filter.outputs.subscription }}" = "true" ] && SVC+=("subscription-service")
-
-          if [ "${#SVC[@]}" -eq 0 ]; then
-            echo "has_changes=false" >> "$GITHUB_OUTPUT"
-            echo 'matrix={"service":[]}' >> "$GITHUB_OUTPUT"
-            exit 0
+          
+          # 3. 변경 파일 및 서비스 추출
+          CHANGED=$(git diff --name-only $BASE $HEAD || echo "")
+          
+          # common이 변경되면 전체 서비스, 아니면 해당 디렉토리 서비스만 추출
+          if echo "$CHANGED" | grep -qE "^((common|$INFRA_PATTERN)/)"; then
+            BUILD_LIST="$ALL"
+            DOMAIN_LIST="$DOMAINS"
+            CLOUD_CHANGED="true"
+          else
+            BUILD_LIST=$(echo "$CHANGED" | awk -F/ '{print $1}' | sort -u | grep -E "^($ALL_PATTERN)$" | jq -R . | jq -s -c . || echo "[]")
+            DOMAIN_LIST="$BUILD_LIST"
+            CLOUD_CHANGED="false"
           fi
-
-          # bash 배열 -> JSON
-          JSON=$(printf '%s\n' "${SVC[@]}" | jq -R . | jq -s .)
-
-          echo "has_changes=true" >> "$GITHUB_OUTPUT"
-          echo "matrix={\"service\":$JSON}" >> "$GITHUB_OUTPUT"
+          
+          # 4. 결과 출력
+          HAS_CHANGES=$([ "$BUILD_LIST" != "[]" ] && echo "true" || echo "false")
+          
+          echo "build_matrix={\"service\":$BUILD_LIST}" >> "$GITHUB_OUTPUT"
+          echo "domain_matrix={\"service\":$DOMAIN_LIST}" >> "$GITHUB_OUTPUT"
+          echo "has_changes=$HAS_CHANGES" >> "$GITHUB_OUTPUT"
+          echo "cloud_changed=$CLOUD_CHANGED" >> "$GITHUB_OUTPUT"
 
   build-and-push:
     name: build application and make jar file
@@ -85,8 +67,7 @@ jobs:
     if: needs.detect.outputs.has_changes == 'true'
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.detect.outputs.matrix) }}
-
+      matrix: ${{ fromJson(needs.detect.outputs.build_matrix) }}
     steps:
       - uses: actions/checkout@v4
 
@@ -102,9 +83,15 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          key: ${{ runner.os }}-gradle-${{ matrix.service }}-${{ hashFiles(format('{0}/*.gradle*', matrix.service), 'common/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
+            ${{ runner.os }}-gradle-${{ matrix.service }}-
             ${{ runner.os }}-gradle-
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-disabled: true # 수동 캐시와 충돌 방지
 
       - name: Build bootJar
         run: ./gradlew :${{ matrix.service }}:bootJar
@@ -124,26 +111,41 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKER_REPO }}/${{ matrix.service }}:latest
 
-  deploy:
-    name: Deploy to Kubernetes
-    runs-on: self-hosted  # EC2에서 직접 명령 실행
+  deploy-cloud:
+    name: Deploy Cloud (config → discovery → apigateway)
+    runs-on: self-hosted
     needs: [detect, build-and-push]
-    if: needs.detect.outputs.has_changes == 'true'
-    strategy:
-      fail-fast: false # 한 서비스가 실패해도 다른 서비스 배포는 진행
-      matrix: ${{ fromJson(needs.detect.outputs.matrix) }} # 변경된 서비스만 배포 대상
-
+    if: needs.detect.outputs.cloud_changed == 'true'
     steps:
       - uses: actions/checkout@v4
 
-      - name: Deploy & Zero-Downtime Rollout
+      - name: Deploy Core Infra
         run: |
-          # 1. 변경된 특정 서비스의 설정만 적용 (또는 전체 적용)
+          for svc in config discovery apigateway; do
+            kubectl apply -f k8s/$svc.yaml
+            kubectl rollout restart deployment/$svc
+            kubectl rollout status deployment/$svc --timeout=300s
+          done
+
+  deploy-domains:
+    name: Deploy Domains
+    runs-on: self-hosted
+    needs: [detect, build-and-push, deploy-cloud]
+    if: |
+      always() && 
+      needs.detect.outputs.has_changes == 'true' &&
+      (needs.deploy-cloud.result == 'success' || needs.deploy-cloud.result == 'skipped')
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix: ${{ fromJson(needs.detect.outputs.domain_matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy & Rollout
+        run: |
           kubectl apply -f k8s/${{ matrix.service }}.yaml
-          
-          # 2. latest 태그 사용 시 필수: 이미지 강제 갱신 및 무중단 배포 시작
-          # Deployment 이름이 서비스명과 같다고 가정합니다.
           kubectl rollout restart deployment/${{ matrix.service }}
+          kubectl rollout status deployment/${{ matrix.service }} --timeout=300s
 
     # EC2 배포
 #  deploy:
