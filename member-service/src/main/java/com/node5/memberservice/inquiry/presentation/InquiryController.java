@@ -7,6 +7,7 @@ import com.node5.memberservice.inquiry.presentation.dto.InquiryRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,7 +25,7 @@ public class InquiryController {
     @GetMapping
     public ResponseEntity<Page<InquiryListResponse>> getMyInquiryList(
             @RequestHeader("Member-Id") UUID memberId,
-            @PageableDefault(size = 10, page = 0, sort = "createdAt") Pageable pageable
+            @PageableDefault(size = 10, page = 0, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         return ResponseEntity.ok(inquiryService.getMyInquiryList(memberId, pageable));
     }
