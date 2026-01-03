@@ -17,59 +17,46 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # 전체 히스토리를 가져와야 PR 이전 시점과 비교가 가능합니다.
+          fetch-depth: 0
 
       - id: detect
         shell: bash
         run: |
           set -euo pipefail
           
-          ALL='["billing-service","catalog-service","member-service","order-service","settlement-service","shop-service","subscription-service"]'
-
-          # 수동 실행 시 전체 배포
+          # 1. 환경 변수 로드 및 통합 목록 생성
+          DOMAINS='${{ vars.DOMAIN_SERVICES }}'
+          INFRA='${{ vars.INFRA_SERVICES }}'
+          ALL=$(echo "$DOMAINS $INFRA" | jq -s -c '.[0] + .[1] | unique')
+          INFRA_PATTERN=$(echo "$INFRA" | jq -r '. | join("|")')
+          ALL_PATTERN=$(echo "$ALL" | jq -r '. | join("|")')
+          
+          # 2. 비교 대상 설정 (수동: main..develop / 자동: before..sha)
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "has_changes=true" >> "$GITHUB_OUTPUT"
-            echo "cloud_changed=true" >> "$GITHUB_OUTPUT"
-            echo "matrix={\"service\":$ALL}" >> "$GITHUB_OUTPUT"
-            exit 0
+            git fetch origin main develop
+            BASE="origin/main"; HEAD="origin/develop"
+          else
+            BASE="${{ github.event.before }}"; HEAD="${{ github.sha }}"
           fi
-
-          BASE="${{ github.event.before }}"
-          HEAD="${{ github.sha }}"
-          CHANGED="$(git diff --name-only "$BASE" "$HEAD")"
-
-          if [ -z "$CHANGED" ]; then
-            echo "has_changes=false" >> "$GITHUB_OUTPUT"
-            echo "cloud_changed=false" >> "$GITHUB_OUTPUT"
-            echo 'matrix={"service":[]}' >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          # cloud/common 중 하나라도 바뀌면 전체 배포
-          if echo "$CHANGED" | grep -qE '^(common/|config/|discovery/|apigateway/)'; then
-          echo "has_changes=true" >> "$GITHUB_OUTPUT"
-          echo "cloud_changed=true"  >> "$GITHUB_OUTPUT"
-          echo "matrix={\"service\":$ALL}" >> "$GITHUB_OUTPUT"
-          exit 0
-          fi
-  
-          # 변경된 도메인 서비스 추출
-          SVC_JSON=$(echo "$CHANGED" \
-          | awk -F/ '{print $1}' \
-          | sort -u \
-          | grep -E '^(billing-service|catalog-service|member-service|order-service|settlement-service|shop-service|subscription-service)$' \
-          | jq -R . | jq -s .)
           
-          echo "cloud_changed=false" >> "$GITHUB_OUTPUT"
+          # 3. 변경 파일 및 서비스 추출
+          CHANGED=$(git diff --name-only $BASE $HEAD || echo "")
           
-          if [ "$SVC_JSON" = "[]" ]; then
-          echo "has_changes=false" >> "$GITHUB_OUTPUT"
-          echo 'matrix={"service":[]}' >> "$GITHUB_OUTPUT"
-          exit 0
-          
+          # common이 변경되면 전체 서비스, 아니면 해당 디렉토리 서비스만 추출
+          if echo "$CHANGED" | grep -qE "^(common/|($INFRA_PATTERN)/)"; then
+            SVC_LIST="$ALL"
+            CLOUD_CHANGED="true"
+          else
+            SVC_LIST=$(echo "$CHANGED" | awk -F/ '{print $1}' | sort -u | grep -E "^($ALL_PATTERN)$" | jq -R . | jq -s -c . || echo "[]")
+            CLOUD_CHANGED="false"
           fi
-          echo "has_changes=true" >> "$GITHUB_OUTPUT"
-          echo "matrix={\"service\":$SVC_JSON}" >> "$GITHUB_OUTPUT"
+          
+          # 4. 결과 출력
+          HAS_CHANGES=$([ "$SVC_LIST" != "[]" ] && echo "true" || echo "false")
+          
+          echo "matrix={\"service\":$SVC_LIST}" >> "$GITHUB_OUTPUT"
+          echo "has_changes=$HAS_CHANGES" >> "$GITHUB_OUTPUT"
+          echo "cloud_changed=$CLOUD_CHANGED" >> "$GITHUB_OUTPUT"
 
   build-and-push:
     name: build application and make jar file
@@ -117,26 +104,65 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKER_REPO }}/${{ matrix.service }}:latest
 
-  deploy:
-    name: Deploy to Kubernetes
-    runs-on: self-hosted  # EC2에서 직접 명령 실행
-    needs: [detect, build-and-push]
-    if: needs.detect.outputs.has_changes == 'true'
-    strategy:
-      fail-fast: false # 한 서비스가 실패해도 다른 서비스 배포는 진행
-      matrix: ${{ fromJson(needs.detect.outputs.matrix) }} # 변경된 서비스만 배포 대상
-
+  deploy-cloud:
+    name: Deploy Cloud (config → discovery → apigateway)
+    runs-on: self-hosted
+    needs: detect
+    if: needs.detect.outputs.cloud_changed == 'true'
     steps:
       - uses: actions/checkout@v4
 
-      - name: Deploy & Zero-Downtime Rollout
+      - name: Deploy config
         run: |
-          # 1. 변경된 특정 서비스의 설정만 적용 (또는 전체 적용)
+          kubectl apply -f k8s/config.yaml
+          kubectl rollout restart deployment/config
+          kubectl rollout status deployment/config --timeout=300s
+
+      - name: Deploy discovery
+        run: |
+          kubectl apply -f k8s/discovery.yaml
+          kubectl rollout restart deployment/discovery
+          kubectl rollout status deployment/discovery --timeout=300s
+
+      - name: Deploy apigateway
+        run: |
+          kubectl apply -f k8s/apigateway.yaml
+          kubectl rollout restart deployment/apigateway
+          kubectl rollout status deployment/apigateway --timeout=300s
+
+  deploy-domains-after-cloud:
+    name: Deploy Domains (after cloud)
+    runs-on: self-hosted
+    needs: [detect, build-and-push, deploy-cloud]
+    if: needs.detect.outputs.cloud_changed == 'true' && needs.detect.outputs.matrix != '{"service":[]}'
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix: ${{ fromJson(needs.detect.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy & Rollout
+        run: |
           kubectl apply -f k8s/${{ matrix.service }}.yaml
-          
-          # 2. latest 태그 사용 시 필수: 이미지 강제 갱신 및 무중단 배포 시작
-          # Deployment 이름이 서비스명과 같다고 가정합니다.
           kubectl rollout restart deployment/${{ matrix.service }}
+          kubectl rollout status deployment/${{ matrix.service }} --timeout=300s
+
+  deploy-domains-direct:
+    name: Deploy Domains (direct)
+    runs-on: self-hosted
+    needs: [detect, build-and-push]
+    if: needs.detect.outputs.cloud_changed == 'false' && needs.detect.outputs.matrix != '{"service":[]}'
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix: ${{ fromJson(needs.detect.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy & Rollout
+        run: |
+          kubectl apply -f k8s/${{ matrix.service }}.yaml
+          kubectl rollout restart deployment/${{ matrix.service }}
+          kubectl rollout status deployment/${{ matrix.service }} --timeout=300s
 
     # EC2 배포
 #  deploy:
