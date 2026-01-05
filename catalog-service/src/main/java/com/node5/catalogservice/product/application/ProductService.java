@@ -10,10 +10,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.node5.catalogservice.kafka.producer.ProductIndexProducer;
 import com.node5.catalogservice.product.application.dto.ProductCommand;
 import com.node5.catalogservice.product.application.dto.ProductInfo;
 import com.node5.catalogservice.product.application.dto.ProductUpdateCommand;
+import com.node5.catalogservice.product.application.port.ProductIndexEventPort;
 import com.node5.catalogservice.product.domain.Product;
 import com.node5.catalogservice.product.domain.ProductRepository;
 import com.node5.catalogservice.product.domain.ProductStatus;
@@ -38,7 +38,7 @@ import lombok.RequiredArgsConstructor;
 public class ProductService {
 
 	private final ProductRepository productRepository;
-	private final ProductIndexProducer productIndexProducer;
+	private final ProductIndexEventPort productIndexEventPort;
 	private final ShopOwnershipClient shopOwnershipClient;
 
 	public Page<ProductInfo> getOnSaleProducts(Pageable pageable) {
@@ -66,8 +66,7 @@ public class ProductService {
 		);
 
 		Product saved = productRepository.save(product);
-		productIndexProducer.sendProductIndexEvent(saved);
-
+		productIndexEventPort.publishCreate(saved);
 		return ProductInfo.from(saved);
 	}
 
@@ -86,8 +85,7 @@ public class ProductService {
 		);
 
 		Product saved = productRepository.save(product);
-		productIndexProducer.sendProductUpdateEvent(saved);
-
+		productIndexEventPort.publishUpdate(saved);
 		return ProductInfo.from(saved);
 	}
 
@@ -99,8 +97,7 @@ public class ProductService {
 		product.adjustStock(stock);
 
 		Product saved = productRepository.save(product);
-		productIndexProducer.sendProductUpdateEvent(saved);
-
+		productIndexEventPort.publishUpdate(saved);
 		return ProductInfo.from(saved);
 	}
 
@@ -112,8 +109,7 @@ public class ProductService {
 		product.changeStatus(status);
 
 		Product saved = productRepository.save(product);
-		productIndexProducer.sendProductUpdateEvent(saved);
-
+		productIndexEventPort.publishUpdate(saved);
 		return ProductInfo.from(saved);
 	}
 
@@ -125,7 +121,7 @@ public class ProductService {
 		product.discontinue();
 
 		Product saved = productRepository.save(product);
-		productIndexProducer.sendProductUpdateEvent(saved);
+		productIndexEventPort.publishUpdate(saved);
 	}
 
 	public Page<ProductInfo> getProductsByShop(UUID memberId, UUID shopId, Pageable pageable) {

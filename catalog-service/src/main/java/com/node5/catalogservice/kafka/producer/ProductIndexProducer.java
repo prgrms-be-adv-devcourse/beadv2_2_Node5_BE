@@ -5,6 +5,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
 import com.node5.catalogservice.kafka.dto.ProductIndexEvent;
+import com.node5.catalogservice.product.application.port.ProductIndexEventPort;
 import com.node5.catalogservice.product.domain.Product;
 
 import lombok.RequiredArgsConstructor;
@@ -13,36 +14,37 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class ProductIndexProducer {
+public class ProductIndexProducer implements ProductIndexEventPort {
 
 	private final KafkaTemplate<String, ProductIndexEvent> kafkaTemplate;
 
 	@Value("${app.search.kafka.topics.product-index:product-index-topic}")
 	private String productIndexTopic;
 
-	public void sendProductIndexEvent(Product product) {
+	@Override
+	public void publishCreate(Product product) {
 		send(ProductIndexEvent.create(product));
 	}
 
-	public void sendProductUpdateEvent(Product product) {
+	@Override
+	public void publishUpdate(Product product) {
 		send(ProductIndexEvent.update(product));
 	}
 
 	private void send(ProductIndexEvent event) {
 		String key = event.productId().toString();
 
-		log.info("Kafka 상품 색인 이벤트 발행, topic={}, key={}",
-			productIndexTopic, key);
-
 		kafkaTemplate
 			.send(productIndexTopic, key, event)
 			.whenComplete((result, ex) -> {
 				if (ex != null) {
-					log.error("Kafka 상품 색인 이벤트 발행 실패, key={}", key, ex);
+					log.error("Kafka 상품 색인 이벤트 발행 실패, topic={}, key={}, productId={}",
+						productIndexTopic, key, event.productId(), ex);
 				} else {
-					log.info("Kafka 상품 색인 이벤트 발행 성공, key={}, offset={}",
-						key, result.getRecordMetadata().offset()
-					);
+					log.info("Kafka 상품 색인 이벤트 발행 성공, topic={}, key={}, partition={}, offset={}",
+						productIndexTopic, key,
+						result.getRecordMetadata().partition(),
+						result.getRecordMetadata().offset());
 				}
 			});
 	}
