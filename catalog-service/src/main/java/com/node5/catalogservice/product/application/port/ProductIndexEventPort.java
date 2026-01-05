@@ -1,8 +1,7 @@
 package com.node5.catalogservice.product.application.port;
 
-import com.node5.catalogservice.product.domain.Product;
+import com.node5.catalogservice.product.event.ProductIndexEvent;
 
 public interface ProductIndexEventPort {
-	void publishCreate(Product product);
-	void publishUpdate(Product product);
+	void publish(ProductIndexEvent event);
 }

@@ -17,6 +17,7 @@ import com.node5.catalogservice.product.application.port.ProductIndexEventPort;
 import com.node5.catalogservice.product.domain.Product;
 import com.node5.catalogservice.product.domain.ProductRepository;
 import com.node5.catalogservice.product.domain.ProductStatus;
+import com.node5.catalogservice.product.event.ProductIndexEvent;
 import com.node5.catalogservice.product.exception.OnSaleProductNotFoundException;
 import com.node5.catalogservice.product.exception.ProductErrorCode;
 import com.node5.catalogservice.product.exception.ProductNotFoundException;
@@ -66,7 +67,7 @@ public class ProductService {
 		);
 
 		Product saved = productRepository.save(product);
-		productIndexEventPort.publishCreate(saved);
+		productIndexEventPort.publish(ProductIndexEvent.create(saved));
 		return ProductInfo.from(saved);
 	}
 
@@ -85,7 +86,7 @@ public class ProductService {
 		);
 
 		Product saved = productRepository.save(product);
-		productIndexEventPort.publishUpdate(saved);
+		productIndexEventPort.publish(ProductIndexEvent.update(saved));
 		return ProductInfo.from(saved);
 	}
 
@@ -97,7 +98,7 @@ public class ProductService {
 		product.adjustStock(stock);
 
 		Product saved = productRepository.save(product);
-		productIndexEventPort.publishUpdate(saved);
+		productIndexEventPort.publish(ProductIndexEvent.update(saved));
 		return ProductInfo.from(saved);
 	}
 
@@ -109,7 +110,7 @@ public class ProductService {
 		product.changeStatus(status);
 
 		Product saved = productRepository.save(product);
-		productIndexEventPort.publishUpdate(saved);
+		productIndexEventPort.publish(ProductIndexEvent.update(saved));
 		return ProductInfo.from(saved);
 	}
 
@@ -121,7 +122,7 @@ public class ProductService {
 		product.discontinue();
 
 		Product saved = productRepository.save(product);
-		productIndexEventPort.publishUpdate(saved);
+		productIndexEventPort.publish(ProductIndexEvent.update(saved));
 	}
 
 	public Page<ProductInfo> getProductsByShop(UUID memberId, UUID shopId, Pageable pageable) {
