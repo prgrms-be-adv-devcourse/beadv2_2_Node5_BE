@@ -3,9 +3,9 @@ package com.node5.catalogservice.product.domain;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-import com.node5.catalogservice.product.exception.ProductInvalidStockException;
-import com.node5.catalogservice.product.exception.ProductStatusChangeNotAllowedException;
+import com.node5.catalogservice.product.exception.ProductErrorCode;
 import com.node5.common.domain.BaseEntity;
+import com.node5.common.exception.BaseException;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -116,6 +116,10 @@ public class Product extends BaseEntity {
 		ProductCategory category,
 		String thumbnailUrl
 	) {
+		if (this.status == ProductStatus.DISCONTINUED) {
+			throw new BaseException(ProductErrorCode.PRODUCT_STATUS_CHANGE_NOT_ALLOWED);
+		}
+
 		this.name = name;
 		this.description = description;
 		this.price = price;
@@ -128,8 +132,8 @@ public class Product extends BaseEntity {
 	}
 
 	public void changeStatus(ProductStatus newStatus) {
-		if (this.status == ProductStatus.DISCONTINUED) {
-			throw new ProductStatusChangeNotAllowedException();
+		if (this.status == ProductStatus.DISCONTINUED || newStatus == ProductStatus.DISCONTINUED) {
+			throw new BaseException(ProductErrorCode.PRODUCT_STATUS_CHANGE_NOT_ALLOWED);
 		}
 		this.status = newStatus;
 	}
@@ -143,7 +147,7 @@ public class Product extends BaseEntity {
 
 	private void validateStockNonNegative(int stock) {
 		if (stock < 0) {
-			throw new ProductInvalidStockException(stock);
+			throw new BaseException(ProductErrorCode.PRODUCT_INVALID_STOCK);
 		}
 	}
 }
