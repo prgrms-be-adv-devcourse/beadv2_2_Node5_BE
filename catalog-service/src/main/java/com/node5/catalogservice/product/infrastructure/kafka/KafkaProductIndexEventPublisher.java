@@ -1,10 +1,10 @@
-package com.node5.catalogservice.kafka.producer;
+package com.node5.catalogservice.product.infrastructure.kafka;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
-import com.node5.catalogservice.kafka.dto.ProductIndexEvent;
+import com.node5.catalogservice.product.event.ProductIndexEvent;
 import com.node5.catalogservice.product.application.port.ProductIndexEventPort;
 import com.node5.catalogservice.product.domain.Product;
 
@@ -14,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class ProductIndexProducer implements ProductIndexEventPort {
+public class KafkaProductIndexEventPublisher implements ProductIndexEventPort {
 
 	private final KafkaTemplate<String, ProductIndexEvent> kafkaTemplate;
 

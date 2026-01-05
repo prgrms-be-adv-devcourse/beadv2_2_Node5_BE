@@ -20,7 +20,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
-import com.node5.catalogservice.kafka.producer.ProductIndexProducer;
+import com.node5.catalogservice.product.infrastructure.kafka.KafkaProductIndexEventPublisher;
 import com.node5.catalogservice.product.application.dto.ProductCommand;
 import com.node5.catalogservice.product.application.dto.ProductInfo;
 import com.node5.catalogservice.product.application.dto.ProductUpdateCommand;
@@ -46,7 +46,7 @@ class ProductServiceTest {
 	private ProductRepository productRepository;
 
 	@Mock
-	private ProductIndexProducer productIndexProducer;
+	private KafkaProductIndexEventPublisher kafkaProductIndexEventPublisher;
 
 	@Mock
 	private ShopOwnershipClient shopOwnershipClient;
@@ -84,7 +84,7 @@ class ProductServiceTest {
 		assertThat(result).isNotNull();
 		then(shopOwnershipClient).should().getOwnerMemberId(shopId);
 		then(productRepository).should().save(any(Product.class));
-		then(productIndexProducer).should().sendProductIndexEvent(saved);
+		then(kafkaProductIndexEventPublisher).should().sendProductIndexEvent(saved);
 	}
 
 	@Test
@@ -114,7 +114,7 @@ class ProductServiceTest {
 			});
 
 		then(productRepository).shouldHaveNoInteractions();
-		then(productIndexProducer).shouldHaveNoInteractions();
+		then(kafkaProductIndexEventPublisher).shouldHaveNoInteractions();
 	}
 
 	@Test
@@ -145,7 +145,7 @@ class ProductServiceTest {
 			});
 
 		then(productRepository).shouldHaveNoInteractions();
-		then(productIndexProducer).shouldHaveNoInteractions();
+		then(kafkaProductIndexEventPublisher).shouldHaveNoInteractions();
 	}
 
 	@Test
@@ -175,7 +175,7 @@ class ProductServiceTest {
 			});
 
 		then(productRepository).shouldHaveNoInteractions();
-		then(productIndexProducer).shouldHaveNoInteractions();
+		then(kafkaProductIndexEventPublisher).shouldHaveNoInteractions();
 	}
 
 	@Test
@@ -207,7 +207,7 @@ class ProductServiceTest {
 		assertThat(result).isNotNull();
 		then(shopOwnershipClient).should().getOwnerMemberId(shopId);
 		then(productRepository).should().save(existing);
-		then(productIndexProducer).should().sendProductUpdateEvent(existing);
+		then(kafkaProductIndexEventPublisher).should().sendProductUpdateEvent(existing);
 	}
 
 	@Test
@@ -233,7 +233,7 @@ class ProductServiceTest {
 
 		then(shopOwnershipClient).shouldHaveNoInteractions();
 		then(productRepository).should(never()).save(any());
-		then(productIndexProducer).shouldHaveNoInteractions();
+		then(kafkaProductIndexEventPublisher).shouldHaveNoInteractions();
 	}
 
 	@Test
@@ -255,7 +255,7 @@ class ProductServiceTest {
 		// then
 		assertThat(result).isNotNull();
 		then(productRepository).should().save(existing);
-		then(productIndexProducer).should().sendProductUpdateEvent(existing);
+		then(kafkaProductIndexEventPublisher).should().sendProductUpdateEvent(existing);
 	}
 
 	@Test
@@ -276,7 +276,7 @@ class ProductServiceTest {
 
 		// then
 		then(productRepository).should().save(existing);
-		then(productIndexProducer).should().sendProductUpdateEvent(existing);
+		then(kafkaProductIndexEventPublisher).should().sendProductUpdateEvent(existing);
 	}
 
 	@Test
@@ -414,7 +414,7 @@ class ProductServiceTest {
 			});
 
 		then(productRepository).should(never()).save(any());
-		then(productIndexProducer).shouldHaveNoInteractions();
+		then(kafkaProductIndexEventPublisher).shouldHaveNoInteractions();
 	}
 
 	@Test
