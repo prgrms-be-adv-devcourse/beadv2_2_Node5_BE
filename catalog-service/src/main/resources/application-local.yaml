@@ -34,7 +34,9 @@ shop-service:
 
 app:
   search:
-    product-index-name: products
+    index:
+      product: products
+
     kafka:
       topics:
         product-index: product-index-topic
