@@ -131,6 +131,14 @@ public class Product extends BaseEntity {
 		this.thumbnailUrl = thumbnailUrl;
 	}
 
+	public void adjustStock(int newStock) {
+		if (this.status == ProductStatus.DISCONTINUED) {
+			throw new BaseException(ProductErrorCode.PRODUCT_STATUS_CHANGE_NOT_ALLOWED);
+		}
+		validateStockNonNegative(newStock);
+		this.stock = newStock;
+	}
+
 	public void changeStatus(ProductStatus newStatus) {
 		if (this.status == ProductStatus.DISCONTINUED || newStatus == ProductStatus.DISCONTINUED) {
 			throw new BaseException(ProductErrorCode.PRODUCT_STATUS_CHANGE_NOT_ALLOWED);
