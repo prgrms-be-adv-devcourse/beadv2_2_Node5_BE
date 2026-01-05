@@ -15,7 +15,7 @@ public class ShopInternalController {
     private final ShopService shopService;
 
     @GetMapping("/{shopId}/member-id")
-    public ResponseEntity<String> getMemberIdByShopId(@PathVariable UUID shopId){
+    public ResponseEntity<UUID> getMemberIdByShopId(@PathVariable UUID shopId){
         return ResponseEntity.ok(shopService.getMemberIdByShopId(shopId));
     }
 
