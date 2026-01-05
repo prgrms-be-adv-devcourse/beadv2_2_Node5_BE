@@ -70,8 +70,7 @@ public class CartService {
 	 * - 상품 존재 여부 및 판매 상태(ON_SALE) 검증<br>
 	 * - 동일 상품이 이미 담긴 경우 수량을 증가 처리
 	 */
-	public CartItemInfo addItem(CartItemCommand command) {
-		UUID memberId = command.memberId();
+	public CartItemInfo addItem(UUID memberId, CartItemCommand command) {
 		UUID productId = command.productId();
 		int quantity = command.quantity();
 

@@ -26,7 +26,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("${api.v1}/search")
+@RequestMapping("${api.v1}/products/search")
 @RequiredArgsConstructor
 @Tag(name = "Product Search", description = "사용자를 위한 상품 검색 API")
 public class ProductSearchController {

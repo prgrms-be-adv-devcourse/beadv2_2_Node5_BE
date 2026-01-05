@@ -47,41 +47,41 @@ class CartServiceTest {
 	private static final Pageable DEFAULT_PAGE = PageRequest.of(0, 10);
 
 	@Test
-	void 판매중이_아닌_상품은_장바구니에_담을_수_없다() {
+	void 장바구니_항목_추가시_판매중이_아닌_상품이면_CartProductNotOnSaleException() {
 		// given
 		UUID memberId = uuid();
 
 		Product hiddenProduct = ProductTestFactory.hidden();
 		UUID productId = hiddenProduct.getId();
 
-		CartItemCommand command = command(memberId, productId, 1);
+		CartItemCommand command = command(productId, 1);
 		given(productRepository.findById(productId)).willReturn(Optional.of(hiddenProduct));
 
 		// when & then
-		assertThatThrownBy(() -> cartService.addItem(command))
+		assertThatThrownBy(() -> cartService.addItem(memberId, command))
 			.isInstanceOf(CartProductNotOnSaleException.class);
 
 		then(cartItemRepository).shouldHaveNoInteractions();
 	}
 
 	@Test
-	void 상품이_없으면_장바구니에_담을_수_없다() {
+	void 장바구니_항목_추가시_상품이_없으면_CartProductNotFoundException() {
 		// given
 		UUID memberId = uuid();
 		UUID productId = uuid();
 
-		CartItemCommand command = command(memberId, productId, 1);
+		CartItemCommand command = command(productId, 1);
 		given(productRepository.findById(productId)).willReturn(Optional.empty());
 
 		// when & then
-		assertThatThrownBy(() -> cartService.addItem(command))
+		assertThatThrownBy(() -> cartService.addItem(memberId, command))
 			.isInstanceOf(CartProductNotFoundException.class);
 
 		then(cartItemRepository).shouldHaveNoInteractions();
 	}
 
 	@Test
-	void 동일_상품이_이미_담긴_경우_수량을_증가시킨다() {
+	void 장바구니_항목_추가시_동일_상품이_이미_담긴_경우_수량을_증가시킨다() {
 		// given
 		UUID memberId = uuid();
 		int addQty = 3;
@@ -89,7 +89,7 @@ class CartServiceTest {
 		Product onSaleProduct = ProductTestFactory.onSale();
 		UUID productId = onSaleProduct.getId();
 
-		CartItemCommand command = command(memberId, productId, addQty);
+		CartItemCommand command = command(productId, addQty);
 		given(productRepository.findById(productId)).willReturn(Optional.of(onSaleProduct));
 
 		CartItem existing = mock(CartItem.class);
@@ -100,7 +100,7 @@ class CartServiceTest {
 		given(cartItemRepository.save(existing)).willReturn(existing);
 
 		// when
-		CartItemInfo result = cartService.addItem(command);
+		CartItemInfo result = cartService.addItem(memberId, command);
 
 		// then
 		assertThat(result).isNotNull();
@@ -109,7 +109,7 @@ class CartServiceTest {
 	}
 
 	@Test
-	void 장바구니_항목_수정시_소유자가_아니면_예외가_발생한다() {
+	void 장바구니_항목_수정시_소유자가_아니면_CartItemForbiddenException() {
 		// given
 		UUID memberId = uuid();
 		UUID otherMemberId = uuid();
@@ -128,7 +128,7 @@ class CartServiceTest {
 	}
 
 	@Test
-	void 장바구니_항목_수정시_상품이_유실되면_예외가_발생한다() {
+	void 장바구니_항목_수정시_상품이_유실되면_CartProductNotFoundException() {
 		// given
 		UUID memberId = uuid();
 		UUID cartItemId = uuid();
@@ -169,7 +169,7 @@ class CartServiceTest {
 	}
 
 	@Test
-	void 장바구니_항목_삭제시_소유자가_아니면_예외가_발생한다() {
+	void 장바구니_항목_삭제시_소유자가_아니면_CartItemForbiddenException() {
 		// given
 		UUID memberId = uuid();
 		UUID otherMemberId = uuid();
@@ -186,7 +186,7 @@ class CartServiceTest {
 	}
 
 	@Test
-	void 장바구니_항목_삭제시_대상이_없으면_예외가_발생한다() {
+	void 장바구니_항목_삭제시_대상이_없으면_CartItemNotFoundException() {
 		// given
 		UUID memberId = uuid();
 		UUID cartItemId = uuid();
@@ -201,7 +201,7 @@ class CartServiceTest {
 	}
 
 	@Test
-	void 장바구니_전체_비우기시_memberId로_일괄삭제된다() {
+	void 장바구니_전체비우기시_deleteByMemberId로_일괄삭제된다() {
 		// given
 		UUID memberId = uuid();
 
@@ -238,7 +238,7 @@ class CartServiceTest {
 	}
 
 	@Test
-	void 장바구니_조회시_상품이_DB에_없으면_예외가_발생한다() {
+	void 장바구니_조회시_상품이_DB에_없으면_CartProductNotFoundException() {
 		// given
 		UUID memberId = uuid();
 		UUID productId = uuid();
@@ -256,7 +256,7 @@ class CartServiceTest {
 	}
 
 	@Test
-	void 장바구니에_없는_상품이면_새_항목으로_저장된다() {
+	void 장바구니_항목_추가시_기존_항목이_없으면_새_항목으로_저장된다() {
 		// given
 		UUID memberId = uuid();
 		int qty = 2;
@@ -264,7 +264,7 @@ class CartServiceTest {
 		Product onSaleProduct = ProductTestFactory.onSale();
 		UUID productId = onSaleProduct.getId();
 
-		CartItemCommand command = command(memberId, productId, qty);
+		CartItemCommand command = command(productId, qty);
 
 		given(productRepository.findById(productId)).willReturn(Optional.of(onSaleProduct));
 		given(cartItemRepository.findByMemberIdAndProductId(memberId, productId))
@@ -280,7 +280,7 @@ class CartServiceTest {
 		given(cartItemRepository.save(any(CartItem.class))).willReturn(saved);
 
 		// when
-		CartItemInfo result = cartService.addItem(command);
+		CartItemInfo result = cartService.addItem(memberId, command);
 
 		// then
 		assertThat(result).isNotNull();
@@ -303,8 +303,8 @@ class CartServiceTest {
 		return UUID.randomUUID();
 	}
 
-	private CartItemCommand command(UUID memberId, UUID productId, int quantity) {
-		return new CartItemCommand(memberId, productId, quantity);
+	private CartItemCommand command(UUID productId, int quantity) {
+		return new CartItemCommand(productId, quantity);
 	}
 
 	private CartItemUpdateCommand updateCommand(int quantity) {

@@ -19,7 +19,7 @@ public record CartItemRequest(
 	Integer quantity
 ) {
 
-	public CartItemCommand toCommand(UUID memberId) {
-		return new CartItemCommand(memberId, productId, quantity);
+	public CartItemCommand toCommand() {
+		return new CartItemCommand(productId, quantity);
 	}
 }

@@ -18,10 +18,10 @@ import com.node5.catalogservice.product.domain.Product;
 import com.node5.catalogservice.product.domain.ProductRepository;
 import com.node5.catalogservice.product.domain.ProductStatus;
 import com.node5.catalogservice.product.exception.OnSaleProductNotFoundException;
+import com.node5.catalogservice.product.exception.ProductErrorCode;
 import com.node5.catalogservice.product.exception.ProductNotFoundException;
-import com.node5.catalogservice.product.exception.ShopForbiddenException;
-import com.node5.catalogservice.product.exception.ShopNotFoundException;
-import com.node5.catalogservice.shop.client.ShopServiceClient;
+import com.node5.catalogservice.shop.client.ShopOwnershipClient;
+import com.node5.common.exception.BaseException;
 
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
@@ -39,7 +39,7 @@ public class ProductService {
 
 	private final ProductRepository productRepository;
 	private final ProductIndexProducer productIndexProducer;
-	private final ShopServiceClient shopServiceClient;
+	private final ShopOwnershipClient shopOwnershipClient;
 
 	public Page<ProductInfo> getOnSaleProducts(Pageable pageable) {
 		return productRepository.findByStatus(ProductStatus.ON_SALE, pageable)
@@ -51,11 +51,11 @@ public class ProductService {
 	}
 
 	@Transactional
-	public ProductInfo createProduct(UUID memberId, ProductCommand command) {
-		validateShopOwnership(memberId, command.shopId());
+	public ProductInfo createProduct(UUID memberId, UUID shopId, ProductCommand command) {
+		validateShopOwnership(memberId, shopId);
 
 		Product product = Product.create(
-			command.shopId(),
+			shopId,
 			command.name(),
 			command.description(),
 			command.price(),
@@ -159,11 +159,15 @@ public class ProductService {
 
 	private void validateShopOwnership(UUID memberId, UUID shopId) {
 		try {
-			shopServiceClient.getShopInfo(memberId, shopId);
+			UUID ownerMemberId = shopOwnershipClient.getOwnerMemberId(shopId);
+
+			if (!ownerMemberId.equals(memberId)) {
+				throw new BaseException(ProductErrorCode.SHOP_FORBIDDEN);
+			}
 		} catch (FeignException.NotFound e) {
-			throw new ShopNotFoundException();
-		} catch (FeignException.Forbidden e) {
-			throw new ShopForbiddenException();
+			throw new BaseException(ProductErrorCode.SHOP_NOT_FOUND);
+		} catch (FeignException e) {
+			throw new BaseException(ProductErrorCode.SHOP_SERVICE_UNAVAILABLE);
 		}
 	}
 }
