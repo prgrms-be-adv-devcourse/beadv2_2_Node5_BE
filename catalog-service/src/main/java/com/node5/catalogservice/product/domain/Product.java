@@ -3,9 +3,9 @@ package com.node5.catalogservice.product.domain;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-import com.node5.catalogservice.product.exception.ProductInvalidStockException;
-import com.node5.catalogservice.product.exception.ProductStatusChangeNotAllowedException;
+import com.node5.catalogservice.product.exception.ProductErrorCode;
 import com.node5.common.domain.BaseEntity;
+import com.node5.common.exception.BaseException;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -108,7 +108,7 @@ public class Product extends BaseEntity {
 		validateStockNonNegative(stock);
 	}
 
-	public void applyPatch(
+	public void applyUpdate(
 		String name,
 		String description,
 		BigDecimal price,
@@ -116,23 +116,32 @@ public class Product extends BaseEntity {
 		ProductCategory category,
 		String thumbnailUrl
 	) {
-
-		if (name != null) this.name = name;
-		if (description != null) this.description = description;
-		if (price != null) this.price = price;
-
-		if (stock != null) {
-			validateStockNonNegative(stock);
-			this.stock = stock;
+		if (this.status == ProductStatus.DISCONTINUED) {
+			throw new BaseException(ProductErrorCode.PRODUCT_STATUS_CHANGE_NOT_ALLOWED);
 		}
 
-		if (category != null) this.category = category;
-		if (thumbnailUrl != null) this.thumbnailUrl = thumbnailUrl;
+		this.name = name;
+		this.description = description;
+		this.price = price;
+
+		validateStockNonNegative(stock);
+		this.stock = stock;
+
+		this.category = category;
+		this.thumbnailUrl = thumbnailUrl;
+	}
+
+	public void adjustStock(int newStock) {
+		if (this.status == ProductStatus.DISCONTINUED) {
+			throw new BaseException(ProductErrorCode.PRODUCT_STATUS_CHANGE_NOT_ALLOWED);
+		}
+		validateStockNonNegative(newStock);
+		this.stock = newStock;
 	}
 
 	public void changeStatus(ProductStatus newStatus) {
-		if (this.status == ProductStatus.DISCONTINUED) {
-			throw new ProductStatusChangeNotAllowedException();
+		if (this.status == ProductStatus.DISCONTINUED || newStatus == ProductStatus.DISCONTINUED) {
+			throw new BaseException(ProductErrorCode.PRODUCT_STATUS_CHANGE_NOT_ALLOWED);
 		}
 		this.status = newStatus;
 	}
@@ -146,7 +155,7 @@ public class Product extends BaseEntity {
 
 	private void validateStockNonNegative(int stock) {
 		if (stock < 0) {
-			throw new ProductInvalidStockException(stock);
+			throw new BaseException(ProductErrorCode.PRODUCT_INVALID_STOCK);
 		}
 	}
 }

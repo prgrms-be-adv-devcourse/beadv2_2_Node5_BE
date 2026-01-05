@@ -29,9 +29,8 @@ import com.node5.catalogservice.product.domain.ProductCategory;
 import com.node5.catalogservice.product.domain.ProductRepository;
 import com.node5.catalogservice.product.domain.ProductStatus;
 import com.node5.catalogservice.product.exception.OnSaleProductNotFoundException;
-import com.node5.catalogservice.product.exception.ProductNotFoundException;
-import com.node5.catalogservice.product.exception.ProductStatusChangeNotAllowedException;
 import com.node5.catalogservice.product.exception.ProductErrorCode;
+import com.node5.catalogservice.product.exception.ProductNotFoundException;
 import com.node5.catalogservice.shop.client.ShopOwnershipClient;
 import com.node5.catalogservice.testsupport.ProductTestFactory;
 import com.node5.common.exception.BaseException;
@@ -392,7 +391,7 @@ class ProductServiceTest {
 	}
 
 	@Test
-	void 이미_판매중단된_상품은_상태를_변경할_수_없다() {
+	void 판매중단된_상품_상태변경시_PRODUCT_STATUS_CHANGE_NOT_ALLOWED_BaseException() {
 		// given
 		UUID memberId = uuid();
 
@@ -404,8 +403,15 @@ class ProductServiceTest {
 		given(shopOwnershipClient.getOwnerMemberId(shopId)).willReturn(memberId);
 
 		// when & then
-		assertThatThrownBy(() -> productService.updateStatus(memberId, productId, ProductStatus.HIDDEN))
-			.isInstanceOf(ProductStatusChangeNotAllowedException.class);
+		assertThatThrownBy(() ->
+			productService.updateStatus(memberId, productId, ProductStatus.HIDDEN)
+		)
+			.isInstanceOf(BaseException.class)
+			.satisfies(ex -> {
+				BaseException be = (BaseException) ex;
+				assertThat(be.getErrorCode())
+					.isEqualTo(ProductErrorCode.PRODUCT_STATUS_CHANGE_NOT_ALLOWED);
+			});
 
 		then(productRepository).should(never()).save(any());
 		then(productIndexProducer).shouldHaveNoInteractions();

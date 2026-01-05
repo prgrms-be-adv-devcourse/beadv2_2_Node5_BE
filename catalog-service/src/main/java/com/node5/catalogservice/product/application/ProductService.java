@@ -76,7 +76,7 @@ public class ProductService {
 		Product product = getProductOrThrow(productId);
 		validateShopOwnership(memberId, product.getShopId());
 
-		product.applyPatch(
+		product.applyUpdate(
 			command.name(),
 			command.description(),
 			command.price(),
@@ -84,6 +84,19 @@ public class ProductService {
 			command.category(),
 			command.thumbnailUrl()
 		);
+
+		Product saved = productRepository.save(product);
+		productIndexProducer.sendProductUpdateEvent(saved);
+
+		return ProductInfo.from(saved);
+	}
+
+	@Transactional
+	public ProductInfo adjustStock(UUID memberId, UUID productId, int stock) {
+		Product product = getProductOrThrow(productId);
+		validateShopOwnership(memberId, product.getShopId());
+
+		product.adjustStock(stock);
 
 		Product saved = productRepository.save(product);
 		productIndexProducer.sendProductUpdateEvent(saved);
