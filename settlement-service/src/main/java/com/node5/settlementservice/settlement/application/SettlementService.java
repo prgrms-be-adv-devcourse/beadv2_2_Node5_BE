@@ -26,11 +26,7 @@ public class SettlementService {
     private final SettlementResultRepository settlementResultRepository;
 
 
-    public SettlementListInfo getSettlementHistory(String roles, UUID shopId, YearMonth startYm, YearMonth endYm, int page) {
-        if(!hasSellerRole(roles)){
-            throw new SettlementException(ACCESS_DENIED);
-        }
-
+    public SettlementListInfo getSettlementHistory(UUID shopId, YearMonth startYm, YearMonth endYm, int page) {
         LocalDate periodStart = startYm.atDay(1);
         LocalDate periodEnd = endYm.atEndOfMonth();
 
@@ -49,18 +45,4 @@ public class SettlementService {
         return SettlementListInfo.from(pageInfo, detailInfoList);
     }
 
-    private boolean hasSellerRole(String roles){
-        if (roles == null || roles.isEmpty()) {
-            return false;
-        }
-
-        String[] roleArr = roles.split(",");
-        for (String role : roleArr) {
-            if ("SELLER".equals(role.trim().toUpperCase())) {
-                return true;
-            }
-        }
-
-        return false;
-    }
 }
