@@ -23,9 +23,9 @@ import com.node5.catalogservice.product.application.dto.ProductCommand;
 import com.node5.catalogservice.product.application.dto.ProductInfo;
 import com.node5.catalogservice.product.application.dto.ProductUpdateCommand;
 import com.node5.catalogservice.product.presentation.dto.ProductRequest;
+import com.node5.catalogservice.product.presentation.dto.ProductStatusUpdateRequest;
 import com.node5.catalogservice.product.presentation.dto.ProductStockUpdateRequest;
 import com.node5.catalogservice.product.presentation.dto.ProductUpdateRequest;
-import com.node5.catalogservice.product.presentation.dto.StatusRequest;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -128,7 +128,7 @@ public class SellerProductController {
 	public ResponseEntity<ProductInfo> updateProductStatus(
 		@RequestHeader("Member-Id") UUID memberId,
 		@PathVariable("productId") UUID productId,
-		@Valid @RequestBody StatusRequest request
+		@Valid @RequestBody ProductStatusUpdateRequest request
 	) {
 		return ResponseEntity.ok(productService.updateStatus(memberId, productId, request.status()));
 	}
