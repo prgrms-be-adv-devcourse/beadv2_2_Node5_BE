@@ -20,6 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -111,5 +112,11 @@ public class ShopService {
         );
 
         return shop.getMemberId();
+    }
+
+    public List<UUID> getShopIds(UUID memberId) {
+        List<Shop> shops = shopRepository.findAllByMemberIdAndDeletedAtIsNull(memberId);
+
+        return shops.stream().map(Shop::getId).toList();
     }
 }

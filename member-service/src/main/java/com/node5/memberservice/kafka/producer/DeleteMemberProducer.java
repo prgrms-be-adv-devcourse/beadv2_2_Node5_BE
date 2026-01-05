@@ -14,6 +14,7 @@ public class DeleteMemberProducer {
     private final static String deleteMemberTopic = "delete-member";
 
     public void send(MemberDeletedEvent memberDeletedEvent) {
-        kafkaTemplate.send(deleteMemberTopic, memberDeletedEvent);
+        String key = memberDeletedEvent.memberId().toString();
+        kafkaTemplate.send(deleteMemberTopic, key, memberDeletedEvent);
     }
 }
