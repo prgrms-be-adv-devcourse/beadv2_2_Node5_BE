@@ -108,7 +108,7 @@ public class Product extends BaseEntity {
 		validateStockNonNegative(stock);
 	}
 
-	public void applyPatch(
+	public void applyUpdate(
 		String name,
 		String description,
 		BigDecimal price,
@@ -116,18 +116,15 @@ public class Product extends BaseEntity {
 		ProductCategory category,
 		String thumbnailUrl
 	) {
+		this.name = name;
+		this.description = description;
+		this.price = price;
 
-		if (name != null) this.name = name;
-		if (description != null) this.description = description;
-		if (price != null) this.price = price;
+		validateStockNonNegative(stock);
+		this.stock = stock;
 
-		if (stock != null) {
-			validateStockNonNegative(stock);
-			this.stock = stock;
-		}
-
-		if (category != null) this.category = category;
-		if (thumbnailUrl != null) this.thumbnailUrl = thumbnailUrl;
+		this.category = category;
+		this.thumbnailUrl = thumbnailUrl;
 	}
 
 	public void changeStatus(ProductStatus newStatus) {

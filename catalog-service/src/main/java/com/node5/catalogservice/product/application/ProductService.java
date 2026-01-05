@@ -76,7 +76,7 @@ public class ProductService {
 		Product product = getProductOrThrow(productId);
 		validateShopOwnership(memberId, product.getShopId());
 
-		product.applyPatch(
+		product.applyUpdate(
 			command.name(),
 			command.description(),
 			command.price(),
