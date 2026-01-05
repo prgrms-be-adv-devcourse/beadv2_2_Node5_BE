@@ -105,11 +105,11 @@ public class ShopService {
         }
     }
 
-    public String getMemberIdByShopId(UUID shopId) {
+    public UUID getMemberIdByShopId(UUID shopId) {
         Shop shop = shopRepository.findById(shopId).orElseThrow(
                 () -> new ShopException(ShopErrorCode.SHOP_NOT_FOUND)
         );
 
-        return shop.getMemberId().toString();
+        return shop.getMemberId();
     }
 }
