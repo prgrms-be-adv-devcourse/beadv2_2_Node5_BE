@@ -1,7 +1,6 @@
 package com.node5.catalogservice.product.presentation.dto;
 
 import java.math.BigDecimal;
-import java.util.UUID;
 
 import com.node5.catalogservice.product.application.dto.ProductCommand;
 import com.node5.catalogservice.product.domain.ProductCategory;
@@ -50,7 +49,7 @@ public record ProductRequest(
 			description,
 			price,
 			stock,
-			status,
+			status != null ? status : ProductStatus.ON_SALE,
 			category,
 			thumbnailUrl
 		);
