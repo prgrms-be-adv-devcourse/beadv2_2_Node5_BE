@@ -4,6 +4,7 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
 import com.node5.catalogservice.product.event.ProductIndexEvent;
+import com.node5.catalogservice.product.infrastructure.kafka.KafkaTopicsProperties;
 import com.node5.catalogservice.search.domain.ProductDocument;
 import com.node5.catalogservice.search.infrastructure.ProductSearchRepository;
 
@@ -18,7 +19,7 @@ public class KafkaProductIndexEventConsumer {
 	private final ProductSearchRepository productSearchRepository;
 
 	@KafkaListener(
-		topics = "${app.search.kafka.topics.product-index:product-index-topic}",
+		topics = "${app.search.kafka.topics.product-index}",
 		groupId = "${spring.kafka.consumer.group-id:catalog-service-search}"
 	)
 	public void consume(ProductIndexEvent event) {
