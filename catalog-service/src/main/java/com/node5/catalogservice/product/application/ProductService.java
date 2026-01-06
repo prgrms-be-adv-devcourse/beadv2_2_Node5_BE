@@ -27,13 +27,6 @@ import com.node5.common.exception.BaseException;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 
-/**
- * 상품(Product) 도메인의 비즈니스 로직을 담당합니다.
- * <p>
- * - 상품 조회 / 생성 / 수정 / 상태 변경<br>
- * - 판매자 소유권 검증 (Shop-Service 연동)<br>
- * - 상품 변경 시 검색 색인 동기화를 위한 Kafka 이벤트를 발행
- */
 @Service
 @RequiredArgsConstructor
 public class ProductService {
@@ -60,7 +53,6 @@ public class ProductService {
 			command.name(),
 			command.description(),
 			command.price(),
-			command.stock(),
 			command.status(),
 			command.category(),
 			command.thumbnailUrl()
@@ -80,7 +72,6 @@ public class ProductService {
 			command.name(),
 			command.description(),
 			command.price(),
-			command.stock(),
 			command.category(),
 			command.thumbnailUrl()
 		);
@@ -120,12 +111,6 @@ public class ProductService {
 			.map(ProductInfo::from);
 	}
 
-	/**
-	 * 상품 ID 목록에 대해 상품의 상점 ID를 조회합니다.
-	 * <p>
-	 * - 요청된 모든 상품이 존재해야 하며<br>
-	 * - 하나라도 존재하지 않으면 예외를 반환합니다.
-	 */
 	@Transactional(readOnly = true)
 	public Map<UUID, UUID> getShopIdsByProductIds(List<UUID> productIds) {
 
