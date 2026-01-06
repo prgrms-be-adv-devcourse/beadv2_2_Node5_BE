@@ -24,7 +24,6 @@ import com.node5.catalogservice.product.application.dto.ProductInfo;
 import com.node5.catalogservice.product.application.dto.ProductUpdateCommand;
 import com.node5.catalogservice.product.presentation.dto.ProductRequest;
 import com.node5.catalogservice.product.presentation.dto.ProductStatusUpdateRequest;
-import com.node5.catalogservice.product.presentation.dto.ProductStockUpdateRequest;
 import com.node5.catalogservice.product.presentation.dto.ProductUpdateRequest;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -102,15 +101,6 @@ public class SellerProductController {
 	) {
 		ProductUpdateCommand command = request.toCommand();
 		return ResponseEntity.ok(productService.updateProduct(memberId, productId, command));
-	}
-
-	@PatchMapping("/products/{productId}/stock")
-	public ResponseEntity<ProductInfo> adjustProductStock(
-		@RequestHeader("Member-Id") UUID memberId,
-		@PathVariable("productId") UUID productId,
-		@Valid @RequestBody ProductStockUpdateRequest request
-	) {
-		return ResponseEntity.ok(productService.adjustStock(memberId, productId, request.stock()));
 	}
 
 	@PatchMapping("/products/{productId}/status")

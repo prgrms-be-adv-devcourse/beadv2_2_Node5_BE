@@ -36,9 +36,6 @@ public class Product extends BaseEntity {
 	@Column(nullable = false, precision = 15, scale = 2)
 	private BigDecimal price;
 
-	@Column(nullable = false)
-	private Integer stock;
-
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
 	private ProductStatus status;
@@ -59,7 +56,6 @@ public class Product extends BaseEntity {
 		String name,
 		String description,
 		BigDecimal price,
-		Integer stock,
 		ProductStatus status,
 		ProductCategory category,
 		String thumbnailUrl
@@ -69,7 +65,6 @@ public class Product extends BaseEntity {
 		this.name = name;
 		this.description = description;
 		this.price = price;
-		this.stock = stock;
 		this.status = status;
 		this.category = category;
 		this.thumbnailUrl = thumbnailUrl;
@@ -80,7 +75,6 @@ public class Product extends BaseEntity {
 		String name,
 		String description,
 		BigDecimal price,
-		Integer stock,
 		ProductStatus status,
 		ProductCategory category,
 		String thumbnailUrl
@@ -92,7 +86,6 @@ public class Product extends BaseEntity {
 			name,
 			description,
 			price,
-			stock,
 			status,
 			category,
 			thumbnailUrl
@@ -103,16 +96,12 @@ public class Product extends BaseEntity {
 	private void onCreate() {
 		if (id == null) id = UUID.randomUUID();
 		if (status == null) status = ProductStatus.ON_SALE;
-		if (stock == null) stock = 0;
-
-		validateStockNonNegative(stock);
 	}
 
 	public void applyUpdate(
 		String name,
 		String description,
 		BigDecimal price,
-		Integer stock,
 		ProductCategory category,
 		String thumbnailUrl
 	) {
@@ -123,20 +112,8 @@ public class Product extends BaseEntity {
 		this.name = name;
 		this.description = description;
 		this.price = price;
-
-		validateStockNonNegative(stock);
-		this.stock = stock;
-
 		this.category = category;
 		this.thumbnailUrl = thumbnailUrl;
-	}
-
-	public void adjustStock(int newStock) {
-		if (this.status == ProductStatus.DISCONTINUED) {
-			throw new BaseException(ProductErrorCode.PRODUCT_STATUS_CHANGE_NOT_ALLOWED);
-		}
-		validateStockNonNegative(newStock);
-		this.stock = newStock;
 	}
 
 	public void changeStatus(ProductStatus newStatus) {
@@ -151,11 +128,5 @@ public class Product extends BaseEntity {
 			return;
 		}
 		this.status = ProductStatus.DISCONTINUED;
-	}
-
-	private void validateStockNonNegative(int stock) {
-		if (stock < 0) {
-			throw new BaseException(ProductErrorCode.PRODUCT_INVALID_STOCK);
-		}
 	}
 }
