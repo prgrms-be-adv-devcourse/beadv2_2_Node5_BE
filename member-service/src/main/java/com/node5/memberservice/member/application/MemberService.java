@@ -1,7 +1,7 @@
 package com.node5.memberservice.member.application;
 
 import com.node5.memberservice.auth.domain.OAuthRepository;
-import com.node5.memberservice.member.application.event.MemberDeletedEvent;
+import com.node5.common.event.MemberDeletedEvent;
 import com.node5.memberservice.member.application.dto.*;
 import com.node5.memberservice.member.client.BillingClient;
 import com.node5.memberservice.member.client.ShopClient;

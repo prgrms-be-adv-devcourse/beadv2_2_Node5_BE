@@ -1,4 +1,4 @@
-package com.node5.memberservice.member.application.event;
+package com.node5.common.event;
 
 import java.util.List;
 import java.util.UUID;

@@ -1,6 +1,6 @@
 package com.node5.shopservice.shop.infrastructure.kafka.handler;
 
-import com.node5.shopservice.shop.application.event.ShopDeletedEvent;
+import com.node5.common.event.ShopDeletedEvent;
 import com.node5.shopservice.shop.infrastructure.kafka.producer.ShopDeletedProducer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
