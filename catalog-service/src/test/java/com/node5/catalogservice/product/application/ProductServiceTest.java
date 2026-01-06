@@ -68,7 +68,6 @@ class ProductServiceTest {
 			"name",
 			"desc",
 			BigDecimal.valueOf(1000),
-			10,
 			ProductStatus.ON_SALE,
 			anyCategory(),
 			"thumb.png"
@@ -104,7 +103,6 @@ class ProductServiceTest {
 			"name",
 			"desc",
 			BigDecimal.valueOf(1000),
-			10,
 			ProductStatus.ON_SALE,
 			anyCategory(),
 			"thumb.png"
@@ -134,7 +132,6 @@ class ProductServiceTest {
 			"name",
 			"desc",
 			BigDecimal.valueOf(1000),
-			10,
 			ProductStatus.ON_SALE,
 			anyCategory(),
 			"thumb.png"
@@ -165,7 +162,6 @@ class ProductServiceTest {
 			"name",
 			"desc",
 			BigDecimal.valueOf(1000),
-			10,
 			ProductStatus.ON_SALE,
 			anyCategory(),
 			"thumb.png"
@@ -198,7 +194,6 @@ class ProductServiceTest {
 			"newName",
 			"newDesc",
 			BigDecimal.valueOf(2000),
-			20,
 			anyCategory(),
 			"newThumb.png"
 		);
@@ -232,7 +227,6 @@ class ProductServiceTest {
 
 		ProductUpdateCommand patch = new ProductUpdateCommand(
 			"newName",
-			null,
 			null,
 			null,
 			null,
