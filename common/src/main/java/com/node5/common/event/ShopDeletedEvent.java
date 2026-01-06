@@ -1,4 +1,4 @@
-package com.node5.shopservice.shop.application.event;
+package com.node5.common.event;
 
 import java.util.UUID;
 

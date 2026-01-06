@@ -1,6 +1,6 @@
 package com.node5.shopservice.shop.infrastructure.kafka.producer;
 
-import com.node5.shopservice.shop.application.event.ShopDeletedEvent;
+import com.node5.common.event.ShopDeletedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
