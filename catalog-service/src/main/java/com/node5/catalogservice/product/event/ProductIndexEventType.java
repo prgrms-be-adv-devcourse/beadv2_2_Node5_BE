@@ -1,4 +1,4 @@
-package com.node5.catalogservice.kafka.dto;
+package com.node5.catalogservice.product.event;
 
 public enum ProductIndexEventType {
 	CREATE,

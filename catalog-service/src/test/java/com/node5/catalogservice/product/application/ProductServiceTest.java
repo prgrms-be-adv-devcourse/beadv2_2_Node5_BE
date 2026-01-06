@@ -20,14 +20,16 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
-import com.node5.catalogservice.kafka.producer.ProductIndexProducer;
 import com.node5.catalogservice.product.application.dto.ProductCommand;
 import com.node5.catalogservice.product.application.dto.ProductInfo;
 import com.node5.catalogservice.product.application.dto.ProductUpdateCommand;
+import com.node5.catalogservice.product.application.port.ProductIndexEventPort;
 import com.node5.catalogservice.product.domain.Product;
 import com.node5.catalogservice.product.domain.ProductCategory;
 import com.node5.catalogservice.product.domain.ProductRepository;
 import com.node5.catalogservice.product.domain.ProductStatus;
+import com.node5.catalogservice.product.event.ProductIndexEvent;
+import com.node5.catalogservice.product.event.ProductIndexEventType;
 import com.node5.catalogservice.product.exception.OnSaleProductNotFoundException;
 import com.node5.catalogservice.product.exception.ProductErrorCode;
 import com.node5.catalogservice.product.exception.ProductNotFoundException;
@@ -46,7 +48,7 @@ class ProductServiceTest {
 	private ProductRepository productRepository;
 
 	@Mock
-	private ProductIndexProducer productIndexProducer;
+	private ProductIndexEventPort productIndexEventPort;
 
 	@Mock
 	private ShopOwnershipClient shopOwnershipClient;
@@ -84,7 +86,12 @@ class ProductServiceTest {
 		assertThat(result).isNotNull();
 		then(shopOwnershipClient).should().getOwnerMemberId(shopId);
 		then(productRepository).should().save(any(Product.class));
-		then(productIndexProducer).should().sendProductIndexEvent(saved);
+
+		then(productIndexEventPort).should().publish(argThat(e ->
+			e != null
+				&& e.productId().equals(saved.getId())
+				&& e.type() == ProductIndexEventType.CREATE
+		));
 	}
 
 	@Test
@@ -114,7 +121,7 @@ class ProductServiceTest {
 			});
 
 		then(productRepository).shouldHaveNoInteractions();
-		then(productIndexProducer).shouldHaveNoInteractions();
+		then(productIndexEventPort).shouldHaveNoInteractions();
 	}
 
 	@Test
@@ -145,7 +152,7 @@ class ProductServiceTest {
 			});
 
 		then(productRepository).shouldHaveNoInteractions();
-		then(productIndexProducer).shouldHaveNoInteractions();
+		then(productIndexEventPort).shouldHaveNoInteractions();
 	}
 
 	@Test
@@ -175,7 +182,7 @@ class ProductServiceTest {
 			});
 
 		then(productRepository).shouldHaveNoInteractions();
-		then(productIndexProducer).shouldHaveNoInteractions();
+		then(productIndexEventPort).shouldHaveNoInteractions();
 	}
 
 	@Test
@@ -207,7 +214,12 @@ class ProductServiceTest {
 		assertThat(result).isNotNull();
 		then(shopOwnershipClient).should().getOwnerMemberId(shopId);
 		then(productRepository).should().save(existing);
-		then(productIndexProducer).should().sendProductUpdateEvent(existing);
+
+		then(productIndexEventPort).should().publish(argThat(e ->
+			e != null
+				&& e.productId().equals(existing.getId())
+				&& e.type() == ProductIndexEventType.UPDATE
+		));
 	}
 
 	@Test
@@ -233,7 +245,7 @@ class ProductServiceTest {
 
 		then(shopOwnershipClient).shouldHaveNoInteractions();
 		then(productRepository).should(never()).save(any());
-		then(productIndexProducer).shouldHaveNoInteractions();
+		then(productIndexEventPort).shouldHaveNoInteractions();
 	}
 
 	@Test
@@ -255,7 +267,8 @@ class ProductServiceTest {
 		// then
 		assertThat(result).isNotNull();
 		then(productRepository).should().save(existing);
-		then(productIndexProducer).should().sendProductUpdateEvent(existing);
+
+		then(productIndexEventPort).should().publish(any(ProductIndexEvent.class));
 	}
 
 	@Test
@@ -276,7 +289,7 @@ class ProductServiceTest {
 
 		// then
 		then(productRepository).should().save(existing);
-		then(productIndexProducer).should().sendProductUpdateEvent(existing);
+		then(productIndexEventPort).should().publish(any(ProductIndexEvent.class));
 	}
 
 	@Test
@@ -414,7 +427,7 @@ class ProductServiceTest {
 			});
 
 		then(productRepository).should(never()).save(any());
-		then(productIndexProducer).shouldHaveNoInteractions();
+		then(productIndexEventPort).shouldHaveNoInteractions();
 	}
 
 	@Test
