@@ -77,21 +77,8 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Gradle 종속성 캐시
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ matrix.service }}-${{ hashFiles(format('{0}/*.gradle*', matrix.service), 'common/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-${{ matrix.service }}-
-            ${{ runner.os }}-gradle-
-
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
-        with:
-          cache-disabled: true # 수동 캐시와 충돌 방지
 
       - name: Build bootJar
         run: ./gradlew :${{ matrix.service }}:bootJar
