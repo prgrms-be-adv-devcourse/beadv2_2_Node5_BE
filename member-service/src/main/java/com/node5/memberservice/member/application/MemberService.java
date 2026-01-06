@@ -76,8 +76,6 @@ public class MemberService {
         } catch (FeignException e) {
             // billing 서비스가 응답했지만 오류
             throw new MemberException(MemberErrorCode.BILLING_SERVICE_UNAVAILABLE);
-        } catch (Exception e) {
-            throw new MemberException(MemberErrorCode.INTERNAL_SERVER_ERROR);
         }
         // Todo - 진행중인 주문 확인
         // Todo - 남은 정산 확인
