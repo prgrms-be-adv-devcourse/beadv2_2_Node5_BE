@@ -10,7 +10,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.PositiveOrZero;
 
 @Schema(description = "상품 등록 요청")
 public record ProductRequest(
@@ -26,11 +25,6 @@ public record ProductRequest(
 	@NotNull(message = "가격은 필수입니다.")
 	@Positive(message = "가격은 0보다 커야 합니다.")
 	BigDecimal price,
-
-	@Schema(description = "재고 수량", example = "50")
-	@NotNull(message = "재고 수량은 필수입니다.")
-	@PositiveOrZero(message = "재고 수량은 0 이상이어야 합니다.")
-	Integer stock,
 
 	@Schema(description = "상품 상태(선택, 미입력 시 ON_SALE)", example = "ON_SALE")
 	ProductStatus status,
@@ -48,7 +42,6 @@ public record ProductRequest(
 			name,
 			description,
 			price,
-			stock,
 			status != null ? status : ProductStatus.ON_SALE,
 			category,
 			thumbnailUrl
