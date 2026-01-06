@@ -24,27 +24,11 @@ jobs:
           java-version: "17"
           distribution: "temurin"
 
-      - name: Gradle 종속성 캐시
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-member-service-${{ hashFiles('member-service/*.gradle*', 'common/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-member-service-
-            ${{ runner.os }}-gradle-
-
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
-        with:
-          cache-disabled: true
 
       - name: Set Permission to gradlew
         run: chmod +x ./gradlew
 
       - name: Gradle Build
         run: ./gradlew :member-service:build
-
-      - name: Run Tests
-        run: ./gradlew :member-service:test
