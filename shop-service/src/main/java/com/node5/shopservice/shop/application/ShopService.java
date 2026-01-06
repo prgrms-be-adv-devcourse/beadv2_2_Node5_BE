@@ -4,7 +4,7 @@ import com.node5.shopservice.shop.application.dto.ShopInfoResponse;
 import com.node5.shopservice.shop.application.dto.ShopListResponse;
 import com.node5.shopservice.shop.application.dto.ShopModifyCommand;
 import com.node5.shopservice.shop.application.dto.ShopRegisterCommand;
-import com.node5.shopservice.shop.application.event.ShopDeletedEvent;
+import com.node5.common.event.ShopDeletedEvent;
 import com.node5.shopservice.shop.client.BillingClient;
 import com.node5.shopservice.shop.client.MemberClient;
 import com.node5.shopservice.shop.client.dto.RoleAction;
@@ -128,5 +128,12 @@ public class ShopService {
         List<Shop> shops = shopRepository.findAllByMemberIdAndDeletedAtIsNull(memberId);
 
         return shops.stream().map(Shop::getId).toList();
+    }
+
+    // Todo - 지금 delete 변경은 각 row 마다 변경 상점이 많아진다면 bulk update를 고려
+    @Transactional
+    public void deleteAllMyShop(UUID memberId) {
+        List<Shop> shops = shopRepository.findAllByMemberIdAndDeletedAtIsNull(memberId);
+        shops.forEach(Shop::delete);
     }
 }

@@ -1,6 +1,6 @@
 package com.node5.memberservice.member.infrastructure.kafka.producer;
 
-import com.node5.memberservice.member.application.event.MemberDeletedEvent;
+import com.node5.common.event.MemberDeletedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
