@@ -3,6 +3,8 @@ package com.node5.billingservice.wallet.application;
 import com.node5.billingservice.wallet.exception.WalletException;
 import com.node5.billingservice.wallet.application.dto.*;
 import com.node5.billingservice.wallet.domain.*;
+import com.node5.billingservice.wallet.infrastructure.kafka.producer.WalletDeletedProducer;
+import com.node5.common.event.WalletDeletedEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,6 +23,7 @@ public class WalletService {
     private final WalletRepository walletRepository;
     private final WalletDepositLogRepository walletDepositLogRepository;
     private final WalletWithdrawLogRepository walletWithdrawLogRepository;
+    private final WalletDeletedProducer walletDeletedProducer;
 
     // memberId에 대한 예치금 조회
     public WalletInfo getWallet(UUID memberId) {
@@ -114,6 +117,14 @@ public class WalletService {
     public void deleteWallet(UUID memberId) {
         Wallet wallet = walletRepository.findByMemberIdForUpdate(memberId)
                 .orElseThrow(() -> new WalletException(WALLET_NOT_FOUND));
+
+        WalletDeletedEvent walletDeletedEvent = new WalletDeletedEvent(wallet.getId());
+
         wallet.delete();
+        //TODO - 연관된 입출금 내역도 삭제할지 고민
+        //TODO - 지갑이 삭제 되었는지 확인하는 쿼리 필요
+
+        // 지갑 삭제 topic 발행
+        walletDeletedProducer.send(walletDeletedEvent);
     }
 }
