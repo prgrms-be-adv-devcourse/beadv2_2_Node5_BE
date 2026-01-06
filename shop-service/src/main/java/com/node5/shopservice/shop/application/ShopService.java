@@ -20,6 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -83,8 +84,11 @@ public class ShopService {
 
         int shopCount = shopRepository.countByMemberIdAndDeletedAtIsNull(memberId);
         if (shopCount == 0) {
+            // Todo - 보상 트랜잭션 필요
             updateMemberRoles(memberId, RoleAction.REMOVE);
         }
+
+        // Todo - 가게 삭제 topic 발행
     }
 
     private void updateMemberRoles(UUID memberId, RoleAction action) {
@@ -111,5 +115,11 @@ public class ShopService {
         );
 
         return shop.getMemberId();
+    }
+
+    public List<UUID> getShopIds(UUID memberId) {
+        List<Shop> shops = shopRepository.findAllByMemberIdAndDeletedAtIsNull(memberId);
+
+        return shops.stream().map(Shop::getId).toList();
     }
 }
