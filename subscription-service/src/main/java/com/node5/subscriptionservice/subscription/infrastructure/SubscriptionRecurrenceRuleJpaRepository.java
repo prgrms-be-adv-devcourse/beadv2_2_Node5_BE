@@ -10,5 +10,7 @@ public interface SubscriptionRecurrenceRuleJpaRepository extends JpaRepository<S
 
     List<SubscriptionRecurrenceRule> findAllBySubscriptionId(UUID subscriptionId);
 
+    List<SubscriptionRecurrenceRule> findAllBySubscriptionIdIn(List<UUID> subscriptionIds);
+
     void deleteAllBySubscriptionId(UUID subscriptionId);
 }
