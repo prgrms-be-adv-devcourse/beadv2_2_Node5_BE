@@ -84,8 +84,11 @@ public class ShopService {
 
         int shopCount = shopRepository.countByMemberIdAndDeletedAtIsNull(memberId);
         if (shopCount == 0) {
+            // Todo - 보상 트랜잭션 필요
             updateMemberRoles(memberId, RoleAction.REMOVE);
         }
+
+        // Todo - 가게 삭제 topic 발행
     }
 
     private void updateMemberRoles(UUID memberId, RoleAction action) {

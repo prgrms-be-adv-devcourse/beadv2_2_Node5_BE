@@ -72,3 +72,6 @@ naver:
     id: ${NAVER_CLIENT_ID}
     secret: ${NAVER_CLIENT_SECRET}
 
+kafka:
+  topics:
+    member-deleted: member-service.member-deleted.v1

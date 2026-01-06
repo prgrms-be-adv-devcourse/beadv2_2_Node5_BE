@@ -2,7 +2,6 @@ package com.node5.memberservice.member.application;
 
 import com.node5.memberservice.auth.domain.OAuthRepository;
 import com.node5.memberservice.kafka.dto.MemberDeletedEvent;
-import com.node5.memberservice.kafka.producer.DeleteMemberProducer;
 import com.node5.memberservice.member.application.dto.*;
 import com.node5.memberservice.member.client.BillingClient;
 import com.node5.memberservice.member.client.ShopClient;
@@ -66,15 +65,14 @@ public class MemberService {
     }
 
     private void validateCanDeleteMember(UUID memberId) {
-        // 예치금 잔액 확인
         try {
+            // 예치금 잔액 확인
             WalletInfo wallet = billingClient.getWallet(memberId).getBody();
             if (wallet != null && wallet.balance() != 0) {
                 throw new MemberException(MemberErrorCode.MEMBER_HAS_BALANCE);
             }
         } catch (FeignException.NotFound e) {
             // 지갑이 없는 회원 → 잔액 없음 → 탈퇴 가능
-            return;
         } catch (FeignException e) {
             // billing 서비스가 응답했지만 오류
             throw new MemberException(MemberErrorCode.BILLING_SERVICE_UNAVAILABLE);
