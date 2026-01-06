@@ -27,6 +27,7 @@ import com.node5.catalogservice.search.config.ElasticsearchIndexConfig;
 import com.node5.catalogservice.search.domain.ProductDocument;
 import com.node5.catalogservice.search.domain.ProductSearchSort;
 import com.node5.catalogservice.search.infrastructure.ProductSearchRepository;
+import com.node5.catalogservice.search.infrastructure.elasticsearch.ElasticsearchProductSearchAdapter;
 
 /**
  * NOTE:
@@ -39,7 +40,11 @@ import com.node5.catalogservice.search.infrastructure.ProductSearchRepository;
 	"spring.config.import="
 })
 @ActiveProfiles("test")
-@Import({SearchService.class, ElasticsearchIndexConfig.class})
+@Import({
+	SearchService.class,
+	ElasticsearchProductSearchAdapter.class,
+	ElasticsearchIndexConfig.class
+})
 @DisabledIfEnvironmentVariable(
 	named = "CI",
 	matches = "true",
