@@ -16,6 +16,11 @@ spring:
         format_sql: true
         jdbc:
           time_zone: Asia/Seoul
+  kafka:
+    bootstrap-servers: ${KAFKA_HOST}:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
 api:
   v1: /api/v1
@@ -28,3 +33,7 @@ management:
 
 server:
   port: 8085
+
+kafka:
+  topics:
+    shop-deleted: shop-service.shop-deleted.v1

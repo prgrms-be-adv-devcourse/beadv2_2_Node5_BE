@@ -4,6 +4,7 @@ import com.node5.shopservice.shop.application.dto.ShopInfoResponse;
 import com.node5.shopservice.shop.application.dto.ShopListResponse;
 import com.node5.shopservice.shop.application.dto.ShopModifyCommand;
 import com.node5.shopservice.shop.application.dto.ShopRegisterCommand;
+import com.node5.shopservice.shop.application.event.ShopDeletedEvent;
 import com.node5.shopservice.shop.client.BillingClient;
 import com.node5.shopservice.shop.client.MemberClient;
 import com.node5.shopservice.shop.client.dto.RoleAction;
@@ -15,6 +16,7 @@ import com.node5.shopservice.shop.exception.ShopException;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -34,6 +36,7 @@ public class ShopService {
     private final ShopRepository shopRepository;
     private final MemberClient memberClient;
     private final BillingClient billingClient;
+    private final ApplicationEventPublisher eventPublisher;
 
     public Page<ShopListResponse> findMyShopList(UUID memberId, Pageable pageable) {
         return shopRepository.findAllByMemberIdAndDeletedAtIsNull(memberId, pageable).map(ShopListResponse::from);
@@ -79,6 +82,9 @@ public class ShopService {
     public void deleteMyShop(UUID memberId, UUID shopId) {
         Shop shop = shopRepository.findByIdAndMemberIdAndDeletedAtIsNull(shopId, memberId)
                 .orElseThrow(() -> new ShopException(ShopErrorCode.SHOP_NOT_FOUND));
+
+        ShopDeletedEvent shopDeletedEvent = new ShopDeletedEvent(shop.getId());
+
         shop.delete();
         shopRepository.flush();
 
@@ -88,7 +94,8 @@ public class ShopService {
             updateMemberRoles(memberId, RoleAction.REMOVE);
         }
 
-        // Todo - 가게 삭제 topic 발행
+        // 가게 삭제 topic 발행
+        eventPublisher.publishEvent(shopDeletedEvent);
     }
 
     private void updateMemberRoles(UUID memberId, RoleAction action) {
