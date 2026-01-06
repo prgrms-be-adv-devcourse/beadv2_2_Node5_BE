@@ -6,7 +6,6 @@ CREATE TABLE catalog.product (
     name varchar(100) NOT NULL,
     description text NULL,
     price numeric(15,2) NOT NULL,
-    stock int4 NOT NULL DEFAULT 0,
     status varchar(30) NOT NULL,
     category varchar(255) NOT NULL,
     thumbnail_url varchar(255) NULL,
