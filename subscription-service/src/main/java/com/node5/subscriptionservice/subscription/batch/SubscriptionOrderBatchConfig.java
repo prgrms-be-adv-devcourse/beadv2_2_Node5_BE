@@ -38,38 +38,57 @@ public class SubscriptionOrderBatchConfig {
 
     @Bean
     public Job subscriptionOrderJob(JobRepository jobRepository,
-                                    Step subscriptionOrderStep) {
+                                    Step subscriptionOrderRequestStep,
+                                    Step updateNextRunDateStep) {
         return new JobBuilder("subscriptionOrderJob", jobRepository)
-                .start(subscriptionOrderStep)
+                .start(subscriptionOrderRequestStep)
+                .next(updateNextRunDateStep)
                 .build();
     }
 
     @Bean
-    public Step subscriptionOrderStep(JobRepository jobRepository,
-                                      PlatformTransactionManager transactionManager) {
-        return new StepBuilder("subscriptionOrderStep", jobRepository)
+    public Step subscriptionOrderRequestStep(JobRepository jobRepository,
+                                             PlatformTransactionManager transactionManager) {
+        return new StepBuilder("subscriptionOrderRequestStep", jobRepository)
                 .tasklet((contribution, chunkContext) -> {
                     String subscriptionParam = (String) chunkContext.getStepContext()
                             .getJobParameters()
                             .get("subscriptionId");
-                    String runDateParam = (String) chunkContext.getStepContext()
-                            .getJobParameters()
-                            .get("runDate");
 
                     UUID subscriptionId = UUID.fromString(subscriptionParam);
-                    LocalDate runDate = LocalDate.parse(runDateParam);
 
                     Subscription subscription = subscriptionRepository.findById(subscriptionId)
                             .orElseThrow(() -> new SubscriptionException(SUBSCRIPTION_NOT_FOUND));
 
                     requestOrder(subscription);
 
+                    log.info("Order processed subscription {}", subscriptionId);
+
+                    return RepeatStatus.FINISHED;
+                }, transactionManager)
+                .build();
+    }
+
+    @Bean
+    public Step updateNextRunDateStep(JobRepository jobRepository,
+                                            PlatformTransactionManager transactionManager) {
+        return new StepBuilder("subscriptionNextRunDateStep", jobRepository)
+                .tasklet((contribution, chunkContext) -> {
+                    String subscriptionParam = (String) chunkContext.getStepContext()
+                            .getJobParameters()
+                            .get("subscriptionId");
+
+                    UUID subscriptionId = UUID.fromString(subscriptionParam);
+
+                    Subscription subscription = subscriptionRepository.findById(subscriptionId)
+                            .orElseThrow(() -> new SubscriptionException(SUBSCRIPTION_NOT_FOUND));
+
                     List<SubscriptionRecurrenceRule> rules =
                             subscriptionRecurrenceRuleRepository.findAllBySubscriptionId(subscription.getId());
                     subscription.calculateNextRunDate(rules);
                     subscriptionRepository.save(subscription);
 
-                    log.info("Order processed subscription {} for runDAte = {}", subscriptionId, runDate);
+                    log.info("Next run date updated for subscription {}", subscriptionId);
 
                     return RepeatStatus.FINISHED;
                 }, transactionManager)
