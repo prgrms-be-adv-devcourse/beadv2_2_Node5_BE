@@ -91,18 +91,6 @@ public class ProductService {
 	}
 
 	@Transactional
-	public ProductInfo adjustStock(UUID memberId, UUID productId, int stock) {
-		Product product = getProductOrThrow(productId);
-		validateShopOwnership(memberId, product.getShopId());
-
-		product.adjustStock(stock);
-
-		Product saved = productRepository.save(product);
-		productIndexEventPort.publish(ProductIndexEvent.update(saved));
-		return ProductInfo.from(saved);
-	}
-
-	@Transactional
 	public ProductInfo updateStatus(UUID memberId, UUID productId, ProductStatus status) {
 		Product product = getProductOrThrow(productId);
 		validateShopOwnership(memberId, product.getShopId());
