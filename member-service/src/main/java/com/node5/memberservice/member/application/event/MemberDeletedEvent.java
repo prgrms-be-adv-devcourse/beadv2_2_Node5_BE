@@ -1,4 +1,4 @@
-package com.node5.memberservice.kafka.dto;
+package com.node5.memberservice.member.application.event;
 
 import java.util.List;
 import java.util.UUID;

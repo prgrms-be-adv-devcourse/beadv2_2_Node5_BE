@@ -1,7 +1,7 @@
-package com.node5.memberservice.kafka.handler;
+package com.node5.memberservice.member.infrastructure.kafka.handler;
 
-import com.node5.memberservice.kafka.dto.MemberDeletedEvent;
-import com.node5.memberservice.kafka.producer.MemberDeletedProducer;
+import com.node5.memberservice.member.application.event.MemberDeletedEvent;
+import com.node5.memberservice.member.infrastructure.kafka.producer.MemberDeletedProducer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
