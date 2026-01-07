@@ -25,7 +25,7 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("${api.v1}/products")
 @RequiredArgsConstructor
 @Tag(name = "Products", description = "사용자가 조회 가능한 상품 정보 조회 API")
-public class ProductController {
+public class ProductQueryController {
 
 	private final ProductService productService;
 

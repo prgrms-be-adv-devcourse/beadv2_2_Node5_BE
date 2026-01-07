@@ -17,11 +17,11 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("${api.v1}/seller")
 @RequiredArgsConstructor
-public class SellerUploadController {
+public class ProductImageController {
 
 	private final ProductImageService productImageService;
 
-	@PostMapping("/products/images/presigned-urls")
+	@PostMapping("/products/images/presigned-url")
 	public ResponseEntity<PresignedUrlResponse> createPresignedUrl(@Valid @RequestBody PresignedUrlRequest request) {
 		PresignedUrlInfo info = productImageService.createUploadUrl(request.contentType());
 		return ResponseEntity.ok(new PresignedUrlResponse(info.url(), info.key()));
