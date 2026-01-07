@@ -6,7 +6,8 @@ import org.springframework.stereotype.Service;
 
 import com.node5.catalogservice.product.application.dto.PresignedUrlInfo;
 import com.node5.catalogservice.product.application.port.S3PresignedUrlPort;
-import com.node5.catalogservice.product.exception.ProductUnsupportedImageContentTypeException;
+import com.node5.catalogservice.product.exception.ProductErrorCode;
+import com.node5.common.exception.BaseException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -28,10 +29,10 @@ public class ProductImageService {
 
 	private void validateContentType(String contentType) {
 		if (contentType == null || contentType.isBlank()) {
-			throw new ProductUnsupportedImageContentTypeException();
+			throw new BaseException(ProductErrorCode.UNSUPPORTED_IMAGE_CONTENT_TYPE);
 		}
 		if (!ALLOWED_IMAGE_CONTENT_TYPES.contains(contentType)) {
-			throw new ProductUnsupportedImageContentTypeException();
+			throw new BaseException(ProductErrorCode.UNSUPPORTED_IMAGE_CONTENT_TYPE);
 		}
 	}
 }
