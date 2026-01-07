@@ -28,6 +28,6 @@ public class WalletDepositLogRepositoryAdapter implements WalletDepositLogReposi
 
     @Override
     public WalletDepositLog save(WalletDepositLog walletDepositLog) {
-        return walletDepositLogJpaRepository.save(walletDepositLog);
+        return walletDepositLogJpaRepository.saveAndFlush(walletDepositLog);
     }
 }
