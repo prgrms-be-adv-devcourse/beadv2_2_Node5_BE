@@ -24,11 +24,6 @@ public class CartItemRepositoryAdapter implements CartItemRepository {
 	}
 
 	@Override
-	public Optional<CartItem> findById(UUID id) {
-		return cartItemJpaRepository.findById(id);
-	}
-
-	@Override
 	public Page<CartItem> findByCartId(UUID cartId, Pageable pageable) {
 		return cartItemJpaRepository.findByCartId(cartId, pageable);
 	}

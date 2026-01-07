@@ -10,8 +10,6 @@ public interface CartItemRepository {
 
 	CartItem save(CartItem cartItem);
 
-	Optional<CartItem> findById(UUID id);
-
 	Page<CartItem> findByCartId(UUID cartId, Pageable pageable);
 
 	Optional<CartItem> findByCartIdAndProductId(UUID cartId, UUID productId);
