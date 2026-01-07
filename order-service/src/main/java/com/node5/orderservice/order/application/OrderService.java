@@ -49,6 +49,13 @@ public class OrderService {
 
     @Transactional
     public OrderCreateInfo create(UUID memberId, OrderCommand command) {
+        if (command.subscriptionKey() != null) {
+            Optional<Order> existing = orderRepository.findBySubscriptionKey(command.subscriptionKey());
+            if (existing.isPresent()) {
+                return OrderCreateInfo.from(existing.get());
+            }
+        }
+
         // 주문번호 생성, 총 주문 금액 계산하여 Order 생성
         String orderNum = generateNewOrderNum();
         Optional<BigDecimal> totalAmountOptional = command.items().stream()

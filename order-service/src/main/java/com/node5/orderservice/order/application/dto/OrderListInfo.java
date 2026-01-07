@@ -22,7 +22,6 @@ public record OrderListInfo(
             String orderDate,
             OrderStatus status,
             OrderType orderType,
-            UUID subscriptionId,
             BigDecimal totalAmount,
 
             // 주문 내 상품 정보
@@ -40,7 +39,6 @@ public record OrderListInfo(
                     orderDate,
                     order.getStatus(),
                     order.getOrderType(),
-                    order.getSubscriptionId(),
                     order.getTotalAmount(),
                     orderedItems
             );

@@ -35,6 +35,11 @@ public class OrderRepositoryAdapter implements OrderRepository {
     }
 
     @Override
+    public Optional<Order> findBySubscriptionKey(UUID subscriptionKey) {
+        return orderJpaRepository.findBySubscriptionKey(subscriptionKey);
+    }
+
+    @Override
     public Page<Order> findByMemberIdAndCreatedAtAfterOrderByCreatedAtDesc(UUID memberId, LocalDateTime createdAt, Pageable pageable) {
         return orderJpaRepository.findByMemberIdAndCreatedAtAfterOrderByCreatedAtDesc(memberId, createdAt, pageable);
     }
