@@ -68,7 +68,6 @@ public class CartController {
 	@ApiResponses({
 		@ApiResponse(responseCode = "200", description = "장바구니 수량 변경 성공"),
 		@ApiResponse(responseCode = "400", description = "요청 값이 유효하지 않습니다."),
-		@ApiResponse(responseCode = "403", description = "해당 장바구니 항목에 대한 권한이 없습니다."),
 		@ApiResponse(responseCode = "404", description = "해당 ID의 장바구니 항목이 없습니다.")
 	})
 	public ResponseEntity<CartItemInfo> updateCartItem(
@@ -83,7 +82,6 @@ public class CartController {
 	@Operation(summary = "장바구니 상품 삭제", description = "장바구니에서 특정 항목을 삭제합니다.")
 	@ApiResponses({
 		@ApiResponse(responseCode = "204", description = "장바구니 상품 삭제 성공"),
-		@ApiResponse(responseCode = "403", description = "해당 장바구니 항목에 대한 권한이 없습니다."),
 		@ApiResponse(responseCode = "404", description = "해당 ID의 장바구니 항목이 없습니다.")
 	})
 	public ResponseEntity<Void> removeItem(
