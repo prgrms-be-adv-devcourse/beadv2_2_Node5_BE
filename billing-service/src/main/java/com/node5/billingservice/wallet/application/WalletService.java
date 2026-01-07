@@ -74,10 +74,10 @@ public class WalletService {
                 .settlementId(command.settlementId())
                 .amount(command.amount())
                 .build();
-        walletDepositLogRepository.save(walletDepositLog);
+        WalletDepositLog savedLog = walletDepositLogRepository.save(walletDepositLog);
 
         wallet.deposit(command.amount());
-        return WalletSettleInfo.from(wallet, walletDepositLog.getCreatedAt());
+        return WalletSettleInfo.from(wallet, savedLog.getCreatedAt());
     }
 
     //예치금 사용
