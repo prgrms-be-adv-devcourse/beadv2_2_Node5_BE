@@ -67,7 +67,7 @@ public class SubscriptionOrderBatchConfig {
                     LocalDate runDate = LocalDate.parse(runDateParam);
                     requestOrder(subscription, runDate);
 
-                    log.info("Order processed subscription {}", subscriptionId);
+                    log.info("Order processed subscription {} for runDate = {}", subscriptionId, runDate);
 
                     return RepeatStatus.FINISHED;
                 }, transactionManager)
