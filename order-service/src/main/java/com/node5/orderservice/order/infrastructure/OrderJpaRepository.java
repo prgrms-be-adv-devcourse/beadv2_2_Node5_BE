@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface OrderJpaRepository extends JpaRepository<Order, UUID> {
@@ -18,6 +19,8 @@ public interface OrderJpaRepository extends JpaRepository<Order, UUID> {
     Long getNextSequenceNum();
 
     Page<Order> findByMemberIdAndCreatedAtAfterOrderByCreatedAtDesc(UUID memberId, LocalDateTime createdAt, Pageable pageable);
+
+    Optional<Order> findBySubscriptionKey(UUID subscriptionKey);
 
     @Query("SELECT o FROM Order o WHERE o.status = :status AND o.paidAt < :standard")
     List<Order> findByStatusAndPaidAtBefore(@Param("status") OrderStatus status, @Param("standard") LocalDateTime standard);
