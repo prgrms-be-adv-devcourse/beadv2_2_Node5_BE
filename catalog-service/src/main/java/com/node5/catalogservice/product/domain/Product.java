@@ -95,7 +95,6 @@ public class Product extends BaseEntity {
 	@PrePersist
 	private void onCreate() {
 		if (id == null) id = UUID.randomUUID();
-		if (status == null) status = ProductStatus.ON_SALE;
 	}
 
 	public void applyUpdate(
