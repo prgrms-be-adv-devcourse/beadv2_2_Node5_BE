@@ -108,6 +108,8 @@ jobs:
 
       - name: Deploy Core Infra
         run: |
+          kubectl apply -f k8s/config-repo-configmap.yaml
+
           for svc in config discovery apigateway; do
             kubectl apply -f k8s/$svc.yaml
             kubectl rollout restart deployment/$svc
