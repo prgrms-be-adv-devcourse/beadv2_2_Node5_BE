@@ -14,6 +14,7 @@ import org.springframework.data.elasticsearch.core.SearchPage;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import com.node5.catalogservice.search.application.dto.ProductAutocompleteCommand;
 import com.node5.catalogservice.search.application.dto.ProductSearchCommand;
 import com.node5.catalogservice.search.application.port.ProductSearchPort;
 import com.node5.catalogservice.search.domain.ProductDocument;
@@ -31,6 +32,54 @@ import lombok.RequiredArgsConstructor;
 public class ElasticsearchProductSearchAdapter implements ProductSearchPort {
 
 	private final ElasticsearchOperations elasticsearchOperations;
+
+	@Override
+	public List<String> autocomplete(ProductAutocompleteCommand command) {
+		Objects.requireNonNull(command);
+
+		int size = command.size() != null ? command.size() : 10;
+
+		Query query = Query.of(q -> q.bool(b -> {
+
+			// filter:
+			// - 판매 중인 상품만 자동완성 대상
+			// - 점수 계산과 무관한 고정 조건
+			b.filter(f -> f.term(t -> t.field("status").value(FieldValue.of("ON_SALE"))));
+
+			// filter:
+			// - 카테고리 선택 시에만 적용되는 제한 조건
+			if (command.category() != null) {
+				b.filter(f -> f.term(t -> t.field("category")
+					.value(FieldValue.of(command.category().name()))));
+			}
+
+			// must:
+			// - 자동완성 전용 필드(name_autocomplete)로 prefix 매칭
+			if (StringUtils.hasText(command.keyword())) {
+				b.must(m -> m.match(mm -> mm
+					.field("name_autocomplete")
+					.query(command.keyword())
+					.operator(Operator.And)
+				));
+			}
+
+			return b;
+		}));
+
+		// 페이징 없이 결과 수 제한
+		NativeQuery nativeQuery = new NativeQueryBuilder()
+			.withQuery(query)
+			.withMaxResults(size)
+			.build();
+
+		SearchHits<ProductDocument> hits =
+			elasticsearchOperations.search(nativeQuery, ProductDocument.class);
+
+		return hits.getSearchHits().stream()
+			.map(hit -> hit.getContent().getName())
+			.filter(StringUtils::hasText)
+			.toList();
+	}
 
 	@Override
 	public Page<ProductDocument> search(ProductSearchCommand command, Pageable pageable) {
