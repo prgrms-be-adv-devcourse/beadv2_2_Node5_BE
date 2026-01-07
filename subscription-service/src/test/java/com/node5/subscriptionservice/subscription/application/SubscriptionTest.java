@@ -43,7 +43,7 @@ class SubscriptionTest {
     @Test
     void 해지된_구독은_수정에_실패한다() {
         Subscription subscription = createSubscription();
-        subscription.delete();
+        subscription.cancel();
 
         assertThatThrownBy(() -> subscription.update("서울"))
                 .isInstanceOf(SubscriptionException.class)
@@ -146,7 +146,7 @@ class SubscriptionTest {
     void ACTIVE_상태이면_해지된다() {
         Subscription subscription = createSubscription();
 
-        subscription.delete();
+        subscription.cancel();
 
         assertThat(subscription.getSubscriptionStatus()).isEqualTo(SubscriptionStatus.CANCELLED);
     }
@@ -154,9 +154,9 @@ class SubscriptionTest {
     @Test
     void 이미_해지된_구독은_해지에_실패한다() {
         Subscription subscription = createSubscription();
-        subscription.delete();
+        subscription.cancel();
 
-        assertThatThrownBy(subscription::delete)
+        assertThatThrownBy(subscription::cancel)
                 .isInstanceOf(SubscriptionException.class)
                 .extracting("errorCode")
                 .isEqualTo(SubscriptionErrorCode.SUBSCRIPTION_INVALID_STATE);

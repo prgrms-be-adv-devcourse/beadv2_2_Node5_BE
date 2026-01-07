@@ -1,5 +1,6 @@
 package com.node5.subscriptionservice.subscription.application;
 
+import com.node5.common.event.SubscriptionDeletedEvent;
 import com.node5.subscriptionservice.subscription.application.dto.SubscriptionCreateCommand;
 import com.node5.subscriptionservice.subscription.application.dto.SubscriptionInfo;
 import com.node5.subscriptionservice.subscription.application.dto.SubscriptionUpdateCommand;
@@ -142,11 +143,11 @@ public class SubscriptionService {
     }
 
     @Transactional
-    public SubscriptionInfo delete(UUID id) {
+    public SubscriptionInfo cancel(UUID id) {
         Subscription subscription = subscriptionRepository.findById(id)
                 .orElseThrow(() -> new SubscriptionException(SUBSCRIPTION_NOT_FOUND));
 
-        subscription.delete();
+        subscription.cancel();
         Subscription saved = subscriptionRepository.save(subscription);
 
         return toSubscriptionInfo(saved);
@@ -158,6 +159,12 @@ public class SubscriptionService {
         return subscriptions.map(subscription ->
                 toSubscriptionInfo(subscription, rules.getOrDefault(subscription.getId(), List.of()))
         );
+    }
+
+    @Transactional
+    public void terminate(UUID memberId) {
+        List<Subscription> subscriptions = subscriptionRepository.findAllByMemberId(memberId);
+        subscriptions.forEach(Subscription::terminate);
     }
 
     private ProductInfoResponse getProductInfo(UUID productId) {

@@ -62,7 +62,7 @@ public class SubscriptionController {
 
     @Operation(summary = "구독 해지", description = "구독을 해지합니다.")
     @DeleteMapping("{id}")
-    public ResponseEntity<SubscriptionInfo> delete(@PathVariable UUID id) {
-        return ResponseEntity.ok(subscriptionService.delete(id));
+    public ResponseEntity<SubscriptionInfo> cancel(@PathVariable UUID id) {
+        return ResponseEntity.ok(subscriptionService.cancel(id));
     }
 }

@@ -152,7 +152,7 @@ public class Subscription extends BaseEntity {
         this.subscriptionStatus = SubscriptionStatus.ACTIVE;
     }
 
-    public void delete() {
+    public void cancel() {
         SubscriptionStatus currentStatus = this.subscriptionStatus;
         // ACTIVE, PAUSED, FAILED 일때 해지 가능
         if (currentStatus == SubscriptionStatus.CANCELLED
@@ -160,5 +160,9 @@ public class Subscription extends BaseEntity {
             throw new SubscriptionException(SUBSCRIPTION_INVALID_STATE);
         }
         this.subscriptionStatus = SubscriptionStatus.CANCELLED;
+    }
+
+    public void terminate() {
+        this.subscriptionStatus = SubscriptionStatus.TERMINATED;
     }
 }
