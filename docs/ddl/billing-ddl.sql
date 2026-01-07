@@ -40,6 +40,20 @@ CREATE TABLE billing."wallet_withdraw_log" (
     CONSTRAINT uq_wallet_withdraw_order UNIQUE (order_id)
 );
 
+CREATE TABLE billing."wallet_transfer_log" (
+    id uuid NOT NULL,
+    member_id uuid NOT NULL,
+    account_no varchar(20) NOT NULL,
+    amount BIGINT NOT NULL,
+    transaction_id varchar(30) NOT NULL,
+    message varchar(30) NOT NULL,
+    requested_at timestamp NOT NULL,
+    approved_at timestamp NOT NULL,
+    created_at timestamp NOT NULL,
+    modified_at timestamp NOT NULL,
+    CONSTRAINT pk_wallet_transfer_log PRIMARY KEY (id)
+);
+
 CREATE TABLE billing."payment" (
     id uuid NOT NULL,
     member_id uuid NOT NULL,
