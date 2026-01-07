@@ -65,6 +65,10 @@ public class WalletService {
         Wallet wallet = walletRepository.findByMemberIdForUpdate(memberId)
                 .orElseThrow(() -> new WalletException(WALLET_NOT_FOUND));
 
+        if (walletDepositLogRepository.existsBySettlementId(command.settlementId())) {
+            throw new WalletException(WALLET_SETTLEMENT_ALREADY_EXISTS);
+        }
+
         WalletDepositLog walletDepositLog = WalletDepositLog.builder()
                 .memberId(memberId)
                 .settlementId(command.settlementId())
