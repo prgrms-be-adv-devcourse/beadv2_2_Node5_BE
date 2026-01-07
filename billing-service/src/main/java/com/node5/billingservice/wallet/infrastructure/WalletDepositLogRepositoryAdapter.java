@@ -22,6 +22,11 @@ public class WalletDepositLogRepositoryAdapter implements WalletDepositLogReposi
     }
 
     @Override
+    public Boolean existsBySettlementId(UUID settlementId) {
+        return walletDepositLogJpaRepository.existsBySettlementId(settlementId);
+    }
+
+    @Override
     public WalletDepositLog save(WalletDepositLog walletDepositLog) {
         return walletDepositLogJpaRepository.save(walletDepositLog);
     }
