@@ -103,10 +103,9 @@ public class CartService {
 
 	@Transactional
 	public void clearCart(UUID memberId) {
-		UUID cartId = getOrCreateCartId(memberId);
-		cartItemRepository.deleteByCartId(cartId);
+		cartRepository.findByMemberId(memberId)
+			.ifPresent(cart -> cartItemRepository.deleteByCartId(cart.getId()));
 	}
-
 
 	private UUID getOrCreateCartId(UUID memberId) {
 		return cartRepository.findByMemberId(memberId)
