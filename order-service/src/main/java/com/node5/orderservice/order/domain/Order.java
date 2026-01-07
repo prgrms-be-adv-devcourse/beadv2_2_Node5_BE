@@ -39,7 +39,7 @@ public class Order extends BaseEntity {
     private LocalDateTime closedAt; //취소, 환불, 배송 완료 일시
 
     @Column
-    private UUID subscriptionId;
+    private UUID subscriptionKey; //구독 주문 시 중복 요청 방지를 위한 멱등키
 
     @Column
     private BigDecimal totalAmount; //총 주문 금액
@@ -59,7 +59,7 @@ public class Order extends BaseEntity {
             OrderStatus status,
             String orderNum,
             OrderType orderType,
-            UUID subscriptionId,
+            UUID subscriptionKey,
             BigDecimal totalAmount,
             String recipientName,
             String recipientAddress
@@ -69,7 +69,7 @@ public class Order extends BaseEntity {
         this.status =  status;
         this.orderNum = orderNum;
         this.orderType = orderType;
-        this.subscriptionId = subscriptionId;
+        this.subscriptionKey = subscriptionKey;
         this.totalAmount = totalAmount;
         this.recipientName = recipientName;
         this.recipientAddress = recipientAddress;
@@ -87,7 +87,7 @@ public class Order extends BaseEntity {
                 .memberId(memberId)
                 .orderNum(orderNum)
                 .orderType(command.orderType())
-                .subscriptionId(command.subscriptionId())
+                .subscriptionKey(command.subscriptionKey())
                 .totalAmount(totalAmount)
                 .recipientName(command.recipientName())
                 .recipientAddress(command.recipientAddress())

@@ -14,7 +14,7 @@ public record OrderCreateRequest(
         @NotNull(message = "주문 유형은 필수 값입니다.")
         OrderType orderType,
 
-        UUID subscriptionId,
+        UUID subscriptionKey,
 
         String recipientName,
         String recipientAddress,
@@ -48,7 +48,7 @@ public record OrderCreateRequest(
 
         return new OrderCommand(
                 orderType(),
-                subscriptionId,
+                subscriptionKey,
                 recipientName,
                 recipientAddress,
                 itemCommands

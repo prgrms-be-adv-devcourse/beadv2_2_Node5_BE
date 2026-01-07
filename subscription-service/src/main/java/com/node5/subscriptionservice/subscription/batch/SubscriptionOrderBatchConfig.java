@@ -19,6 +19,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.PlatformTransactionManager;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -60,7 +61,11 @@ public class SubscriptionOrderBatchConfig {
                     Subscription subscription = subscriptionRepository.findById(subscriptionId)
                             .orElseThrow(() -> new SubscriptionException(SUBSCRIPTION_NOT_FOUND));
 
-                    requestOrder(subscription);
+                    String runDateParam = (String) chunkContext.getStepContext()
+                            .getJobParameters()
+                            .get("runDate");
+                    LocalDate runDate = LocalDate.parse(runDateParam);
+                    requestOrder(subscription, runDate);
 
                     log.info("Order processed subscription {}", subscriptionId);
 
@@ -95,10 +100,13 @@ public class SubscriptionOrderBatchConfig {
                 .build();
     }
 
-    private void requestOrder(Subscription subscription) {
+    private void requestOrder(Subscription subscription, LocalDate runDate) {
+        UUID subscriptionKey = UUID.nameUUIDFromBytes(
+                (subscription.getId().toString() + ":" + runDate).getBytes(StandardCharsets.UTF_8)
+        );
         OrderCreateRequest request = new OrderCreateRequest(
                 "SUBSCRIPTION",
-                subscription.getId(),
+                subscriptionKey,
                 "subscription-batch",
                 subscription.getDeliveryAddress(),
                 List.of(

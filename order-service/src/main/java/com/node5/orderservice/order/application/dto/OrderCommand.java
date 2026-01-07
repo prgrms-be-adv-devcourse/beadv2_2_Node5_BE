@@ -7,7 +7,7 @@ import java.util.UUID;
 
 public record OrderCommand(
         OrderType orderType,
-        UUID subscriptionId,
+        UUID subscriptionKey,
         String recipientName,
         String recipientAddress,
         List<OrderItemCommand> items

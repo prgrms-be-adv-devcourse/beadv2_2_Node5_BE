@@ -16,6 +16,8 @@ public interface OrderRepository {
 
     Optional<Order> findById(UUID orderId);
 
+    Optional<Order> findBySubscriptionKey(UUID subscriptionKey);
+
     Page<Order> findByMemberIdAndCreatedAtAfterOrderByCreatedAtDesc(UUID memberId, LocalDateTime createdAt, Pageable pageable);
 
     List<Order> findByStatusAndPaidAtBefore(OrderStatus orderStatus, LocalDateTime standard);
