@@ -15,12 +15,14 @@ import jakarta.transaction.Transactional;
 
 public interface CartItemJpaRepository extends JpaRepository<CartItem, UUID> {
 
-	Page<CartItem> findByMemberId(UUID memberId, Pageable pageable);
+	Page<CartItem> findByCartId(UUID cartId, Pageable pageable);
 
-	Optional<CartItem> findByMemberIdAndProductId(UUID memberId, UUID productId);
+	Optional<CartItem> findByCartIdAndProductId(UUID cartId, UUID productId);
+
+	Optional<CartItem> findByIdAndCartId(UUID id, UUID cartId);
 
 	@Modifying(clearAutomatically = true)
 	@Transactional
-	@Query("delete from CartItem c where c.memberId = :memberId")
-	void deleteByMemberId(UUID memberId);
+	@Query("delete from CartItem c where c.cartId = :cartId")
+	void deleteByCartId(UUID cartId);
 }

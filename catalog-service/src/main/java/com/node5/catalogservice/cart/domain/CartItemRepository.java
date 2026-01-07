@@ -12,11 +12,13 @@ public interface CartItemRepository {
 
 	Optional<CartItem> findById(UUID id);
 
-	Page<CartItem> findByMemberId(UUID memberId, Pageable pageable);
+	Page<CartItem> findByCartId(UUID cartId, Pageable pageable);
 
-	Optional<CartItem> findByMemberIdAndProductId(UUID memberId, UUID productId);
+	Optional<CartItem> findByCartIdAndProductId(UUID cartId, UUID productId);
+
+	Optional<CartItem> findByIdAndCartId(UUID id, UUID cartId);
 
 	void deleteById(UUID id);
 
-	void deleteByMemberId(UUID memberId);
+	void deleteByCartId(UUID cartId);
 }
