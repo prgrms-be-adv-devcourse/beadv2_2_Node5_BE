@@ -61,12 +61,11 @@ public class CartService {
 	}
 
 	public CartItemInfo addItem(UUID memberId, CartItemCommand command) {
-		UUID cartId = getOrCreateCartId(memberId);
-
 		UUID productId = command.productId();
 		int quantity = command.quantity();
 
 		Product product = getOnSaleProductOrThrow(productId);
+		UUID cartId = getOrCreateCartId(memberId);
 
 		CartItem cartItem = cartItemRepository.findByCartIdAndProductId(cartId, product.getId())
 			.map(existing -> {
