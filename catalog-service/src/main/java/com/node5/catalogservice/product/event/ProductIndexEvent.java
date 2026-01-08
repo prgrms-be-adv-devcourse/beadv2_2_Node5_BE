@@ -9,6 +9,7 @@ public record ProductIndexEvent(
 	UUID productId,
 	UUID shopId,
 	String name,
+	String nameAutocomplete,
 	String category,
 	String thumbnailUrl,
 	long price,
@@ -21,6 +22,7 @@ public record ProductIndexEvent(
 		return new ProductIndexEvent(
 			product.getId(),
 			product.getShopId(),
+			product.getName(),
 			product.getName(),
 			product.getCategory().name(),
 			product.getThumbnailUrl(),
@@ -35,6 +37,7 @@ public record ProductIndexEvent(
 		return new ProductIndexEvent(
 			product.getId(),
 			product.getShopId(),
+			product.getName(),
 			product.getName(),
 			product.getCategory().name(),
 			product.getThumbnailUrl(),
