@@ -18,12 +18,11 @@ import com.node5.catalogservice.cart.domain.Cart;
 import com.node5.catalogservice.cart.domain.CartItem;
 import com.node5.catalogservice.cart.domain.CartItemRepository;
 import com.node5.catalogservice.cart.domain.CartRepository;
-import com.node5.catalogservice.cart.exception.CartItemNotFoundException;
-import com.node5.catalogservice.cart.exception.CartProductNotFoundException;
-import com.node5.catalogservice.cart.exception.CartProductNotOnSaleException;
+import com.node5.catalogservice.cart.exception.CartErrorCode;
 import com.node5.catalogservice.product.domain.Product;
 import com.node5.catalogservice.product.domain.ProductRepository;
 import com.node5.catalogservice.product.domain.ProductStatus;
+import com.node5.common.exception.BaseException;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -54,7 +53,7 @@ public class CartService {
 		return cartItems.map(item -> {
 			Product product = productMap.get(item.getProductId());
 			if (product == null) {
-				throw new CartProductNotFoundException();
+				throw new BaseException(CartErrorCode.CART_PRODUCT_NOT_FOUND);
 			}
 			return CartItemInfo.from(item, product);
 		});
@@ -82,7 +81,7 @@ public class CartService {
 		UUID cartId = getOrCreateCartId(memberId);
 
 		CartItem cartItem = cartItemRepository.findByIdAndCartId(cartItemId, cartId)
-			.orElseThrow(CartItemNotFoundException::new);
+			.orElseThrow(() -> new BaseException(CartErrorCode.CART_ITEM_NOT_FOUND));
 
 		cartItem.updateQuantity(command.quantity());
 		CartItem saved = cartItemRepository.save(cartItem);
@@ -95,7 +94,7 @@ public class CartService {
 		UUID cartId = getOrCreateCartId(memberId);
 
 		CartItem cartItem = cartItemRepository.findByIdAndCartId(cartItemId, cartId)
-			.orElseThrow(CartItemNotFoundException::new);
+			.orElseThrow(() -> new BaseException(CartErrorCode.CART_ITEM_NOT_FOUND));
 
 		cartItemRepository.deleteById(cartItem.getId());
 	}
@@ -114,13 +113,13 @@ public class CartService {
 
 	private Product getProductOrThrow(UUID productId) {
 		return productRepository.findById(productId)
-			.orElseThrow(CartProductNotFoundException::new);
+			.orElseThrow(() -> new BaseException(CartErrorCode.CART_PRODUCT_NOT_FOUND));
 	}
 
 	private Product getOnSaleProductOrThrow(UUID productId) {
 		Product product = getProductOrThrow(productId);
 		if (product.getStatus() != ProductStatus.ON_SALE) {
-			throw new CartProductNotOnSaleException();
+			throw new BaseException(CartErrorCode.CART_PRODUCT_NOT_ON_SALE);
 		}
 		return product;
 	}
