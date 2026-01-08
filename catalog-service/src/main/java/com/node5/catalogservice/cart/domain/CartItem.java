@@ -9,7 +9,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import lombok.Getter;
 
+@Getter
 @Entity
 @Table(name = "cart_item", schema = "catalog")
 public class CartItem extends BaseEntity {
@@ -17,8 +19,8 @@ public class CartItem extends BaseEntity {
 	@Id
 	private UUID id;
 
-	@Column(name = "member_id", nullable = false)
-	private UUID memberId;
+	@Column(name = "cart_id", nullable = false)
+	private UUID cartId;
 
 	@Column(name = "product_id", nullable = false)
 	private UUID productId;
@@ -29,16 +31,16 @@ public class CartItem extends BaseEntity {
 	protected CartItem() {
 	}
 
-	protected CartItem(UUID id, UUID memberId, UUID productId, Integer quantity) {
+	protected CartItem(UUID id, UUID cartId, UUID productId, Integer quantity) {
 		this.id = id;
-		this.memberId = memberId;
+		this.cartId = cartId;
 		this.productId = productId;
 		this.quantity = quantity;
 	}
 
-	public static CartItem create(UUID memberId, UUID productId, Integer quantity) {
+	public static CartItem create(UUID cartId, UUID productId, Integer quantity) {
 		validateQuantity(quantity);
-		return new CartItem(null, memberId, productId, quantity);
+		return new CartItem(null, cartId, productId, quantity);
 	}
 
 	public void updateQuantity(int quantity) {
@@ -60,21 +62,5 @@ public class CartItem extends BaseEntity {
 	@PrePersist
 	public void onCreate() {
 		if (id == null) id = UUID.randomUUID();
-	}
-
-	public UUID getId() {
-		return id;
-	}
-
-	public UUID getMemberId() {
-		return memberId;
-	}
-
-	public UUID getProductId() {
-		return productId;
-	}
-
-	public Integer getQuantity() {
-		return quantity;
 	}
 }
