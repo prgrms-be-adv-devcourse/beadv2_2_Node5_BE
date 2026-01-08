@@ -40,7 +40,8 @@ public class CartController {
 	@GetMapping
 	@Operation(summary = "장바구니 조회", description = "회원의 장바구니 항목 목록을 페이징 조회합니다.")
 	@ApiResponses({
-		@ApiResponse(responseCode = "200", description = "장바구니 조회 성공")
+		@ApiResponse(responseCode = "200", description = "장바구니 조회 성공"),
+		@ApiResponse(responseCode = "404", description = "장바구니에 담긴 상품이 존재하지 않습니다.")
 	})
 	public ResponseEntity<Page<CartItemInfo>> getCartItems(
 		@RequestHeader("Member-Id") UUID memberId,
@@ -53,7 +54,8 @@ public class CartController {
 	@Operation(summary = "장바구니 상품 추가", description = "상품을 장바구니에 추가합니다.")
 	@ApiResponses({
 		@ApiResponse(responseCode = "201", description = "상품 장바구니 추가 성공"),
-		@ApiResponse(responseCode = "400", description = "요청 값이 유효하지 않습니다.")
+		@ApiResponse(responseCode = "400", description = "요청 값이 유효하지 않습니다."),
+		@ApiResponse(responseCode = "404", description = "장바구니에 담으려는 상품이 존재하지 않습니다.")
 	})
 	public ResponseEntity<CartItemInfo> addCartItem(
 		@RequestHeader("Member-Id") UUID memberId,
