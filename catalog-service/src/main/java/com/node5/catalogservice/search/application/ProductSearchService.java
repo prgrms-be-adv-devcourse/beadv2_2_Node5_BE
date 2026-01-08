@@ -15,7 +15,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class SearchService {
+public class ProductSearchService {
 
 	private final ProductSearchPort productSearchPort;
 
