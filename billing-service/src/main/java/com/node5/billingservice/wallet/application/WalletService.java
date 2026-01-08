@@ -3,6 +3,15 @@ package com.node5.billingservice.wallet.application;
 import com.node5.billingservice.wallet.client.TransferClient;
 import com.node5.billingservice.wallet.client.dto.TransferRequset;
 import com.node5.billingservice.wallet.client.dto.TransferResponse;
+import com.node5.billingservice.wallet.domain.WalletDepositLog;
+import com.node5.billingservice.wallet.domain.WalletDepositLogRepository;
+import com.node5.billingservice.wallet.domain.WalletTransactionLog;
+import com.node5.billingservice.wallet.domain.WalletTransactionLogGroupType;
+import com.node5.billingservice.wallet.domain.WalletTransactionLogRepository;
+import com.node5.billingservice.wallet.domain.WalletTransferLog;
+import com.node5.billingservice.wallet.domain.WalletTransferLogRepository;
+import com.node5.billingservice.wallet.domain.WalletWithdrawLog;
+import com.node5.billingservice.wallet.domain.WalletWithdrawLogRepository;
 import com.node5.billingservice.wallet.exception.WalletException;
 import com.node5.billingservice.wallet.application.dto.*;
 import com.node5.billingservice.wallet.domain.*;
@@ -15,6 +24,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.UUID;
 
 import static com.node5.billingservice.wallet.client.TransferStateCode.*;
+import static com.node5.billingservice.wallet.domain.WalletTransactionLogStatus.COMPLETED;
+import static com.node5.billingservice.wallet.domain.WalletTransactionLogStatus.REFUNDED;
+import static com.node5.billingservice.wallet.domain.WalletTransactionLogType.*;
 import static com.node5.billingservice.wallet.exception.WalletErrorCode.*;
 
 @Service
@@ -26,7 +38,7 @@ public class WalletService {
     private final WalletDepositLogRepository walletDepositLogRepository;
     private final WalletWithdrawLogRepository walletWithdrawLogRepository;
     private final WalletTransferLogRepository walletTransferLogRepository;
-    private final WalletDeletedProducer walletDeletedProducer;
+    private final WalletTransactionLogRepository walletTransactionLogRepository;
     private final TransferClient transferClient;
 
     // memberId에 대한 예치금 조회
@@ -51,16 +63,22 @@ public class WalletService {
         return WalletInfo.from(wallet);
     }
 
+    // memberId에 대한 예치금 입출금 내역 조회
+    public Page<WalletLogInfo> getTransactions(UUID memberId, Pageable pageable) {
+        Page<WalletTransactionLog> transactionLogPage = walletTransactionLogRepository.findAllByMemberId(memberId, pageable);
+        return transactionLogPage.map(WalletLogInfo::from);
+    }
+
     // memberId에 대한 예치금 입금 내역 조회
-    public Page<WalletDepositInfo> getDeposits(UUID memberId, Pageable pageable) {
-        Page<WalletDepositLog> depositLogPage = walletDepositLogRepository.findAllByMemberId(memberId, pageable);
-        return depositLogPage.map(WalletDepositInfo::from);
+    public Page<WalletLogInfo> getDeposits(UUID memberId, Pageable pageable) {
+        Page<WalletTransactionLog> depositLogPage = walletTransactionLogRepository.findInLogByMemberId(memberId, pageable);
+        return depositLogPage.map(WalletLogInfo::from);
     }
 
     // memberId에 대한 예치금 출금 내역 조회
-    public Page<WalletWithdrawInfo> getWithdraws(UUID memberId, Pageable pageable) {
-        Page<WalletWithdrawLog> withdrawLogPage = walletWithdrawLogRepository.findAllByMemberId(memberId, pageable);
-        return withdrawLogPage.map(WalletWithdrawInfo::from);
+    public Page<WalletLogInfo> getWithdraws(UUID memberId, Pageable pageable) {
+        Page<WalletTransactionLog> withdrawLogPage = walletTransactionLogRepository.findOutLogByMemberId(memberId, pageable);
+        return withdrawLogPage.map(WalletLogInfo::from);
     }
 
     // 예치금 정산
@@ -73,6 +91,8 @@ public class WalletService {
             throw new WalletException(WALLET_SETTLEMENT_ALREADY_EXISTS);
         }
 
+        wallet.deposit(command.amount());
+
         WalletDepositLog walletDepositLog = WalletDepositLog.builder()
                 .memberId(memberId)
                 .settlementId(command.settlementId())
@@ -80,7 +100,17 @@ public class WalletService {
                 .build();
         WalletDepositLog savedLog = walletDepositLogRepository.save(walletDepositLog);
 
-        wallet.deposit(command.amount());
+        WalletTransactionLog transactionLog = WalletTransactionLog.builder()
+                .memberId(memberId)
+                .referenceId(command.settlementId().toString())
+                .type(SETTLEMENT)
+                .groupType(WalletTransactionLogGroupType.IN)
+                .amount(command.amount())
+                .balanceAfter(wallet.getBalance())
+                .status(COMPLETED)
+                .build();
+        walletTransactionLogRepository.save(transactionLog);
+
         return WalletSettleInfo.from(wallet, savedLog.getCreatedAt());
     }
 
@@ -90,7 +120,7 @@ public class WalletService {
         Wallet wallet = walletRepository.findByMemberIdForUpdate(memberId)
                 .orElseThrow(() -> new WalletException(WALLET_NOT_FOUND));
 
-        wallet.validateSufficientBalance(command.withdrawAmount());
+        wallet.withdraw(command.withdrawAmount());
 
         WalletWithdrawLog walletWithdrawLog = WalletWithdrawLog.builder()
                 .memberId(memberId)
@@ -99,7 +129,18 @@ public class WalletService {
                 .build();
         walletWithdrawLogRepository.save(walletWithdrawLog);
 
-        wallet.withdraw(command.withdrawAmount());
+        WalletTransactionLog transactionLog = WalletTransactionLog.builder()
+                .memberId(memberId)
+                .referenceId(command.orderId().toString())
+                .type(ORDER)
+                .groupType(WalletTransactionLogGroupType.OUT)
+                .amount(command.withdrawAmount())
+                .balanceAfter(wallet.getBalance())
+                .status(COMPLETED)
+                .build();
+
+        walletTransactionLogRepository.save(transactionLog);
+
         return WalletInfo.from(wallet);
     }
 
@@ -116,7 +157,26 @@ public class WalletService {
         withdrawLog.validateRefundable(command.orderId(), command.refundAmount());
         withdrawLog.refund();
 
-        wallet.deposit(withdrawLog.getAmount());
+        String transactionId = withdrawLog.getOrderId().toString();
+        int update = walletTransactionLogRepository.updateStatusByTransactionId(memberId, transactionId, ORDER, COMPLETED, REFUNDED);
+        if (update == 0) {
+            throw new WalletException(WALLET_REFUND_INVALID_STATUS);
+        }
+
+        wallet.deposit(command.refundAmount());
+
+        WalletTransactionLog transactionLog = WalletTransactionLog.builder()
+                .memberId(memberId)
+                .referenceId(transactionId)
+                .type(ORDER_REFUND)
+                .groupType(WalletTransactionLogGroupType.IN)
+                .amount(command.refundAmount())
+                .balanceAfter(wallet.getBalance())
+                .status(COMPLETED)
+                .build();
+
+        walletTransactionLogRepository.save(transactionLog);
+
         return WalletInfo.from(wallet);
     }
 
@@ -135,7 +195,7 @@ public class WalletService {
         Wallet wallet = walletRepository.findByMemberIdForUpdate(memberId)
                 .orElseThrow(() -> new WalletException(WALLET_NOT_FOUND));
 
-        wallet.validateSufficientBalance(command.transferAmount());
+        wallet.withdraw(command.transferAmount());
 
         String orderId = "ORDER-" + UUID.randomUUID();
 
@@ -165,13 +225,18 @@ public class WalletService {
                 .build();
         walletTransferLogRepository.save(walletTransferLog);
 
-        wallet.withdraw(command.transferAmount());
+        WalletTransactionLog transactionLog = WalletTransactionLog.builder()
+                .memberId(memberId)
+                .referenceId(response.transactionId())
+                .type(TRANSFER)
+                .groupType(WalletTransactionLogGroupType.OUT)
+                .amount(command.transferAmount())
+                .balanceAfter(wallet.getBalance())
+                .status(COMPLETED)
+                .build();
+        walletTransactionLogRepository.save(transactionLog);
+
         return WalletTransferInfo.from(walletTransferLog);
     }
 
-    // memberId에 대한 예치금 이체 내역 조회
-    public Page<WalletTransferInfo> getTransfers(UUID memberId, Pageable pageable) {
-        Page<WalletTransferLog> transferLogPage = walletTransferLogRepository.findAllByMemberId(memberId, pageable);
-        return transferLogPage.map(WalletTransferInfo::from);
-    }
 }
