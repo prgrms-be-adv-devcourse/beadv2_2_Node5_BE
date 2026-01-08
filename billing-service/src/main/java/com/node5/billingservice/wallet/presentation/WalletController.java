@@ -3,8 +3,11 @@ package com.node5.billingservice.wallet.presentation;
 import com.node5.billingservice.wallet.application.WalletService;
 import com.node5.billingservice.wallet.application.dto.WalletDepositInfo;
 import com.node5.billingservice.wallet.application.dto.WalletInfo;
+import com.node5.billingservice.wallet.application.dto.WalletTransferInfo;
 import com.node5.billingservice.wallet.application.dto.WalletWithdrawInfo;
+import com.node5.billingservice.wallet.presentation.dto.WalletTransferRequest;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -44,6 +47,18 @@ public class WalletController {
     @GetMapping("/withdraws")
     public ResponseEntity<Page<WalletWithdrawInfo>> getWithdraws(@RequestHeader("Member-Id") UUID memberId, Pageable pageable) {
         return ResponseEntity.ok(walletService.getWithdraws(memberId, pageable));
+    }
+
+    @Operation(summary = "예치금 이체 내역 조회", description = "회원의 예치금 이체 내역을 조회한다.")
+    @GetMapping("/transfers")
+    public ResponseEntity<Page<WalletTransferInfo>> getTransfers(@RequestHeader("Member-Id") UUID memberId, Pageable pageable) {
+        return ResponseEntity.ok(walletService.getTransfers(memberId, pageable));
+    }
+
+    @Operation(summary = "예치금 이체", description = "회원의 예치금을 이체한다.")
+    @PostMapping("/transfer")
+    public ResponseEntity<WalletTransferInfo>transferWallet(@RequestHeader("Member-Id") UUID memberId, @Valid @RequestBody WalletTransferRequest request) {
+        return ResponseEntity.ok(walletService.transferWallet(memberId, request.toCommand()));
     }
 
 }
