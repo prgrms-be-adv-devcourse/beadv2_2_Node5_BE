@@ -4,7 +4,6 @@ import com.node5.catalogservice.product.domain.ProductCategory;
 
 public record ProductAutocompleteCommand(
 	String keyword,
-	ProductCategory category,
 	int size
 ) {
 }
