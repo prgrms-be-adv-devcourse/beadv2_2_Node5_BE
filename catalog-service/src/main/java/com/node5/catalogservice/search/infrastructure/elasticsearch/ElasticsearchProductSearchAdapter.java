@@ -44,13 +44,6 @@ public class ElasticsearchProductSearchAdapter implements ProductSearchPort {
 			// - 점수 계산과 무관한 고정 조건
 			b.filter(f -> f.term(t -> t.field("status").value(FieldValue.of("ON_SALE"))));
 
-			// filter:
-			// - 카테고리 선택 시에만 적용되는 제한 조건
-			if (command.category() != null) {
-				b.filter(f -> f.term(t -> t.field("category")
-					.value(FieldValue.of(command.category().name()))));
-			}
-
 			// must:
 			// - 자동완성 전용 필드(name_autocomplete)로 prefix 매칭
 			if (StringUtils.hasText(command.keyword())) {

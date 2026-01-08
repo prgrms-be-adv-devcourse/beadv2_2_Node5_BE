@@ -20,14 +20,14 @@ public class ProductAutocompleteService {
 
 	private final ProductSearchPort productSearchPort;
 
-	public List<String> autocomplete(String keyword, ProductCategory category) {
+	public List<String> autocomplete(String keyword) {
 		if (!StringUtils.hasText(keyword)) return List.of();
 
 		String trimmed = keyword.trim();
 		if (trimmed.length() < MIN_LENGTH) return List.of();
 
 		List<String> raw = productSearchPort.autocomplete(
-			new ProductAutocompleteCommand(trimmed, category, AUTOCOMPLETE_LIMIT)
+			new ProductAutocompleteCommand(trimmed, AUTOCOMPLETE_LIMIT)
 		);
 
 		return raw.stream()

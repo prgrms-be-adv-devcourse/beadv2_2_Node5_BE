@@ -21,10 +21,7 @@ public class ProductAutocompleteController {
 	private final ProductAutocompleteService productAutocompleteService;
 
 	@GetMapping
-	public ResponseEntity<List<String>> autocomplete(
-		@RequestParam String keyword,
-		@RequestParam(required = false) ProductCategory category
-		) {
-		return ResponseEntity.ok(productAutocompleteService.autocomplete(keyword, category));
+	public ResponseEntity<List<String>> autocomplete(@RequestParam String keyword) {
+		return ResponseEntity.ok(productAutocompleteService.autocomplete(keyword));
 	}
 }
