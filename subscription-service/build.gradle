@@ -18,4 +18,5 @@ dependencies {
 
     implementation 'org.springframework.boot:spring-boot-starter-batch'
 
+    implementation 'org.springframework.kafka:spring-kafka'
 }
