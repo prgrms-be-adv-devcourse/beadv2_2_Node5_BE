@@ -1,10 +1,7 @@
 package com.node5.billingservice.wallet.presentation;
 
 import com.node5.billingservice.wallet.application.WalletService;
-import com.node5.billingservice.wallet.application.dto.WalletDepositInfo;
-import com.node5.billingservice.wallet.application.dto.WalletInfo;
-import com.node5.billingservice.wallet.application.dto.WalletTransferInfo;
-import com.node5.billingservice.wallet.application.dto.WalletWithdrawInfo;
+import com.node5.billingservice.wallet.application.dto.*;
 import com.node5.billingservice.wallet.presentation.dto.WalletTransferRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
@@ -31,28 +28,28 @@ public class WalletController {
         return ResponseEntity.ok(walletService.getWallet(memberId));
     }
 
-    @Operation(summary = "예치금 생성", description = "회원의 예치금 계좌를 생성한다.")
+    @Operation(summary  = "예치금 생성", description = "회원의 예치금 계좌를 생성한다.")
     @PostMapping
     public ResponseEntity<WalletInfo> createWallet(@RequestHeader("Member-Id") UUID memberId) {
         return ResponseEntity.status(CREATED).body(walletService.createWallet(memberId));
     }
 
+    @Operation(summary = "예치금 거래 내역 조회", description = "회원의 예치금 거래 내역을 조회한다.")
+    @GetMapping("/transactions/all")
+    public ResponseEntity<Page<WalletLogInfo>> getTransactionLogs(@RequestHeader("Member-Id") UUID memberId, Pageable pageable) {
+        return ResponseEntity.ok(walletService.getTransactions(memberId, pageable));
+    }
+
     @Operation(summary = "예치금 입금 내역 조회", description = "회원의 예치금 입금 내역을 조회한다.")
-    @GetMapping("/deposits")
-    public ResponseEntity<Page<WalletDepositInfo>> getDepositLogs(@RequestHeader("Member-Id") UUID memberId, Pageable pageable) {
+    @GetMapping("/transactions/deposits")
+    public ResponseEntity<Page<WalletLogInfo>> getDepositLogs(@RequestHeader("Member-Id") UUID memberId, Pageable pageable) {
         return ResponseEntity.ok(walletService.getDeposits(memberId, pageable));
     }
 
     @Operation(summary = "예치금 출금 내역 조회", description = "회원의 예치금 출금 내역을 조회한다.")
-    @GetMapping("/withdraws")
-    public ResponseEntity<Page<WalletWithdrawInfo>> getWithdraws(@RequestHeader("Member-Id") UUID memberId, Pageable pageable) {
+    @GetMapping("/transactions/withdraws")
+    public ResponseEntity<Page<WalletLogInfo>> getWithdraws(@RequestHeader("Member-Id") UUID memberId, Pageable pageable) {
         return ResponseEntity.ok(walletService.getWithdraws(memberId, pageable));
-    }
-
-    @Operation(summary = "예치금 이체 내역 조회", description = "회원의 예치금 이체 내역을 조회한다.")
-    @GetMapping("/transfers")
-    public ResponseEntity<Page<WalletTransferInfo>> getTransfers(@RequestHeader("Member-Id") UUID memberId, Pageable pageable) {
-        return ResponseEntity.ok(walletService.getTransfers(memberId, pageable));
     }
 
     @Operation(summary = "예치금 이체", description = "회원의 예치금을 이체한다.")
