@@ -28,6 +28,7 @@ class SubscriptionTest {
         Subscription subscription = Subscription.create(
                 UUID.randomUUID(),
                 UUID.randomUUID(),
+                UUID.randomUUID(),
                 "테스트 상품",
                 "http://thumb",
                 BigDecimal.valueOf(1200),
@@ -164,6 +165,7 @@ class SubscriptionTest {
 
     private Subscription createSubscription() {
         return Subscription.create(
+                UUID.randomUUID(),
                 UUID.randomUUID(),
                 UUID.randomUUID(),
                 "테스트 상품",

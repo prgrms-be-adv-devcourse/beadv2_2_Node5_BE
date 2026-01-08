@@ -1,6 +1,5 @@
 package com.node5.subscriptionservice.subscription.application;
 
-import com.node5.common.event.SubscriptionDeletedEvent;
 import com.node5.subscriptionservice.subscription.application.dto.SubscriptionCreateCommand;
 import com.node5.subscriptionservice.subscription.application.dto.SubscriptionInfo;
 import com.node5.subscriptionservice.subscription.application.dto.SubscriptionUpdateCommand;
@@ -17,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.DayOfWeek;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -57,6 +57,7 @@ public class SubscriptionService {
         Subscription subscription = Subscription.create(
                 memberId,
                 productInfo.id(),
+                productInfo.shopId(),
                 productInfo.name(),
                 productInfo.thumbnailUrl(),
                 productInfo.price(),
@@ -162,9 +163,15 @@ public class SubscriptionService {
     }
 
     @Transactional
-    public void terminate(UUID memberId) {
+    public void terminateUserSubscriptions(UUID memberId) {
         List<Subscription> subscriptions = subscriptionRepository.findAllByMemberId(memberId);
         subscriptions.forEach(Subscription::terminate);
+    }
+
+    @Transactional
+    public void terminateSellerSubscriptions(UUID shopId) {
+        // 대량 처리 고려하여 bulk update
+        subscriptionRepository.bulkTerminateAllByShop(shopId, LocalDateTime.now());
     }
 
     private ProductInfoResponse getProductInfo(UUID productId) {

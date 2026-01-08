@@ -4,6 +4,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -21,4 +22,6 @@ public interface SubscriptionRepository {
     Page<Subscription> findAllByNextRunDateAndSubscriptionStatus(LocalDate nextRunDate, SubscriptionStatus subscriptionStatus, Pageable pageable);
 
     Page<Subscription> findAllByProductId(UUID productId, Pageable pageable);
+
+    void bulkTerminateAllByShop(UUID shopId, LocalDateTime dateTime);
 }

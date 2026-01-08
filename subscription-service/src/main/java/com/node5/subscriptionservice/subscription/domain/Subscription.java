@@ -32,6 +32,9 @@ public class Subscription extends BaseEntity {
     @Column(name = "product_id", nullable = false)
     private UUID productId;
 
+    @Column(name = "shop_id", nullable = false)
+    private UUID shopId;
+
     @Column(nullable = false, length = 100)
     private String productName;
 
@@ -63,6 +66,7 @@ public class Subscription extends BaseEntity {
     private Subscription(UUID id,
                         UUID memberId,
                         UUID productId,
+                        UUID shopId,
                         String productName,
                         String thumbnailUrl,
                         BigDecimal pricePerItem,
@@ -74,6 +78,7 @@ public class Subscription extends BaseEntity {
         this.id = id;
         this.memberId = memberId;
         this.productId = productId;
+        this.shopId = shopId;
         this.productName = productName;
         this.thumbnailUrl = thumbnailUrl;
         this.pricePerItem = pricePerItem;
@@ -87,6 +92,7 @@ public class Subscription extends BaseEntity {
 
     public static Subscription create(UUID memberId,
                                 UUID productId,
+                                UUID shopId,
                                 String productName,
                                 String thumbnailUrl,
                                 BigDecimal pricePerItem,
@@ -97,6 +103,7 @@ public class Subscription extends BaseEntity {
                 UUID.randomUUID(),
                 memberId,
                 productId,
+                shopId,
                 productName,
                 thumbnailUrl,
                 pricePerItem,
@@ -160,9 +167,11 @@ public class Subscription extends BaseEntity {
             throw new SubscriptionException(SUBSCRIPTION_INVALID_STATE);
         }
         this.subscriptionStatus = SubscriptionStatus.CANCELLED;
+        this.deletedAt = LocalDateTime.now();
     }
 
     public void terminate() {
         this.subscriptionStatus = SubscriptionStatus.TERMINATED;
+        if(deletedAt == null) this.deletedAt = LocalDateTime.now();
     }
 }

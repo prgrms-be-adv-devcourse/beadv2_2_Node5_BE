@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -39,5 +40,10 @@ public class SubscriptionRepositoryAdapter implements SubscriptionRepository {
     @Override
     public Page<Subscription> findAllByProductId(UUID productId, Pageable pageable){
         return jpaRepository.findAllByProductId(productId, pageable);
+    }
+
+    @Override
+    void bulkTerminateAllByShop(UUID shopId, LocalDateTime dateTime){
+        return jpaRepository.
     }
 }
