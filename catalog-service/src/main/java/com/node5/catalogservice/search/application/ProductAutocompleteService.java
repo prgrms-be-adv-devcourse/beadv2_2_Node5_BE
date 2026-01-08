@@ -5,7 +5,6 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import com.node5.catalogservice.product.domain.ProductCategory;
 import com.node5.catalogservice.search.application.dto.ProductAutocompleteCommand;
 import com.node5.catalogservice.search.application.port.ProductSearchPort;
 
@@ -16,7 +15,6 @@ import lombok.RequiredArgsConstructor;
 public class ProductAutocompleteService {
 
 	private static final int MIN_LENGTH = 2;
-	private static final int AUTOCOMPLETE_LIMIT = 10;
 
 	private final ProductSearchPort productSearchPort;
 
@@ -27,12 +25,14 @@ public class ProductAutocompleteService {
 		if (trimmed.length() < MIN_LENGTH) return List.of();
 
 		List<String> raw = productSearchPort.autocomplete(
-			new ProductAutocompleteCommand(trimmed, AUTOCOMPLETE_LIMIT)
+			new ProductAutocompleteCommand(trimmed)
 		);
 
 		return raw.stream()
+			.filter(StringUtils::hasText)
+			.map(String::trim)
+			.filter(s -> !s.isBlank())
 			.distinct()
-			.limit(AUTOCOMPLETE_LIMIT)
 			.toList();
 	}
 }

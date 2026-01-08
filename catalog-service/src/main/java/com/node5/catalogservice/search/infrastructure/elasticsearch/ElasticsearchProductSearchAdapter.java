@@ -31,11 +31,12 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ElasticsearchProductSearchAdapter implements ProductSearchPort {
 
+	private static final int AUTOCOMPLETE_LIMIT = 10;
+
 	private final ElasticsearchOperations elasticsearchOperations;
 
 	@Override
 	public List<String> autocomplete(ProductAutocompleteCommand command) {
-		int size = command.size();
 
 		Query query = Query.of(q -> q.bool(b -> {
 
@@ -57,10 +58,9 @@ public class ElasticsearchProductSearchAdapter implements ProductSearchPort {
 			return b;
 		}));
 
-		// 페이징 없이 결과 수 제한
 		NativeQuery nativeQuery = new NativeQueryBuilder()
 			.withQuery(query)
-			.withMaxResults(size)
+			.withMaxResults(AUTOCOMPLETE_LIMIT)
 			.build();
 
 		SearchHits<ProductDocument> hits =

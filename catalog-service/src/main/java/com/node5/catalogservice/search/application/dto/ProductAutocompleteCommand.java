@@ -1,9 +1,4 @@
 package com.node5.catalogservice.search.application.dto;
 
-import com.node5.catalogservice.product.domain.ProductCategory;
-
-public record ProductAutocompleteCommand(
-	String keyword,
-	int size
-) {
+public record ProductAutocompleteCommand(String keyword) {
 }

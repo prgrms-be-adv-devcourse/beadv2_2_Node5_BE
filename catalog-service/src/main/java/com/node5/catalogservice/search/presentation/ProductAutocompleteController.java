@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.node5.catalogservice.product.domain.ProductCategory;
 import com.node5.catalogservice.search.application.ProductAutocompleteService;
 
 import lombok.RequiredArgsConstructor;
