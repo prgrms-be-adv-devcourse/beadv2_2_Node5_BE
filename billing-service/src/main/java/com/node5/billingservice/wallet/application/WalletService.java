@@ -128,13 +128,7 @@ public class WalletService {
         Wallet wallet = walletRepository.findByMemberIdForUpdate(memberId)
                 .orElseThrow(() -> new WalletException(WALLET_NOT_FOUND));
 
-        WalletDeletedEvent walletDeletedEvent = new WalletDeletedEvent(wallet.getId());
-
         wallet.delete();
-        //TODO - 연관된 입출금 내역도 삭제할지 고민
-        //TODO - 지갑이 삭제 되었는지 확인하는 쿼리 필요
-        // 지갑 삭제 topic 발행
-        walletDeletedProducer.send(walletDeletedEvent);
     }
 
     //예치금 이체
