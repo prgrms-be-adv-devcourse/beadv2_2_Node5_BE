@@ -15,7 +15,7 @@ public class MemberDeletedConsumer {
 
     @KafkaListener(topics = "${kafka.topics.member-deleted:member-service.member-deleted.v1}")
     public void consume(MemberDeletedEvent event, Acknowledgment ack) {
-        subscriptionService.terminateUserSubscriptions(event.memberId());
+        subscriptionService.terminateUserSubscriptions(event.memberId(), event.shopIds());
         ack.acknowledge();
     }
 }

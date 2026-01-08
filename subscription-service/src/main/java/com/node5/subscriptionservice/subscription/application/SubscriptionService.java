@@ -163,9 +163,10 @@ public class SubscriptionService {
     }
 
     @Transactional
-    public void terminateUserSubscriptions(UUID memberId) {
+    public void terminateUserSubscriptions(UUID memberId, List<UUID> shopIds) {
         List<Subscription> subscriptions = subscriptionRepository.findAllByMemberId(memberId);
         subscriptions.forEach(Subscription::terminate);
+        shopIds.forEach(shopId -> {terminateSellerSubscriptions(shopId);});
     }
 
     @Transactional
