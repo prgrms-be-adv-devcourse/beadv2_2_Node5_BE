@@ -26,7 +26,7 @@ class ProductAutocompleteServiceTest {
 	void 키워드가_최소길이_미만이면_빈결과를_반환한다() {
 		// when
 		List<String> result =
-			productAutocompleteService.autocomplete("케", null, 10);
+			productAutocompleteService.autocomplete("케");
 
 		// then
 		assertThat(result).isEmpty();
@@ -40,7 +40,7 @@ class ProductAutocompleteServiceTest {
 			.thenReturn(List.of("무선 로봇 청소기"));
 
 		// when
-		List<String> result = productAutocompleteService.autocomplete("무선 로", null, 10);
+		List<String> result = productAutocompleteService.autocomplete("무선 로");
 
 		// then
 		assertThat(result).containsExactly("무선 로봇 청소기");
@@ -58,23 +58,10 @@ class ProductAutocompleteServiceTest {
 
 		// when
 		List<String> result =
-			productAutocompleteService.autocomplete("케이", null, 10);
+			productAutocompleteService.autocomplete("케이");
 
 		// then
 		assertThat(result)
 			.containsExactly("케이크", "카페라떼");
-	}
-
-	@Test
-	void size만큼만_반환한다() {
-		// given
-		when(productSearchPort.autocomplete(any()))
-			.thenReturn(List.of("케이크", "카페라떼", "쿠키"));
-
-		// when
-		List<String> result = productAutocompleteService.autocomplete("케이", null, 2);
-
-		// then
-		assertThat(result).hasSize(2);
 	}
 }
