@@ -3,6 +3,7 @@ CREATE SCHEMA IF NOT EXISTS subscription;
 CREATE TABLE subscription.subscription (
                                            id UUID NOT NULL,
                                            member_id UUID NOT NULL,
+                                           shop_id UUID NOT NULL,
 
                                            product_id UUID NOT NULL,
                                            product_name VARCHAR(100),
@@ -23,6 +24,7 @@ CREATE TABLE subscription.subscription (
 );
 
 CREATE INDEX idx_subscription_member_id ON subscription.subscription(member_id);
+CREATE INDEX idx_subscription_shop_id ON subscription.subscription(shop_id);
 CREATE INDEX idx_subscription_product_id ON subscription.subscription(product_id);
 CREATE INDEX idx_subscription_next_run_date ON subscription.subscription(next_run_date);
 
@@ -30,6 +32,7 @@ COMMENT ON TABLE subscription.subscription IS '구독 테이블';
 
 COMMENT ON COLUMN subscription.subscription.id IS '구독 ID';
 COMMENT ON COLUMN subscription.subscription.member_id IS '회원 ID';
+COMMENT ON COLUMN subscription.subscription.shop_id IS '상점 ID';
 COMMENT ON COLUMN subscription.subscription.product_id IS '상품 ID';
 COMMENT ON COLUMN subscription.subscription.product_name IS '상품명';
 COMMENT ON COLUMN subscription.subscription.thumbnail_url IS '상품 이미지 url';

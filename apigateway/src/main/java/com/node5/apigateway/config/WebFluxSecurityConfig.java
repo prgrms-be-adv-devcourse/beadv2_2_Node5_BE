@@ -23,6 +23,7 @@ public class WebFluxSecurityConfig {
     private final static String[] PERMITALL_ANTPATTERNS = {
             "/", "/csrf",
 //            "/?*-service/api/v1/**",
+//            "/?*-service/test/**",
             "/member-service/api/v1/auth/oauth/**",
             "/member-service/api/v1/auth/email/**",
             "/member-service/api/v1/auth/refresh-token",

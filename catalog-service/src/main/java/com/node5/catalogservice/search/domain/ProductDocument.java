@@ -7,8 +7,6 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 
-import com.node5.catalogservice.product.domain.Product;
-
 import lombok.Getter;
 
 @Getter
@@ -23,6 +21,14 @@ public class ProductDocument {
 
 	@Field(type = FieldType.Text)
 	private String name;
+
+	@Field(
+		name = "name_autocomplete",
+		type = FieldType.Text,
+		analyzer = "autocomplete_index",
+		searchAnalyzer = "autocomplete_search"
+	)
+	private String nameAutocomplete;
 
 	@Field(type = FieldType.Keyword)
 	private String category;
@@ -46,6 +52,7 @@ public class ProductDocument {
 		String id,
 		String shopId,
 		String name,
+		String nameAutocomplete,
 		String category,
 		String thumbnailUrl,
 		Long price,
@@ -55,23 +62,11 @@ public class ProductDocument {
 		this.productId = id;
 		this.shopId = shopId;
 		this.name = name;
+		this.nameAutocomplete = nameAutocomplete;
 		this.category = category;
 		this.thumbnailUrl = thumbnailUrl;
 		this.price = price;
 		this.status = status;
 		this.createdAt = createdAt;
-	}
-
-	public static ProductDocument from(Product product) {
-		return new ProductDocument(
-			product.getId().toString(),
-			product.getShopId().toString(),
-			product.getName(),
-			product.getCategory().name(),
-			product.getThumbnailUrl(),
-			product.getPrice().longValue(),
-			product.getStatus().name(),
-			product.getCreatedAt()
-		);
 	}
 }

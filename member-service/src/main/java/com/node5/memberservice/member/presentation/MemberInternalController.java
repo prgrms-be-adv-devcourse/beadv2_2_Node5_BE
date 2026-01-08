@@ -34,4 +34,9 @@ public class MemberInternalController {
         return ResponseEntity.ok().build();
     }
 
+    @GetMapping("/{memberId}/email")
+    public ResponseEntity<String> getMemberEmail(@PathVariable String memberId){
+        return ResponseEntity.ok(memberService.getMemberEmail(memberId));
+    }
+
 }

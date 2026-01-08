@@ -27,4 +27,5 @@ apigateway:
 
 app:
   search:
-    product-index-name: test_products
+    index:
+      product: test_products

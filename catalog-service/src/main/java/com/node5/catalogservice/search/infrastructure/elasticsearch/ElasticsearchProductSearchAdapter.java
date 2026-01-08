@@ -14,6 +14,7 @@ import org.springframework.data.elasticsearch.core.SearchPage;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import com.node5.catalogservice.search.application.dto.ProductAutocompleteCommand;
 import com.node5.catalogservice.search.application.dto.ProductSearchCommand;
 import com.node5.catalogservice.search.application.port.ProductSearchPort;
 import com.node5.catalogservice.search.domain.ProductDocument;
@@ -30,7 +31,46 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ElasticsearchProductSearchAdapter implements ProductSearchPort {
 
+	private static final int AUTOCOMPLETE_LIMIT = 10;
+
 	private final ElasticsearchOperations elasticsearchOperations;
+
+	@Override
+	public List<String> autocomplete(ProductAutocompleteCommand command) {
+
+		Query query = Query.of(q -> q.bool(b -> {
+
+			// filter:
+			// - 판매 중인 상품만 자동완성 대상
+			// - 점수 계산과 무관한 고정 조건
+			b.filter(f -> f.term(t -> t.field("status").value(FieldValue.of("ON_SALE"))));
+
+			// must:
+			// - 자동완성 전용 필드(name_autocomplete)로 prefix 매칭
+			if (StringUtils.hasText(command.keyword())) {
+				b.must(m -> m.match(mm -> mm
+					.field("name_autocomplete")
+					.query(command.keyword())
+					.operator(Operator.And)
+				));
+			}
+
+			return b;
+		}));
+
+		NativeQuery nativeQuery = new NativeQueryBuilder()
+			.withQuery(query)
+			.withMaxResults(AUTOCOMPLETE_LIMIT)
+			.build();
+
+		SearchHits<ProductDocument> hits =
+			elasticsearchOperations.search(nativeQuery, ProductDocument.class);
+
+		return hits.getSearchHits().stream()
+			.map(hit -> hit.getContent().getName())
+			.filter(StringUtils::hasText)
+			.toList();
+	}
 
 	@Override
 	public Page<ProductDocument> search(ProductSearchCommand command, Pageable pageable) {

@@ -4,6 +4,7 @@ import static org.assertj.core.api.AssertionsForInterfaceTypes.*;
 
 import java.time.LocalDateTime;
 import java.util.Comparator;
+import java.util.List;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -23,11 +24,11 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import com.node5.catalogservice.product.domain.ProductCategory;
 import com.node5.catalogservice.search.application.dto.ProductSearchCommand;
 import com.node5.catalogservice.search.application.dto.ProductSearchResponse;
-import com.node5.catalogservice.search.config.ElasticsearchIndexConfig;
 import com.node5.catalogservice.search.domain.ProductDocument;
 import com.node5.catalogservice.search.domain.ProductSearchSort;
 import com.node5.catalogservice.search.infrastructure.ProductSearchRepository;
 import com.node5.catalogservice.search.infrastructure.elasticsearch.ElasticsearchProductSearchAdapter;
+import com.node5.catalogservice.search.infrastructure.elasticsearch.SearchIndexNameConfig;
 
 /**
  * NOTE:
@@ -43,7 +44,7 @@ import com.node5.catalogservice.search.infrastructure.elasticsearch.Elasticsearc
 @Import({
 	SearchService.class,
 	ElasticsearchProductSearchAdapter.class,
-	ElasticsearchIndexConfig.class
+	SearchIndexNameConfig.class
 })
 @DisabledIfEnvironmentVariable(
 	named = "CI",
@@ -70,29 +71,26 @@ public class SearchServiceTest {
 	void setup() {
 		IndexOperations indexOps = operations.indexOps(ProductDocument.class);
 
-		if (indexOps.exists()) {
-			indexOps.delete();
+		if (!indexOps.exists()) {
+			indexOps.create();
+			indexOps.putMapping();
 		}
-		indexOps.create();
-		indexOps.putMapping();
+
+		productSearchRepository.deleteAll();
 		indexOps.refresh();
 
 		LocalDateTime base = LocalDateTime.of(2025, 1, 1, 0, 0);
 
-		productSearchRepository.save(new ProductDocument(
-			"1", "1", "테스트 상품", "TEST", "product/test-thumb-1.png",
-			1000L, "ON_SALE", base.plusDays(1)
+		productSearchRepository.saveAll(List.of(
+			new ProductDocument("1", "1", "테스트 상품", "테스트 상품", "TEST",
+				"product/test-thumb-1.png", 1000L, "ON_SALE", base.plusDays(1)),
+			new ProductDocument("2", "2", "사과 상품", "사과 상품", "FOOD",
+				"product/apple-thumb.png", 2000L, "ON_SALE", base.plusDays(2)),
+			new ProductDocument("3", "3", "숨긴 상품", "숨긴 상품", "TEST",
+				"product/hidden-thumb.png", 5000L, "HIDDEN", base.plusDays(3))
 		));
 
-		productSearchRepository.save(new ProductDocument(
-			"2", "2", "사과 상품", "FOOD", "product/apple-thumb.png",
-			2000L, "ON_SALE", base.plusDays(2)
-		));
-
-		productSearchRepository.save(new ProductDocument(
-			"3", "3", "숨긴 상품", "TEST", "product/hidden-thumb.png",
-			5000L, "HIDDEN", base.plusDays(3)
-		));
+		indexOps.refresh();
 	}
 
 	@Test
