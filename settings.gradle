@@ -12,5 +12,5 @@ include(
         'settlement-service',
         'shop-service',
         'subscription-service',
-        'notification-service',
+        'support-service',
 )
