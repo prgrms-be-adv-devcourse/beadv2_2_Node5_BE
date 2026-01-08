@@ -188,8 +188,6 @@ public class SubscriptionService {
             throw exception;
         } catch (FeignException.NotFound ex) {
             throw new SubscriptionException(SUBSCRIPTION_PRODUCT_NOT_FOUND);
-        } catch (FeignException ex) {
-            throw new SubscriptionException(SUBSCRIPTION_PRODUCT_REQUEST_FAILED);
         } catch (Exception ex) {
             throw new SubscriptionException(SUBSCRIPTION_PRODUCT_REQUEST_FAILED);
         }

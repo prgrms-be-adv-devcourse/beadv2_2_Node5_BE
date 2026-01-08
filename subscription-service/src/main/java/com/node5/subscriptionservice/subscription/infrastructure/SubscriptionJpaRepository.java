@@ -28,6 +28,7 @@ public interface SubscriptionJpaRepository extends JpaRepository<Subscription, U
         set s.subscriptionStatus = 'TERMINATED',
             s.deletedAt = coalesce(s.deletedAt, :dateTime)
         where s.shopId = :shopId
+            and s.subscriptionStatus != 'TERMINATED'
     """)
     void bulkTerminateAllByShop(UUID shopId, LocalDateTime dateTime);
 }

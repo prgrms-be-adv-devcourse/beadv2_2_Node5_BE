@@ -43,7 +43,7 @@ public class SubscriptionRepositoryAdapter implements SubscriptionRepository {
     }
 
     @Override
-    void bulkTerminateAllByShop(UUID shopId, LocalDateTime dateTime){
-        return jpaRepository.
+    public void bulkTerminateAllByShop(UUID shopId, LocalDateTime dateTime){
+        jpaRepository.bulkTerminateAllByShop(shopId, dateTime);
     }
 }

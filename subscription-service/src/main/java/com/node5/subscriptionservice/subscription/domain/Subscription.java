@@ -171,6 +171,9 @@ public class Subscription extends BaseEntity {
     }
 
     public void terminate() {
+        if(this.subscriptionStatus == SubscriptionStatus.TERMINATED) {
+            return;
+        }
         this.subscriptionStatus = SubscriptionStatus.TERMINATED;
         if(deletedAt == null) this.deletedAt = LocalDateTime.now();
     }
