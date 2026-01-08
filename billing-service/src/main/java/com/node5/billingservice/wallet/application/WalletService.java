@@ -6,8 +6,6 @@ import com.node5.billingservice.wallet.client.dto.TransferResponse;
 import com.node5.billingservice.wallet.exception.WalletException;
 import com.node5.billingservice.wallet.application.dto.*;
 import com.node5.billingservice.wallet.domain.*;
-import com.node5.billingservice.wallet.infrastructure.kafka.producer.WalletDeletedProducer;
-import com.node5.common.event.WalletDeletedEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
