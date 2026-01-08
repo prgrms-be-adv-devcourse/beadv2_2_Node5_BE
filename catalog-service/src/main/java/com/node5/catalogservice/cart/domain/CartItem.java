@@ -2,7 +2,9 @@ package com.node5.catalogservice.cart.domain;
 
 import java.util.UUID;
 
+import com.node5.catalogservice.cart.exception.CartErrorCode;
 import com.node5.common.domain.BaseEntity;
+import com.node5.common.exception.BaseException;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -55,7 +57,7 @@ public class CartItem extends BaseEntity {
 
 	private static void validateQuantity(int quantity) {
 		if (quantity <= 0) {
-			throw new IllegalArgumentException("수량은 1 이상이어야 합니다.");
+			throw new BaseException(CartErrorCode.CART_QUANTITY_INVALID);
 		}
 	}
 
