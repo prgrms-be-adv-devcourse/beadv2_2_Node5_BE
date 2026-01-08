@@ -35,9 +35,7 @@ public class ElasticsearchProductSearchAdapter implements ProductSearchPort {
 
 	@Override
 	public List<String> autocomplete(ProductAutocompleteCommand command) {
-		Objects.requireNonNull(command);
-
-		int size = command.size() != null ? command.size() : 10;
+		int size = command.size();
 
 		Query query = Query.of(q -> q.bool(b -> {
 
