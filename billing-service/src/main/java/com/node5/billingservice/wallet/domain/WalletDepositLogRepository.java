@@ -9,5 +9,7 @@ import java.util.UUID;
 public interface WalletDepositLogRepository {
     Page<WalletDepositLog> findAllByMemberId(UUID memberId, Pageable pageable);
 
+    Boolean existsBySettlementId(UUID settlementId);
+
     WalletDepositLog save(WalletDepositLog walletDepositLog);
 }

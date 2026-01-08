@@ -9,4 +9,7 @@ import java.util.UUID;
 
 public interface WalletDepositLogJpaRepository extends JpaRepository<WalletDepositLog, UUID> {
     Page<WalletDepositLog> findAllByMemberId(UUID memberId, Pageable pageable);
+
+    Boolean existsBySettlementId(UUID settlementId);
+
 }
