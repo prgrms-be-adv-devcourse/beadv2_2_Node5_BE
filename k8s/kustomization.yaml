@@ -13,3 +13,4 @@ resources:
   - settlement-service.yaml
   - shop-service.yaml
   - subscription-service.yaml
+  - support-service.yaml

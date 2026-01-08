@@ -136,4 +136,9 @@ public class MemberService {
                         .toArray(MemberStatus[]::new)
         );
     }
+
+    public String getMemberEmail(String memberId) {
+        Member member = getNotDeletedMemberOrThrow(UUID.fromString(memberId));
+        return member.getEmail();
+    }
 }
