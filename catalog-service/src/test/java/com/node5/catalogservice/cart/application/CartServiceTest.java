@@ -25,10 +25,12 @@ import com.node5.catalogservice.cart.application.dto.CartItemUpdateCommand;
 import com.node5.catalogservice.cart.domain.CartItem;
 import com.node5.catalogservice.cart.domain.CartItemRepository;
 import com.node5.catalogservice.cart.domain.CartRepository;
+import com.node5.catalogservice.cart.exception.CartErrorCode;
 import com.node5.catalogservice.product.domain.Product;
 import com.node5.catalogservice.product.domain.ProductRepository;
 import com.node5.catalogservice.testsupport.CartTestFactory;
 import com.node5.catalogservice.testsupport.ProductTestFactory;
+import com.node5.common.exception.BaseException;
 
 @ExtendWith(MockitoExtension.class)
 class CartServiceTest {
@@ -48,7 +50,7 @@ class CartServiceTest {
 	private static final Pageable DEFAULT_PAGE = PageRequest.of(0, 10);
 
 	@Test
-	void 장바구니_항목_추가시_판매중이_아닌_상품이면_CartProductNotOnSaleException() {
+	void 장바구니_항목_추가시_판매중이_아닌_상품이면_CART_PRODUCT_NOT_ON_SALE_BaseException() {
 		// given
 		UUID memberId = uuid();
 
@@ -60,14 +62,18 @@ class CartServiceTest {
 
 		// when & then
 		assertThatThrownBy(() -> cartService.addItem(memberId, command))
-			.isInstanceOf(CartProductNotOnSaleException.class);
+			.isInstanceOf(BaseException.class)
+			.satisfies(ex -> {
+				BaseException be = (BaseException) ex;
+				assertThat(be.getErrorCode()).isEqualTo(CartErrorCode.CART_PRODUCT_NOT_ON_SALE);
+			});
 
 		then(cartItemRepository).shouldHaveNoInteractions();
 		then(cartRepository).shouldHaveNoInteractions();
 	}
 
 	@Test
-	void 장바구니_항목_추가시_상품이_없으면_CartProductNotFoundException() {
+	void 장바구니_항목_추가시_상품이_없으면_CART_PRODUCT_NOT_FOUND_BaseException() {
 		// given
 		UUID memberId = uuid();
 		UUID productId = uuid();
@@ -77,7 +83,11 @@ class CartServiceTest {
 
 		// when & then
 		assertThatThrownBy(() -> cartService.addItem(memberId, command))
-			.isInstanceOf(CartProductNotFoundException.class);
+			.isInstanceOf(BaseException.class)
+			.satisfies(ex -> {
+				BaseException be = (BaseException) ex;
+				assertThat(be.getErrorCode()).isEqualTo(CartErrorCode.CART_PRODUCT_NOT_FOUND);
+			});
 
 		then(cartItemRepository).shouldHaveNoInteractions();
 		then(cartRepository).shouldHaveNoInteractions();
@@ -116,7 +126,7 @@ class CartServiceTest {
 	}
 
 	@Test
-	void 장바구니_항목_수정시_내_장바구니에_없는_항목이면_CartItemNotFoundException() {
+	void 장바구니_항목_수정시_내_장바구니에_없는_항목이면_CART_ITEM_NOT_FOUND_BaseException() {
 		// given
 		UUID memberId = uuid();
 		UUID cartId = uuid();
@@ -130,13 +140,17 @@ class CartServiceTest {
 
 		// when & then
 		assertThatThrownBy(() -> cartService.updateItem(memberId, cartItemId, command))
-			.isInstanceOf(CartItemNotFoundException.class);
+			.isInstanceOf(BaseException.class)
+			.satisfies(ex -> {
+				BaseException be = (BaseException) ex;
+				assertThat(be.getErrorCode()).isEqualTo(CartErrorCode.CART_ITEM_NOT_FOUND);
+			});
 
 		then(cartItemRepository).should(never()).save(any());
 	}
 
 	@Test
-	void 장바구니_항목_수정시_상품이_유실되면_CartProductNotFoundException() {
+	void 장바구니_항목_수정시_상품이_유실되면_CART_PRODUCT_NOT_FOUND_BaseException() {
 		// given
 		UUID memberId = uuid();
 		UUID cartId = uuid();
@@ -158,7 +172,11 @@ class CartServiceTest {
 
 		// when & then
 		assertThatThrownBy(() -> cartService.updateItem(memberId, cartItemId, command))
-			.isInstanceOf(CartProductNotFoundException.class);
+			.isInstanceOf(BaseException.class)
+			.satisfies(ex -> {
+				BaseException be = (BaseException) ex;
+				assertThat(be.getErrorCode()).isEqualTo(CartErrorCode.CART_PRODUCT_NOT_FOUND);
+			});
 
 		then(cartItem).should().updateQuantity(2);
 		then(cartItemRepository).should().save(cartItem);
@@ -187,7 +205,7 @@ class CartServiceTest {
 	}
 
 	@Test
-	void 장바구니_항목_삭제시_내_장바구니에_없으면_CartItemNotFoundException() {
+	void 장바구니_항목_삭제시_내_장바구니에_없으면_CART_ITEM_NOT_FOUND_BaseException() {
 		// given
 		UUID memberId = uuid();
 		UUID cartId = uuid();
@@ -199,7 +217,11 @@ class CartServiceTest {
 
 		// when & then
 		assertThatThrownBy(() -> cartService.removeItem(memberId, cartItemId))
-			.isInstanceOf(CartItemNotFoundException.class);
+			.isInstanceOf(BaseException.class)
+			.satisfies(ex -> {
+				BaseException be = (BaseException) ex;
+				assertThat(be.getErrorCode()).isEqualTo(CartErrorCode.CART_ITEM_NOT_FOUND);
+			});
 
 		then(cartItemRepository).should(never()).deleteById(any());
 	}
@@ -263,7 +285,7 @@ class CartServiceTest {
 	}
 
 	@Test
-	void 장바구니_조회시_상품이_DB에_없으면_CartProductNotFoundException() {
+	void 장바구니_조회시_상품이_DB에_없으면_CART_PRODUCT_NOT_FOUND_BaseException() {
 		// given
 		UUID memberId = uuid();
 		UUID cartId = uuid();
@@ -281,7 +303,11 @@ class CartServiceTest {
 
 		// when & then
 		assertThatThrownBy(() -> cartService.getCartItems(memberId, DEFAULT_PAGE))
-			.isInstanceOf(CartProductNotFoundException.class);
+			.isInstanceOf(BaseException.class)
+			.satisfies(ex -> {
+				BaseException be = (BaseException) ex;
+				assertThat(be.getErrorCode()).isEqualTo(CartErrorCode.CART_PRODUCT_NOT_FOUND);
+			});
 	}
 
 	@Test
