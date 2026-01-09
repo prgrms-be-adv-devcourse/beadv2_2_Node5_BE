@@ -19,7 +19,8 @@ public enum WalletErrorCode implements BaseErrorCode {
     WALLET_TRANSFER_BANK_TIMEOUT(BAD_REQUEST.value(), "WALLET_010", "은행 응답 시간이 초과되었습니다."),
     WALLET_TRANSFER_BANK_MAINTENANCE(BAD_REQUEST.value(), "WALLET_011", "은행 점검 시간입니다."),
     WALLET_TRANSFER_INVALID_ACCOUNT(BAD_REQUEST.value(), "WALLET_012", "유효하지 않은 계좌 정보입니다."),
-    WALLET_TRANSFER_SYSTEM_ERROR(BAD_REQUEST.value(), "WALLET_013", "내부 시스템 오류가 발생했습니다.");
+    WALLET_TRANSFER_SYSTEM_ERROR(BAD_REQUEST.value(), "WALLET_013", "내부 시스템 오류가 발생했습니다."),
+    WALLET_REFUND_INVALID_STATUS(BAD_REQUEST.value(), "WALLET_014", "환불 처리할 수 없는 상태입니다.");
 
     private final int status;
     private final String code;

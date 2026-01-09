@@ -1,6 +1,5 @@
 package com.node5.billingservice.wallet.domain;
 
-import com.node5.billingservice.wallet.exception.WalletException;
 import com.node5.common.domain.BaseEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
@@ -10,8 +9,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.util.UUID;
-
-import static com.node5.billingservice.wallet.exception.WalletErrorCode.*;
 
 @Schema(description = "예치금 입금 로그")
 @Table(name = "\"wallet_deposit_log\"", schema = "billing")
