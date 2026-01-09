@@ -11,6 +11,6 @@ public record ProductCommand(
 	BigDecimal price,
 	ProductStatus status,
 	ProductCategory category,
-	String thumbnailUrl
+	String thumbnailKey
 ) {
 }

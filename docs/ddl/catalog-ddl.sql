@@ -17,7 +17,7 @@ CREATE TABLE catalog.product (
     price numeric(15, 2) NOT NULL,
     status varchar(30) NOT NULL,
     category varchar(255) NOT NULL,
-    thumbnail_url varchar(255) NULL,
+    thumbnail_key varchar(255) NULL,
     created_at timestamp(6) NOT NULL,
     modified_at timestamp(6) NOT NULL,
     CONSTRAINT pk_product PRIMARY KEY (id)

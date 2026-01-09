@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.node5.catalogservice.product.domain.ProductCategory;
-import com.node5.catalogservice.search.application.SearchService;
+import com.node5.catalogservice.search.application.ProductSearchService;
 import com.node5.catalogservice.search.application.dto.ProductSearchCommand;
 import com.node5.catalogservice.search.application.dto.ProductSearchResponse;
 import com.node5.catalogservice.search.domain.ProductSearchSort;
@@ -31,7 +31,7 @@ import lombok.RequiredArgsConstructor;
 @Tag(name = "Product Search", description = "사용자를 위한 상품 검색 API")
 public class ProductSearchController {
 
-	private final SearchService searchService;
+	private final ProductSearchService productSearchService;
 
 	@GetMapping
 	@Operation(
@@ -39,42 +39,34 @@ public class ProductSearchController {
 		description = "키워드, 카테고리, 가격 범위, 정렬 조건을 조합하여 판매 중 상품을 검색합니다."
 	)
 	@ApiResponses({
-		@ApiResponse(responseCode = "200", description = "상품 검색 성공")
+		@ApiResponse(responseCode = "200", description = "상품 검색 성공"),
+		@ApiResponse(responseCode = "400", description = "요청 값이 유효하지 않습니다.")
 	})
 	public ResponseEntity<Page<ProductSearchResponse>> searchProducts(
-		@Parameter(description = "검색 키워드", required = false)
+		@Parameter(description = "검색 키워드")
 		@RequestParam(required = false) String keyword,
 
-		@Parameter(
-			description = "카테고리",
-			required = false,
-			schema = @Schema(implementation = ProductCategory.class)
-		)
+		@Parameter(description = "카테고리", schema = @Schema(implementation = ProductCategory.class))
 		@RequestParam(required = false) ProductCategory category,
 
-		@Parameter(description = "최소 가격", required = false)
+		@Parameter(description = "최소 가격")
 		@RequestParam(required = false) Integer minPrice,
 
-		@Parameter(description = "최대 가격", required = false)
+		@Parameter(description = "최대 가격")
 		@RequestParam(required = false) Integer maxPrice,
 
-		@Parameter(description = "정렬 기준", required = false)
+		@Parameter(description = "정렬 기준")
 		@RequestParam(name = "searchSort", required = false) ProductSearchSort searchSort,
 
-		@Parameter(description = "상점 ID(판매자)", required = false)
+		@Parameter(description = "상점 ID(판매자)")
 		@RequestParam(required = false) UUID shopId,
 
 		@ParameterObject Pageable pageable
 	) {
 		ProductSearchCommand command = new ProductSearchCommand(
-			keyword,
-			shopId,
-			category,
-			minPrice,
-			maxPrice,
-			searchSort
+			keyword, shopId, category, minPrice, maxPrice, searchSort
 		);
 
-		return ResponseEntity.ok(searchService.search(command, pageable));
+		return ResponseEntity.ok(productSearchService.search(command, pageable));
 	}
 }

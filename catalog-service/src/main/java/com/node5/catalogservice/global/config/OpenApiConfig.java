@@ -1,4 +1,4 @@
-package com.node5.catalogservice.config;
+package com.node5.catalogservice.global.config;
 
 import java.util.ArrayList;
 import java.util.List;

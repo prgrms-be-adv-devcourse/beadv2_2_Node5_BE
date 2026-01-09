@@ -7,8 +7,8 @@ import jakarta.validation.constraints.NotNull;
 
 @Schema(description = "상품 상태 변경 요청")
 public record ProductStatusUpdateRequest(
-	@NotNull
 	@Schema(description = "변경할 상품 상태", example = "HIDDEN")
+	@NotNull(message = "상태값은 필수입니다.")
 	ProductStatus status
 ) {
 }

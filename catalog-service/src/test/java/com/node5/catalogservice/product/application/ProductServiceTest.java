@@ -30,9 +30,7 @@ import com.node5.catalogservice.product.domain.ProductRepository;
 import com.node5.catalogservice.product.domain.ProductStatus;
 import com.node5.catalogservice.product.event.ProductIndexEvent;
 import com.node5.catalogservice.product.event.ProductIndexEventType;
-import com.node5.catalogservice.product.exception.OnSaleProductNotFoundException;
 import com.node5.catalogservice.product.exception.ProductErrorCode;
-import com.node5.catalogservice.product.exception.ProductNotFoundException;
 import com.node5.catalogservice.shop.client.ShopOwnershipClient;
 import com.node5.catalogservice.testsupport.ProductTestFactory;
 import com.node5.common.exception.BaseException;
@@ -218,7 +216,7 @@ class ProductServiceTest {
 	}
 
 	@Test
-	void 상품_수정시_상품이_없으면_ProductNotFoundException() {
+	void 상품_수정시_상품이_없으면_PRODUCT_NOT_FOUND_BaseException() {
 		// given
 		UUID memberId = uuid();
 		UUID productId = uuid();
@@ -235,7 +233,11 @@ class ProductServiceTest {
 
 		// when & then
 		assertThatThrownBy(() -> productService.updateProduct(memberId, productId, patch))
-			.isInstanceOf(ProductNotFoundException.class);
+			.isInstanceOf(BaseException.class)
+			.satisfies(ex -> {
+				BaseException be = (BaseException) ex;
+				assertThat(be.getErrorCode()).isEqualTo(ProductErrorCode.PRODUCT_NOT_FOUND);
+			});
 
 		then(shopOwnershipClient).shouldHaveNoInteractions();
 		then(productRepository).should(never()).save(any());
@@ -304,7 +306,7 @@ class ProductServiceTest {
 	}
 
 	@Test
-	void 판매중_상품_단건조회시_없으면_OnSaleProductNotFoundException() {
+	void 판매중_상품_단건조회시_없으면_ON_SALE_PRODUCT_NOT_FOUND_BaseException() {
 		// given
 		UUID productId = uuid();
 
@@ -313,7 +315,11 @@ class ProductServiceTest {
 
 		// when & then
 		assertThatThrownBy(() -> productService.getOnSaleProduct(productId))
-			.isInstanceOf(OnSaleProductNotFoundException.class);
+			.isInstanceOf(BaseException.class)
+			.satisfies(ex -> {
+				BaseException be = (BaseException) ex;
+				assertThat(be.getErrorCode()).isEqualTo(ProductErrorCode.ON_SALE_PRODUCT_NOT_FOUND);
+			});
 	}
 
 	@Test
@@ -326,7 +332,7 @@ class ProductServiceTest {
 	}
 
 	@Test
-	void 상품ID목록으로_shopId조회시_하나라도_없으면_ProductNotFoundException() {
+	void 상품ID목록으로_shopId조회시_하나라도_없으면_PRODUCT_NOT_FOUND_BaseException() {
 		// given
 		UUID p1 = uuid();
 		UUID p2 = uuid();
@@ -336,7 +342,11 @@ class ProductServiceTest {
 
 		// when & then
 		assertThatThrownBy(() -> productService.getShopIdsByProductIds(List.of(p1, p2)))
-			.isInstanceOf(ProductNotFoundException.class);
+			.isInstanceOf(BaseException.class)
+			.satisfies(ex -> {
+				BaseException be = (BaseException) ex;
+				assertThat(be.getErrorCode()).isEqualTo(ProductErrorCode.PRODUCT_NOT_FOUND);
+			});
 	}
 
 	@Test

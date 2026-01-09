@@ -16,7 +16,7 @@ public record ProductInfo(
 	BigDecimal price,
 	ProductStatus status,
 	ProductCategory category,
-	String thumbnailUrl,
+	String thumbnailKey,
 	LocalDateTime createdAt,
 	LocalDateTime modifiedAt
 ) {
@@ -30,7 +30,7 @@ public record ProductInfo(
 			product.getPrice(),
 			product.getStatus(),
 			product.getCategory(),
-			product.getThumbnailUrl(),
+			product.getThumbnailKey(),
 			product.getCreatedAt(),
 			product.getModifiedAt()
 		);

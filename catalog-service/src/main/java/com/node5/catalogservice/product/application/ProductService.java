@@ -18,9 +18,7 @@ import com.node5.catalogservice.product.domain.Product;
 import com.node5.catalogservice.product.domain.ProductRepository;
 import com.node5.catalogservice.product.domain.ProductStatus;
 import com.node5.catalogservice.product.event.ProductIndexEvent;
-import com.node5.catalogservice.product.exception.OnSaleProductNotFoundException;
 import com.node5.catalogservice.product.exception.ProductErrorCode;
-import com.node5.catalogservice.product.exception.ProductNotFoundException;
 import com.node5.catalogservice.shop.client.ShopOwnershipClient;
 import com.node5.common.exception.BaseException;
 
@@ -55,7 +53,7 @@ public class ProductService {
 			command.price(),
 			command.status(),
 			command.category(),
-			command.thumbnailUrl()
+			command.thumbnailKey()
 		);
 
 		Product saved = productRepository.save(product);
@@ -73,7 +71,7 @@ public class ProductService {
 			command.description(),
 			command.price(),
 			command.category(),
-			command.thumbnailUrl()
+			command.thumbnailKey()
 		);
 
 		Product saved = productRepository.save(product);
@@ -123,7 +121,7 @@ public class ProductService {
 		List<Product> products = productRepository.findAllByIdIn(distinctIds);
 
 		if (products.size() != distinctIds.size()) {
-			throw new ProductNotFoundException();
+			throw new BaseException(ProductErrorCode.PRODUCT_NOT_FOUND);
 		}
 
 		return products.stream()
@@ -132,12 +130,12 @@ public class ProductService {
 
 	private Product getProductOrThrow(UUID productId) {
 		return productRepository.findById(productId)
-			.orElseThrow(ProductNotFoundException::new);
+			.orElseThrow(() -> new BaseException(ProductErrorCode.PRODUCT_NOT_FOUND));
 	}
 
 	private Product getOnSaleProductOrThrow(UUID productId) {
 		return productRepository.findByIdAndStatus(productId, ProductStatus.ON_SALE)
-			.orElseThrow(OnSaleProductNotFoundException::new);
+			.orElseThrow(() -> new BaseException(ProductErrorCode.ON_SALE_PRODUCT_NOT_FOUND));
 	}
 
 	private void validateShopOwnership(UUID memberId, UUID shopId) {

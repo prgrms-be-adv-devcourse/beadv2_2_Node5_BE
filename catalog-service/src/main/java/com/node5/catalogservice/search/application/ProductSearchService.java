@@ -9,13 +9,13 @@ import com.node5.catalogservice.search.application.dto.ProductSearchResponse;
 import com.node5.catalogservice.search.application.port.ProductSearchPort;
 import com.node5.catalogservice.search.domain.ProductDocument;
 import com.node5.catalogservice.search.exception.SearchErrorCode;
-import com.node5.catalogservice.search.exception.SearchException;
+import com.node5.common.exception.BaseException;
 
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class SearchService {
+public class ProductSearchService {
 
 	private final ProductSearchPort productSearchPort;
 
@@ -28,10 +28,10 @@ public class SearchService {
 
 	private void validatePriceRange(Integer minPrice, Integer maxPrice) {
 		if ((minPrice == null) != (maxPrice == null)) {
-			throw new SearchException(SearchErrorCode.PRICE_RANGE_INCOMPLETE);
+			throw new BaseException(SearchErrorCode.PRICE_RANGE_INCOMPLETE);
 		}
 		if (minPrice != null && maxPrice != null && minPrice > maxPrice) {
-			throw new SearchException(SearchErrorCode.INVALID_PRICE_RANGE);
+			throw new BaseException(SearchErrorCode.INVALID_PRICE_RANGE);
 		}
 	}
 }

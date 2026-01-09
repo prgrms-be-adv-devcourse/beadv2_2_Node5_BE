@@ -25,36 +25,26 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("${api.v1}/products")
 @RequiredArgsConstructor
 @Tag(name = "Products", description = "사용자가 조회 가능한 상품 정보 조회 API")
-public class ProductController {
+public class ProductQueryController {
 
 	private final ProductService productService;
 
 	@GetMapping
-	@Operation(
-		summary = "판매 중인 상품 목록 조회",
-		description = "판매 중(ON_SALE) 상품 목록을 페이징으로 조회합니다."
-	)
+	@Operation(summary = "판매 중인 상품 목록 조회", description = "판매 중(ON_SALE) 상품 목록을 페이징으로 조회합니다.")
 	@ApiResponses({
 		@ApiResponse(responseCode = "200", description = "판매 중 상품 목록 조회 성공")
 	})
-	public ResponseEntity<Page<ProductInfo>> getProducts(
-		@ParameterObject Pageable pageable
-	) {
+	public ResponseEntity<Page<ProductInfo>> getProducts(@ParameterObject Pageable pageable) {
 		return ResponseEntity.ok(productService.getOnSaleProducts(pageable));
 	}
 
 	@GetMapping("/{productId}")
-	@Operation(
-		summary = "판매 중 상품 상세 조회",
-		description = "상품 ID로 판매 중(ON_SALE) 상품을 조회합니다."
-	)
+	@Operation(summary = "판매 중 상품 상세 조회", description = "상품 ID로 판매 중(ON_SALE) 상품을 조회합니다.")
 	@ApiResponses({
 		@ApiResponse(responseCode = "200", description = "판매 중 상품 조회 성공"),
 		@ApiResponse(responseCode = "404", description = "해당 ID의 판매 중인 상품이 없습니다.")
 	})
-	public ResponseEntity<ProductInfo> getProduct(
-		@Parameter(description = "상품 ID") @PathVariable UUID productId
-	) {
+	public ResponseEntity<ProductInfo> getProduct(@Parameter(description = "상품 ID") @PathVariable UUID productId) {
 		return ResponseEntity.ok(productService.getOnSaleProduct(productId));
 	}
 }

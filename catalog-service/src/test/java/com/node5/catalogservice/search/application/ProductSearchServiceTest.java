@@ -42,7 +42,7 @@ import com.node5.catalogservice.search.infrastructure.elasticsearch.SearchIndexN
 })
 @ActiveProfiles("test")
 @Import({
-	SearchService.class,
+	ProductSearchService.class,
 	ElasticsearchProductSearchAdapter.class,
 	SearchIndexNameConfig.class
 })
@@ -51,7 +51,7 @@ import com.node5.catalogservice.search.infrastructure.elasticsearch.SearchIndexN
 	matches = "true",
 	disabledReason = "CI 환경에서는 검색 테스트를 건너뜁니다."
 )
-public class SearchServiceTest {
+public class ProductSearchServiceTest {
 
 	private static final PageRequest DEFAULT_PAGE = PageRequest.of(0, 10);
 
@@ -62,7 +62,7 @@ public class SearchServiceTest {
 	private ProductSearchRepository productSearchRepository;
 
 	@Autowired
-	private SearchService searchService;
+	private ProductSearchService productSearchService;
 
 	@Autowired
 	private ElasticsearchOperations operations;
@@ -97,7 +97,7 @@ public class SearchServiceTest {
 	void 검색_키워드만_사용하면_이름_포함된_상품만_반환된다() {
 		// when
 		Page<ProductSearchResponse> result =
-			searchService.search(command("테스트", null, null, null, null, null), DEFAULT_PAGE);
+			productSearchService.search(command("테스트", null, null, null, null, null), DEFAULT_PAGE);
 
 		// then
 		assertThat(result.getContent()).hasSize(1);
@@ -108,7 +108,7 @@ public class SearchServiceTest {
 	void 정렬_조건을_주지_않으면_기본값은_LATEST이다() {
 		// when
 		Page<ProductSearchResponse> result =
-			searchService.search(command(null, null, null, null, null, null), DEFAULT_PAGE);
+			productSearchService.search(command(null, null, null, null, null, null), DEFAULT_PAGE);
 
 		// then
 		assertThat(result.getContent())
@@ -120,7 +120,7 @@ public class SearchServiceTest {
 	void 정렬_LOW_PRICE_이면_가격_오름차순으로_정렬된다() {
 		// when
 		Page<ProductSearchResponse> result =
-			searchService.search(command(null, null, null, null, null, ProductSearchSort.LOW_PRICE), DEFAULT_PAGE);
+			productSearchService.search(command(null, null, null, null, null, ProductSearchSort.LOW_PRICE), DEFAULT_PAGE);
 
 		// then
 		assertThat(result.getContent()).hasSize(2);
@@ -133,7 +133,7 @@ public class SearchServiceTest {
 	void 정렬_HIGH_PRICE_이면_가격_내림차순으로_정렬된다() {
 		// when
 		Page<ProductSearchResponse> result =
-			searchService.search(command(null, null, null, null, null, ProductSearchSort.HIGH_PRICE), DEFAULT_PAGE);
+			productSearchService.search(command(null, null, null, null, null, ProductSearchSort.HIGH_PRICE), DEFAULT_PAGE);
 
 		// then
 		assertThat(result.getContent()).hasSize(2);
@@ -146,7 +146,7 @@ public class SearchServiceTest {
 	void 항상_ON_SALE_상태의_상품만_검색된다() {
 		// when
 		Page<ProductSearchResponse> result =
-			searchService.search(command(null, null, null, null, null, null), DEFAULT_PAGE);
+			productSearchService.search(command(null, null, null, null, null, null), DEFAULT_PAGE);
 
 		// then
 		assertThat(result.getContent())

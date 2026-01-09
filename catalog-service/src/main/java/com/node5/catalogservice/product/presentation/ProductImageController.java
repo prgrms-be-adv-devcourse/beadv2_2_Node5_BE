@@ -11,18 +11,30 @@ import com.node5.catalogservice.product.application.dto.PresignedUrlInfo;
 import com.node5.catalogservice.product.presentation.dto.PresignedUrlRequest;
 import com.node5.catalogservice.product.presentation.dto.PresignedUrlResponse;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("${api.v1}/seller")
 @RequiredArgsConstructor
-public class SellerUploadController {
+public class ProductImageController {
 
 	private final ProductImageService productImageService;
 
-	@PostMapping("/products/images/presigned-urls")
-	public ResponseEntity<PresignedUrlResponse> createPresignedUrl(@Valid @RequestBody PresignedUrlRequest request) {
+	@Tag(name = "Seller Products", description = "판매자 상품 관리 API")
+	@PostMapping("/products/images/presigned-url")
+	@Operation(summary = "상품 이미지 업로드 Presigned URL 발급", description = "이미지 업로드용 Presigned URL과 객체 key를 발급합니다.")
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "Presigned URL 발급 성공"),
+		@ApiResponse(responseCode = "400", description = "요청 값이 유효하지 않습니다.")
+	})
+	public ResponseEntity<PresignedUrlResponse> createPresignedUrl(
+		@Valid @RequestBody PresignedUrlRequest request
+	) {
 		PresignedUrlInfo info = productImageService.createUploadUrl(request.contentType());
 		return ResponseEntity.ok(new PresignedUrlResponse(info.url(), info.key()));
 	}

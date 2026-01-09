@@ -92,6 +92,7 @@ public class SellerProductController {
 		@ApiResponse(responseCode = "400", description = "요청 값이 유효하지 않습니다."),
 		@ApiResponse(responseCode = "403", description = "해당 상품/상점에 대한 권한이 없습니다."),
 		@ApiResponse(responseCode = "404", description = "상품 또는 상점을 찾을 수 없습니다."),
+		@ApiResponse(responseCode = "409", description = "판매 중단된 상품은 수정/상태 변경이 불가합니다."),
 		@ApiResponse(responseCode = "503", description = "상점 서비스 장애로 조회할 수 없습니다.")
 	})
 	public ResponseEntity<ProductInfo> updateProduct(
@@ -113,6 +114,7 @@ public class SellerProductController {
 		@ApiResponse(responseCode = "400", description = "요청 값이 유효하지 않습니다."),
 		@ApiResponse(responseCode = "403", description = "해당 상품/상점에 대한 권한이 없습니다."),
 		@ApiResponse(responseCode = "404", description = "상품 또는 상점을 찾을 수 없습니다."),
+		@ApiResponse(responseCode = "409", description = "판매 중단된 상품은 수정/상태 변경이 불가합니다."),
 		@ApiResponse(responseCode = "503", description = "상점 서비스 장애로 조회할 수 없습니다.")
 	})
 	public ResponseEntity<ProductInfo> updateProductStatus(
