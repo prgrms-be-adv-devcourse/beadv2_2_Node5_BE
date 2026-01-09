@@ -53,7 +53,7 @@ public class ProductService {
 			command.price(),
 			command.status(),
 			command.category(),
-			command.thumbnailUrl()
+			command.thumbnailKey()
 		);
 
 		Product saved = productRepository.save(product);
@@ -71,7 +71,7 @@ public class ProductService {
 			command.description(),
 			command.price(),
 			command.category(),
-			command.thumbnailUrl()
+			command.thumbnailKey()
 		);
 
 		Product saved = productRepository.save(product);

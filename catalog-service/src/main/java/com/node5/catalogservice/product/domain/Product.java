@@ -44,8 +44,8 @@ public class Product extends BaseEntity {
 	@Column(nullable = false)
 	private ProductCategory category;
 
-	@Column(name = "thumbnail_url")
-	private String thumbnailUrl;
+	@Column(name = "thumbnail_key")
+	private String thumbnailKey;
 
 	protected Product() {
 	}
@@ -58,7 +58,7 @@ public class Product extends BaseEntity {
 		BigDecimal price,
 		ProductStatus status,
 		ProductCategory category,
-		String thumbnailUrl
+		String thumbnailKey
 	) {
 		this.id = id;
 		this.shopId = shopId;
@@ -67,7 +67,7 @@ public class Product extends BaseEntity {
 		this.price = price;
 		this.status = status;
 		this.category = category;
-		this.thumbnailUrl = thumbnailUrl;
+		this.thumbnailKey = thumbnailKey;
 	}
 
 	public static Product create(
@@ -77,7 +77,7 @@ public class Product extends BaseEntity {
 		BigDecimal price,
 		ProductStatus status,
 		ProductCategory category,
-		String thumbnailUrl
+		String thumbnailKey
 	) {
 
 		return new Product(
@@ -88,7 +88,7 @@ public class Product extends BaseEntity {
 			price,
 			status,
 			category,
-			thumbnailUrl
+			thumbnailKey
 		);
 	}
 
@@ -102,7 +102,7 @@ public class Product extends BaseEntity {
 		String description,
 		BigDecimal price,
 		ProductCategory category,
-		String thumbnailUrl
+		String thumbnailKey
 	) {
 		if (this.status == ProductStatus.DISCONTINUED) {
 			throw new BaseException(ProductErrorCode.PRODUCT_STATUS_CHANGE_NOT_ALLOWED);
@@ -112,7 +112,7 @@ public class Product extends BaseEntity {
 		this.description = description;
 		this.price = price;
 		this.category = category;
-		this.thumbnailUrl = thumbnailUrl;
+		this.thumbnailKey = thumbnailKey;
 	}
 
 	public void changeStatus(ProductStatus newStatus) {

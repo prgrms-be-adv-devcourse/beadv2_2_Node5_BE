@@ -29,8 +29,8 @@ public record ProductUpdateRequest(
 	@NotNull(message = "카테고리는 필수입니다.")
 	ProductCategory category,
 
-	@Schema(description = "대표 이미지 URL", example = "https://cdn.example.com/product/thumbnail.jpg")
-	String thumbnailUrl
+	@Schema(description = "대표 이미지 객체 키", example = "product/550e8400-e29b-41d4-a716-446655440000")
+	String thumbnailKey
 ) {
 
 	public ProductUpdateCommand toCommand() {
@@ -39,7 +39,7 @@ public record ProductUpdateRequest(
 			description,
 			price,
 			category,
-			thumbnailUrl
+			thumbnailKey
 		);
 	}
 }

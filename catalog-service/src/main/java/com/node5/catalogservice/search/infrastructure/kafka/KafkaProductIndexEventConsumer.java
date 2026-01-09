@@ -35,7 +35,7 @@ public class KafkaProductIndexEventConsumer {
 				event.name(),
 				event.nameAutocomplete(),
 				event.category(),
-				event.thumbnailUrl(),
+				event.thumbnailKey(),
 				event.price(),
 				event.status(),
 				event.createdAt()
