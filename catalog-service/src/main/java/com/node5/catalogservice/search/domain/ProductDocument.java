@@ -34,7 +34,7 @@ public class ProductDocument {
 	private String category;
 
 	@Field(type = FieldType.Keyword)
-	private String thumbnailUrl;
+	private String thumbnailKey;
 
 	@Field(type = FieldType.Long)
 	private Long price;
@@ -54,7 +54,7 @@ public class ProductDocument {
 		String name,
 		String nameAutocomplete,
 		String category,
-		String thumbnailUrl,
+		String thumbnailKey,
 		Long price,
 		String status,
 		LocalDateTime createdAt
@@ -64,7 +64,7 @@ public class ProductDocument {
 		this.name = name;
 		this.nameAutocomplete = nameAutocomplete;
 		this.category = category;
-		this.thumbnailUrl = thumbnailUrl;
+		this.thumbnailKey = thumbnailKey;
 		this.price = price;
 		this.status = status;
 		this.createdAt = createdAt;
