@@ -1,4 +1,4 @@
-package com.node5.catalogservice.product.infrastructure.s3;
+package com.node5.catalogservice.config.s3;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

@@ -1,4 +1,4 @@
-package com.node5.catalogservice.product.infrastructure.kafka;
+package com.node5.catalogservice.config.kafka;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

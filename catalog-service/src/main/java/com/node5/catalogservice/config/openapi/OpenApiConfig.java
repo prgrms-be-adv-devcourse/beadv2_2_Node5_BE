@@ -1,4 +1,4 @@
-package com.node5.catalogservice.global.config;
+package com.node5.catalogservice.config.openapi;
 
 import java.util.ArrayList;
 import java.util.List;

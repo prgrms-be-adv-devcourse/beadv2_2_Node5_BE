@@ -1,4 +1,4 @@
-package com.node5.catalogservice.search.infrastructure.elasticsearch;
+package com.node5.catalogservice.config.search;
 
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Configuration;
 @EnableConfigurationProperties(SearchIndexProperties.class)
 public class SearchIndexNameConfig {
 
-	@Bean
+	@Bean(name = "productIndexName")
 	public String productIndexName(SearchIndexProperties props) {
 		return props.getProduct();
 	}
