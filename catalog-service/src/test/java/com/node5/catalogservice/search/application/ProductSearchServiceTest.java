@@ -21,6 +21,7 @@ import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import com.node5.catalogservice.config.search.SearchIndexNameConfig;
 import com.node5.catalogservice.product.domain.ProductCategory;
 import com.node5.catalogservice.search.application.dto.ProductSearchCommand;
 import com.node5.catalogservice.search.application.dto.ProductSearchResponse;
@@ -28,7 +29,6 @@ import com.node5.catalogservice.search.domain.ProductDocument;
 import com.node5.catalogservice.search.domain.ProductSearchSort;
 import com.node5.catalogservice.search.infrastructure.ProductSearchRepository;
 import com.node5.catalogservice.search.infrastructure.elasticsearch.ElasticsearchProductSearchAdapter;
-import com.node5.catalogservice.search.infrastructure.elasticsearch.SearchIndexNameConfig;
 
 /**
  * NOTE:

@@ -1,4 +1,4 @@
-package com.node5.catalogservice.search.infrastructure.elasticsearch;
+package com.node5.catalogservice.config.search;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

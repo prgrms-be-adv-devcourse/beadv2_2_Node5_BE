@@ -3,6 +3,7 @@ package com.node5.catalogservice.product.infrastructure.kafka;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
+import com.node5.catalogservice.config.kafka.KafkaTopicsProperties;
 import com.node5.catalogservice.product.application.port.ProductIndexEventPort;
 import com.node5.catalogservice.product.event.ProductIndexEvent;
 
