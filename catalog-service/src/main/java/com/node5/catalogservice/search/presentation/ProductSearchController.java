@@ -39,17 +39,14 @@ public class ProductSearchController {
 		description = "키워드, 카테고리, 가격 범위, 정렬 조건을 조합하여 판매 중 상품을 검색합니다."
 	)
 	@ApiResponses({
-		@ApiResponse(responseCode = "200", description = "상품 검색 성공")
+		@ApiResponse(responseCode = "200", description = "상품 검색 성공"),
+		@ApiResponse(responseCode = "400", description = "요청 값이 유효하지 않습니다.")
 	})
 	public ResponseEntity<Page<ProductSearchResponse>> searchProducts(
 		@Parameter(description = "검색 키워드")
 		@RequestParam(required = false) String keyword,
 
-		@Parameter(
-			description = "카테고리",
-			required = false,
-			schema = @Schema(implementation = ProductCategory.class)
-		)
+		@Parameter(description = "카테고리", schema = @Schema(implementation = ProductCategory.class))
 		@RequestParam(required = false) ProductCategory category,
 
 		@Parameter(description = "최소 가격")
@@ -67,12 +64,7 @@ public class ProductSearchController {
 		@ParameterObject Pageable pageable
 	) {
 		ProductSearchCommand command = new ProductSearchCommand(
-			keyword,
-			shopId,
-			category,
-			minPrice,
-			maxPrice,
-			searchSort
+			keyword, shopId, category, minPrice, maxPrice, searchSort
 		);
 
 		return ResponseEntity.ok(productSearchService.search(command, pageable));
