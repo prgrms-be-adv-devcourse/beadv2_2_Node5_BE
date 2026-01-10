@@ -3,6 +3,7 @@ package com.node5.settlementservice.settlement.presentation;
 import com.node5.settlementservice.settlement.application.SettlementInternalService;
 import com.node5.settlementservice.settlement.application.dto.JobExecutionInfo;
 import com.node5.settlementservice.settlement.application.dto.SettlementSourceItem;
+import com.node5.settlementservice.settlement.exception.SettlementException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -11,12 +12,15 @@ import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.launch.JobLauncher;
+import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+
+import static com.node5.settlementservice.settlement.exception.SettlementErrorCode.SETTLEMENT_ALREADY_COMPLETED;
 
 @Tag(name = "Settlement", description = "정산 API")
 @RestController
@@ -33,10 +37,15 @@ public class SettlementInternalController {
     public ResponseEntity<String> runAll(
             @RequestParam(value = "yearMonth", required = false) String yearMonth
     ) throws Exception {
-
         JobParameters params = getDefaultSettlementParamsBuilder(yearMonth)
                 .toJobParameters();
-        JobExecution jobExecution = jobLauncher.run(shopSettlementJob, params);
+
+        JobExecution jobExecution;
+        try {
+            jobExecution = jobLauncher.run(shopSettlementJob, params);
+        } catch(JobInstanceAlreadyCompleteException e) {
+            throw new SettlementException(SETTLEMENT_ALREADY_COMPLETED);
+        }
 
         return ResponseEntity.ok(String.format("Settlement job started for all shops - BatchId: %s", jobExecution.getId()));
     }
@@ -47,11 +56,16 @@ public class SettlementInternalController {
             @RequestParam("shopId") String shopId,
             @RequestParam(value = "yearMonth", required = false) String yearMonth
     ) throws Exception {
-
         JobParameters params = getDefaultSettlementParamsBuilder(yearMonth)
                 .addString("shopId", shopId)
                 .toJobParameters();
-        JobExecution jobExecution = jobLauncher.run(shopSettlementJob, params);
+
+        JobExecution jobExecution;
+        try {
+            jobExecution = jobLauncher.run(shopSettlementJob, params);
+        } catch(JobInstanceAlreadyCompleteException e) {
+            throw new SettlementException(SETTLEMENT_ALREADY_COMPLETED);
+        }
 
         return ResponseEntity.ok(String.format("Settlement job started for shop(%s) - BatchId: %s", shopId, jobExecution.getId()));
     }
@@ -85,7 +99,7 @@ public class SettlementInternalController {
         String endDate = targetMonth.atEndOfMonth().format(DateTimeFormatter.ISO_DATE);
 
         return new JobParametersBuilder()
-                .addLong("timestamp", System.currentTimeMillis())
+                //.addLong("timestamp", System.currentTimeMillis())
                 .addString("startDate", startDate)
                 .addString("endDate", endDate);
     }
