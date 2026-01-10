@@ -17,8 +17,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-import static com.node5.settlementservice.settlement.exception.SettlementErrorCode.ACCESS_DENIED;
-
 @Service
 @RequiredArgsConstructor
 public class SettlementService {
