@@ -99,16 +99,13 @@ public class SettlementResult {
                 .build();
     }
 
-    public void markPaid() {
+    public void markPaid(LocalDateTime payoutAt) {
         this.status = SettlementPayoutStatus.PAID;
+        this.payoutAt = payoutAt;
     }
 
     public void markFailed(String errorMsg) {
         this.status = SettlementPayoutStatus.FAILED;
         this.errorMsg = errorMsg;
-    }
-
-    public void updatePayoutAt(LocalDateTime payoutAt) {
-        this.payoutAt = payoutAt;
     }
 }
