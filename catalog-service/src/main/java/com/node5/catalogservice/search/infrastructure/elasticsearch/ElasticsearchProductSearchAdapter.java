@@ -132,14 +132,14 @@ public class ElasticsearchProductSearchAdapter implements ProductSearchPort {
 			// - 범위 조건은 점수와 무관
 			// - 숫자 필터는 filter로 처리하여 성능 최적화
 			if (command.minPrice() != null && command.maxPrice() != null) {
-				long min = command.minPrice().longValue();
-				long max = command.maxPrice().longValue();
+				double min = command.minPrice().doubleValue();
+				double max = command.maxPrice().doubleValue();
 
 				b.filter(f -> f.range(r -> r
 					.number(n -> n
 						.field("price")
-						.gte((double) min)
-						.lte((double) max)
+						.gte(min)
+						.lte(max)
 					)
 				));
 			}
