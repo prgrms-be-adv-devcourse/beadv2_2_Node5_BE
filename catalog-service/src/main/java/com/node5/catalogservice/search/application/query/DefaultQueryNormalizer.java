@@ -12,24 +12,23 @@ public class DefaultQueryNormalizer implements QueryNormalizer {
 
 	@Override
 	public String normalize(String raw) {
-		if (!StringUtils.hasText(raw)) {
-			return "";
-		}
+		if (!StringUtils.hasText(raw)) return "";
 
 		String s = raw.trim();
-
 		s = Normalizer.normalize(s, Normalizer.Form.NFKC);
 
+		// 구분자 통일: -, _, / → 공백
 		s = s.replaceAll("[-_/]+", " ");
 
-		s = s.replaceAll("\\s+", " ").trim();
-
+		// 공백 정리 + 영문 소문자
 		s = toLowerAscii(s);
+		s = s.replaceAll("\\s+", " ").trim();
 
 		if (s.length() > MAX_LENGTH) {
 			s = s.substring(0, MAX_LENGTH).trim();
 		}
 
+		// substring 이후 공백이 생길 수 있어서 1번 더 공백 정리
 		s = s.replaceAll("\\s+", " ").trim();
 
 		return s;
