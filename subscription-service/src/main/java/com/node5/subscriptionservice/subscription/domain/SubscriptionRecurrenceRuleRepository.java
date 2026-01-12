@@ -6,6 +6,8 @@ import java.util.UUID;
 public interface SubscriptionRecurrenceRuleRepository {
     List<SubscriptionRecurrenceRule> findAllBySubscriptionId(UUID subscriptionId);
 
+    List<SubscriptionRecurrenceRule> findAllBySubscriptionIdIn(List<UUID> subscriptionIds);
+
     List<SubscriptionRecurrenceRule> saveAll(List<SubscriptionRecurrenceRule> rules);
 
     void deleteAllBySubscriptionId(UUID subscriptionId);

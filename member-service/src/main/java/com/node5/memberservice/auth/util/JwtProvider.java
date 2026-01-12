@@ -1,6 +1,5 @@
 package com.node5.memberservice.auth.util;
 
-import com.node5.memberservice.auth.application.dto.JwtMemberInfo;
 import com.node5.memberservice.auth.exception.AuthErrorCode;
 import com.node5.memberservice.auth.exception.AuthException;
 import io.jsonwebtoken.Claims;
@@ -34,12 +33,11 @@ public class JwtProvider {
         this.refreshTokenExpiration = refreshTokenExpiration;
     }
 
-    public String generateAccessToken(JwtMemberInfo memberInfo) {
+    public String generateAccessToken(UUID memberId) {
         Date now = new Date();
         Date expirationDate = new Date(now.getTime() + accessTokenExpiration);
         return Jwts.builder()
-                .subject(memberInfo.memberId())
-                .claim("memberStatus", memberInfo.memberStatus())
+                .subject(memberId.toString())
                 .claim("type", TokenType.ACCESS.name())
                 .issuedAt(now)
                 .expiration(expirationDate)
@@ -47,11 +45,11 @@ public class JwtProvider {
                 .compact();
     }
 
-    public String generateRefreshToken(JwtMemberInfo memberInfo) {
+    public String generateRefreshToken(UUID memberId) {
         Date now = new Date();
         Date expirationDate = new Date(now.getTime() + refreshTokenExpiration);
         return Jwts.builder()
-                .subject(memberInfo.memberId())
+                .subject(memberId.toString())
                 .claim("type", TokenType.REFRESH.name())
                 .issuedAt(now)
                 .expiration(expirationDate)

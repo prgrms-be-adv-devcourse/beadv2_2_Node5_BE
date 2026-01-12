@@ -3,9 +3,9 @@ package com.node5.catalogservice.product.domain;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-import com.node5.catalogservice.product.exception.ProductInvalidStockException;
-import com.node5.catalogservice.product.exception.ProductStatusChangeNotAllowedException;
+import com.node5.catalogservice.product.exception.ProductErrorCode;
 import com.node5.common.domain.BaseEntity;
+import com.node5.common.exception.BaseException;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -36,9 +36,6 @@ public class Product extends BaseEntity {
 	@Column(nullable = false, precision = 15, scale = 2)
 	private BigDecimal price;
 
-	@Column(nullable = false)
-	private Integer stock;
-
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
 	private ProductStatus status;
@@ -47,8 +44,8 @@ public class Product extends BaseEntity {
 	@Column(nullable = false)
 	private ProductCategory category;
 
-	@Column(name = "thumbnail_url")
-	private String thumbnailUrl;
+	@Column(name = "thumbnail_key")
+	private String thumbnailKey;
 
 	protected Product() {
 	}
@@ -59,20 +56,18 @@ public class Product extends BaseEntity {
 		String name,
 		String description,
 		BigDecimal price,
-		Integer stock,
 		ProductStatus status,
 		ProductCategory category,
-		String thumbnailUrl
+		String thumbnailKey
 	) {
 		this.id = id;
 		this.shopId = shopId;
 		this.name = name;
 		this.description = description;
 		this.price = price;
-		this.stock = stock;
 		this.status = status;
 		this.category = category;
-		this.thumbnailUrl = thumbnailUrl;
+		this.thumbnailKey = thumbnailKey;
 	}
 
 	public static Product create(
@@ -80,10 +75,9 @@ public class Product extends BaseEntity {
 		String name,
 		String description,
 		BigDecimal price,
-		Integer stock,
 		ProductStatus status,
 		ProductCategory category,
-		String thumbnailUrl
+		String thumbnailKey
 	) {
 
 		return new Product(
@@ -92,47 +86,38 @@ public class Product extends BaseEntity {
 			name,
 			description,
 			price,
-			stock,
 			status,
 			category,
-			thumbnailUrl
+			thumbnailKey
 		);
 	}
 
 	@PrePersist
 	private void onCreate() {
 		if (id == null) id = UUID.randomUUID();
-		if (status == null) status = ProductStatus.ON_SALE;
-		if (stock == null) stock = 0;
-
-		validateStockNonNegative(stock);
 	}
 
-	public void applyPatch(
+	public void applyUpdate(
 		String name,
 		String description,
 		BigDecimal price,
-		Integer stock,
 		ProductCategory category,
-		String thumbnailUrl
+		String thumbnailKey
 	) {
-
-		if (name != null) this.name = name;
-		if (description != null) this.description = description;
-		if (price != null) this.price = price;
-
-		if (stock != null) {
-			validateStockNonNegative(stock);
-			this.stock = stock;
+		if (this.status == ProductStatus.DISCONTINUED) {
+			throw new BaseException(ProductErrorCode.PRODUCT_STATUS_CHANGE_NOT_ALLOWED);
 		}
 
-		if (category != null) this.category = category;
-		if (thumbnailUrl != null) this.thumbnailUrl = thumbnailUrl;
+		this.name = name;
+		this.description = description;
+		this.price = price;
+		this.category = category;
+		this.thumbnailKey = thumbnailKey;
 	}
 
 	public void changeStatus(ProductStatus newStatus) {
-		if (this.status == ProductStatus.DISCONTINUED) {
-			throw new ProductStatusChangeNotAllowedException();
+		if (this.status == ProductStatus.DISCONTINUED || newStatus == ProductStatus.DISCONTINUED) {
+			throw new BaseException(ProductErrorCode.PRODUCT_STATUS_CHANGE_NOT_ALLOWED);
 		}
 		this.status = newStatus;
 	}
@@ -142,11 +127,5 @@ public class Product extends BaseEntity {
 			return;
 		}
 		this.status = ProductStatus.DISCONTINUED;
-	}
-
-	private void validateStockNonNegative(int stock) {
-		if (stock < 0) {
-			throw new ProductInvalidStockException(stock);
-		}
 	}
 }

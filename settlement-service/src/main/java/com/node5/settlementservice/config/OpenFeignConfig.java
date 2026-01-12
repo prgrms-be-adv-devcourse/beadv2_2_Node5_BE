@@ -1,7 +1,7 @@
 package com.node5.settlementservice.config;
 
 import com.node5.settlementservice.settlement.client.BillingClient;
-import com.node5.settlementservice.settlement.client.BillingErrorDecoder;
+import com.node5.settlementservice.settlement.client.CommonFeignDecoder;
 import com.node5.settlementservice.settlement.client.ShopClient;
 import feign.codec.ErrorDecoder;
 import org.springframework.cloud.openfeign.EnableFeignClients;
@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Configuration;
 public class OpenFeignConfig {
 
     @Bean
-    public ErrorDecoder billingErrorDecoder() {
-        return new BillingErrorDecoder();
+    public ErrorDecoder CommonFeignDecoder() {
+        return new CommonFeignDecoder();
     }
 }

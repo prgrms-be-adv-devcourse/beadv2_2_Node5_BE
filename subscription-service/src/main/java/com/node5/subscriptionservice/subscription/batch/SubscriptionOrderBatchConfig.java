@@ -19,6 +19,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.PlatformTransactionManager;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -38,48 +39,74 @@ public class SubscriptionOrderBatchConfig {
 
     @Bean
     public Job subscriptionOrderJob(JobRepository jobRepository,
-                                    Step subscriptionOrderStep) {
+                                    Step subscriptionOrderRequestStep,
+                                    Step updateNextRunDateStep) {
         return new JobBuilder("subscriptionOrderJob", jobRepository)
-                .start(subscriptionOrderStep)
+                .start(subscriptionOrderRequestStep)
+                .next(updateNextRunDateStep)
                 .build();
     }
 
     @Bean
-    public Step subscriptionOrderStep(JobRepository jobRepository,
-                                      PlatformTransactionManager transactionManager) {
-        return new StepBuilder("subscriptionOrderStep", jobRepository)
+    public Step subscriptionOrderRequestStep(JobRepository jobRepository,
+                                             PlatformTransactionManager transactionManager) {
+        return new StepBuilder("subscriptionOrderRequestStep", jobRepository)
                 .tasklet((contribution, chunkContext) -> {
                     String subscriptionParam = (String) chunkContext.getStepContext()
                             .getJobParameters()
                             .get("subscriptionId");
-                    String runDateParam = (String) chunkContext.getStepContext()
-                            .getJobParameters()
-                            .get("runDate");
 
                     UUID subscriptionId = UUID.fromString(subscriptionParam);
-                    LocalDate runDate = LocalDate.parse(runDateParam);
 
                     Subscription subscription = subscriptionRepository.findById(subscriptionId)
                             .orElseThrow(() -> new SubscriptionException(SUBSCRIPTION_NOT_FOUND));
 
-                    requestOrder(subscription);
+                    String runDateParam = (String) chunkContext.getStepContext()
+                            .getJobParameters()
+                            .get("runDate");
+                    LocalDate runDate = LocalDate.parse(runDateParam);
+                    requestOrder(subscription, runDate);
 
-                    List<SubscriptionRecurrenceRule> rules =
-                            subscriptionRecurrenceRuleRepository.findAllBySubscriptionId(subscription.getId());
-                    subscription.calculateNextRunDate(rules);
-                    subscriptionRepository.save(subscription);
-
-                    log.info("Order processed subscription {} for runDAte = {}", subscriptionId, runDate);
+                    log.info("Order processed subscription {} for runDate = {}", subscriptionId, runDate);
 
                     return RepeatStatus.FINISHED;
                 }, transactionManager)
                 .build();
     }
 
-    private void requestOrder(Subscription subscription) {
+    @Bean
+    public Step updateNextRunDateStep(JobRepository jobRepository,
+                                            PlatformTransactionManager transactionManager) {
+        return new StepBuilder("subscriptionNextRunDateStep", jobRepository)
+                .tasklet((contribution, chunkContext) -> {
+                    String subscriptionParam = (String) chunkContext.getStepContext()
+                            .getJobParameters()
+                            .get("subscriptionId");
+
+                    UUID subscriptionId = UUID.fromString(subscriptionParam);
+
+                    Subscription subscription = subscriptionRepository.findById(subscriptionId)
+                            .orElseThrow(() -> new SubscriptionException(SUBSCRIPTION_NOT_FOUND));
+
+                    List<SubscriptionRecurrenceRule> rules =
+                            subscriptionRecurrenceRuleRepository.findAllBySubscriptionId(subscription.getId());
+                    subscription.calculateNextRunDate(rules);
+                    subscriptionRepository.save(subscription);
+
+                    log.info("Next run date updated for subscription {}", subscriptionId);
+
+                    return RepeatStatus.FINISHED;
+                }, transactionManager)
+                .build();
+    }
+
+    private void requestOrder(Subscription subscription, LocalDate runDate) {
+        UUID subscriptionKey = UUID.nameUUIDFromBytes(
+                (subscription.getId().toString() + ":" + runDate).getBytes(StandardCharsets.UTF_8)
+        );
         OrderCreateRequest request = new OrderCreateRequest(
                 "SUBSCRIPTION",
-                subscription.getId(),
+                subscriptionKey,
                 "subscription-batch",
                 subscription.getDeliveryAddress(),
                 List.of(

@@ -6,7 +6,7 @@ import java.util.UUID;
 
 public record OrderCreateRequest(
         String orderType,
-        UUID subscriptionId,
+        UUID subscriptionKey,
         String recipientName,
         String recipientAddress,
         List<OrderItemRequest> items

@@ -23,7 +23,7 @@ public record CartItemInfo(
 			item.getProductId(),
 			product.getName(),
 			product.getPrice().longValue(),
-			product.getThumbnailUrl(),
+			product.getThumbnailKey(),
 			item.getQuantity(),
 			item.getCreatedAt(),
 			item.getModifiedAt()

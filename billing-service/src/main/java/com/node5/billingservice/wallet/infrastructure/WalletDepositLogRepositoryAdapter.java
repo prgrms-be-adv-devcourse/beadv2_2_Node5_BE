@@ -7,7 +7,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -22,7 +21,12 @@ public class WalletDepositLogRepositoryAdapter implements WalletDepositLogReposi
     }
 
     @Override
+    public Boolean existsBySettlementId(UUID settlementId) {
+        return walletDepositLogJpaRepository.existsBySettlementId(settlementId);
+    }
+
+    @Override
     public WalletDepositLog save(WalletDepositLog walletDepositLog) {
-        return walletDepositLogJpaRepository.save(walletDepositLog);
+        return walletDepositLogJpaRepository.saveAndFlush(walletDepositLog);
     }
 }

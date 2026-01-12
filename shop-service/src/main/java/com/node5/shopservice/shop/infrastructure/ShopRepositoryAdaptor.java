@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -19,6 +20,11 @@ public class ShopRepositoryAdaptor implements ShopRepository {
     @Override
     public Page<Shop> findAllByMemberIdAndDeletedAtIsNull(UUID memberId, Pageable pageable) {
         return shopJpaRepository.findAllByMemberIdAndDeletedAtIsNull(memberId, pageable);
+    }
+
+    @Override
+    public List<Shop> findAllByMemberIdAndDeletedAtIsNull(UUID memberId) {
+        return shopJpaRepository.findAllByMemberIdAndDeletedAtIsNull(memberId);
     }
 
     @Override

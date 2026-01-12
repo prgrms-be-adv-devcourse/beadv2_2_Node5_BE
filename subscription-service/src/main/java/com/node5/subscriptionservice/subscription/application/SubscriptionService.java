@@ -16,9 +16,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.DayOfWeek;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static com.node5.subscriptionservice.subscription.exception.SubscriptionErrorCode.*;
 
@@ -40,7 +43,10 @@ public class SubscriptionService {
 
     public Page<SubscriptionInfo> findAllByMemberId(UUID memberId, Pageable pageable) {
         Page<Subscription> subscriptions = subscriptionRepository.findAllByMemberId(memberId, pageable);
-        return subscriptions.map(this::toSubscriptionInfo);
+        Map<UUID, List<SubscriptionRecurrenceRule>> rules = findRulesBySubscriptionId(subscriptions.getContent());
+        return subscriptions.map(subscription ->
+                toSubscriptionInfo(subscription, rules.getOrDefault(subscription.getId(), List.of()))
+        );
     }
 
     @Transactional
@@ -51,6 +57,7 @@ public class SubscriptionService {
         Subscription subscription = Subscription.create(
                 memberId,
                 productInfo.id(),
+                productInfo.shopId(),
                 productInfo.name(),
                 productInfo.thumbnailUrl(),
                 productInfo.price(),
@@ -137,11 +144,11 @@ public class SubscriptionService {
     }
 
     @Transactional
-    public SubscriptionInfo delete(UUID id) {
+    public SubscriptionInfo cancel(UUID id) {
         Subscription subscription = subscriptionRepository.findById(id)
                 .orElseThrow(() -> new SubscriptionException(SUBSCRIPTION_NOT_FOUND));
 
-        subscription.delete();
+        subscription.cancel();
         Subscription saved = subscriptionRepository.save(subscription);
 
         return toSubscriptionInfo(saved);
@@ -149,7 +156,23 @@ public class SubscriptionService {
 
     public Page<SubscriptionInfo> findAllByProductId(UUID productId, Pageable pageable) {
         Page<Subscription> subscriptions = subscriptionRepository.findAllByProductId(productId, pageable);
-        return  subscriptions.map(this::toSubscriptionInfo);
+        Map<UUID, List<SubscriptionRecurrenceRule>> rules = findRulesBySubscriptionId(subscriptions.getContent());
+        return subscriptions.map(subscription ->
+                toSubscriptionInfo(subscription, rules.getOrDefault(subscription.getId(), List.of()))
+        );
+    }
+
+    @Transactional
+    public void terminateUserSubscriptions(UUID memberId, List<UUID> shopIds) {
+        List<Subscription> subscriptions = subscriptionRepository.findAllByMemberId(memberId);
+        subscriptions.forEach(Subscription::terminate);
+        shopIds.forEach(shopId -> {terminateSellerSubscriptions(shopId);});
+    }
+
+    @Transactional
+    public void terminateSellerSubscriptions(UUID shopId) {
+        // 대량 처리 고려하여 bulk update
+        subscriptionRepository.bulkTerminateAllByShop(shopId, LocalDateTime.now());
     }
 
     private ProductInfoResponse getProductInfo(UUID productId) {
@@ -166,8 +189,6 @@ public class SubscriptionService {
             throw exception;
         } catch (FeignException.NotFound ex) {
             throw new SubscriptionException(SUBSCRIPTION_PRODUCT_NOT_FOUND);
-        } catch (FeignException ex) {
-            throw new SubscriptionException(SUBSCRIPTION_PRODUCT_REQUEST_FAILED);
         } catch (Exception ex) {
             throw new SubscriptionException(SUBSCRIPTION_PRODUCT_REQUEST_FAILED);
         }
@@ -223,6 +244,37 @@ public class SubscriptionService {
         Integer dayOfMonth = rules.get(0).getDayOfMonth();
 
         return SubscriptionInfo.of(subscription, ruleType, dayOfWeek, dayOfMonth);
+    }
+
+    private SubscriptionInfo toSubscriptionInfo(Subscription subscription, List<SubscriptionRecurrenceRule> rules) {
+        if (rules.isEmpty()) {
+            throw new SubscriptionException(SUBSCRIPTION_RULE_NOT_FOUND);
+        }
+
+        RecurrenceType ruleType = rules.get(0).getRecurrenceType();
+        List<DayOfWeek> dayOfWeek = rules.stream()
+                .map(SubscriptionRecurrenceRule::getDayOfWeek)
+                .filter(Objects::nonNull)
+                .toList();
+        Integer dayOfMonth = rules.get(0).getDayOfMonth();
+
+        return SubscriptionInfo.of(subscription, ruleType, dayOfWeek, dayOfMonth);
+    }
+
+    private Map<UUID, List<SubscriptionRecurrenceRule>> findRulesBySubscriptionId(List<Subscription> subscriptions) {
+        if (subscriptions.isEmpty()) {
+            return Map.of();
+        }
+
+        List<UUID> subscriptionIds = subscriptions.stream()
+                .map(Subscription::getId)
+                .toList();
+
+        List<SubscriptionRecurrenceRule> rules =
+                subscriptionRecurrenceRuleRepository
+                        .findAllBySubscriptionIdIn(subscriptionIds);
+
+        return rules.stream().collect(Collectors.groupingBy(SubscriptionRecurrenceRule::getSubscriptionId));
     }
 
     private void updateSubscriptionRecurrenceRule(Subscription subscription, RecurrenceType recurrenceType, List<DayOfWeek> dayOfWeek, Integer dayOfMonth) {

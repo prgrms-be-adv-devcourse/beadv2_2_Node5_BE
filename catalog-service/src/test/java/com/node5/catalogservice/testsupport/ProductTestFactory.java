@@ -20,7 +20,6 @@ public final class ProductTestFactory {
 			"name",
 			"desc",
 			BigDecimal.valueOf(1000),
-			10,
 			status,
 			anyCategory(),
 			"thumb.png"
@@ -39,27 +38,12 @@ public final class ProductTestFactory {
 		return create(ProductStatus.DISCONTINUED);
 	}
 
-	public static Product withId(UUID id, ProductStatus status) {
-		return create(
-			id,
-			UUID.randomUUID(),
-			"name",
-			"desc",
-			BigDecimal.valueOf(1000),
-			10,
-			status,
-			anyCategory(),
-			"thumb.png"
-		);
-	}
-
 	public static Product create(
 		UUID id,
 		UUID shopId,
 		String name,
 		String description,
 		BigDecimal price,
-		Integer stock,
 		ProductStatus status,
 		ProductCategory category,
 		String thumbnailUrl
@@ -69,7 +53,6 @@ public final class ProductTestFactory {
 			name,
 			description,
 			price,
-			stock,
 			status,
 			category,
 			thumbnailUrl

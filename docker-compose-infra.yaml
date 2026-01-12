@@ -1,4 +1,15 @@
 services:
+  nginx:
+    image: 'jc21/nginx-proxy-manager:latest'
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '81:81'
+      - '443:443'
+    volumes:
+      - ./data:/data
+      - ./letsencrypt:/etc/letsencrypt
+
   database:
     image: postgres:17-alpine
     restart: unless-stopped
@@ -70,6 +81,15 @@ services:
       interval: 10s
       timeout: 5s
       retries: 20
+
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: node5
+      RABBITMQ_DEFAULT_PASS: 1234
 
 volumes:
   postgres_data:

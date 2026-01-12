@@ -44,4 +44,10 @@ public class AdminEndPointController {
         endPointService.deleteEndPoint(endPointId);
         return ResponseEntity.ok().build();
     }
+
+    @GetMapping("/cache/refresh")
+    public ResponseEntity<Void> refreshCache() {
+        endPointService.refreshCache();
+        return ResponseEntity.ok().build();
+    }
 }

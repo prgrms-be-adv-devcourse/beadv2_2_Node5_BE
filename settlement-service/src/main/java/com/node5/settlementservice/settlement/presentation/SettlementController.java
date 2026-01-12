@@ -26,7 +26,6 @@ public class SettlementController {
     @Operation(summary = "판매자 정산 내역 조회", description = "판매자가 요청하는 기간 내의 월별 정산 내역을 조회한다.")
     @GetMapping("/history")
     public ResponseEntity<SettlementListInfo> getSettlementHistory(
-            @RequestHeader("Member-Roles") String roles,
             @RequestParam("shopId") UUID shopId,
             @RequestParam("startDate") @DateTimeFormat(pattern = "yyyy-MM") YearMonth startDate,
             @RequestParam("endDate") @DateTimeFormat(pattern = "yyyy-MM") YearMonth endDate,
@@ -36,7 +35,7 @@ public class SettlementController {
             throw new SettlementException(INVALID_VALUE, "조회 시작일(" + startDate + ")은 종료일(" + endDate + ")보다 늦을 수 없습니다.");
         }
 
-        return ResponseEntity.ok(settlementService.getSettlementHistory(roles, shopId, startDate, endDate, page));
+        return ResponseEntity.ok(settlementService.getSettlementHistory(shopId, startDate, endDate, page));
     }
 
 }

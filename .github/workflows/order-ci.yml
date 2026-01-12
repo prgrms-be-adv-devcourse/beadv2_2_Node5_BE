@@ -24,16 +24,6 @@ jobs:
           java-version: "17"
           distribution: "temurin"
 
-      - name: Gradle 종속성 캐시
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
-
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
@@ -42,6 +32,3 @@ jobs:
 
       - name: Gradle Build
         run: ./gradlew :order-service:build
-
-      - name: Run Tests
-        run: ./gradlew :order-service:test

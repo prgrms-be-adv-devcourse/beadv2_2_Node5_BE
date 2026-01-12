@@ -23,11 +23,9 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
             }
 
             String memberId = claims.getSubject();
-            String status = claims.get("memberStatus", String.class);
 
             ServerHttpRequest request = exchange.getRequest().mutate()
                     .header("Member-Id", memberId)
-                    .header("Member-Status", status)
                     .build();
 
             return chain.filter(exchange.mutate().request(request).build());

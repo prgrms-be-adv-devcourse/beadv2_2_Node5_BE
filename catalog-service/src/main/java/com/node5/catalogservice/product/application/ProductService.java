@@ -10,36 +10,28 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.node5.catalogservice.kafka.producer.ProductIndexProducer;
 import com.node5.catalogservice.product.application.dto.ProductCommand;
 import com.node5.catalogservice.product.application.dto.ProductInfo;
 import com.node5.catalogservice.product.application.dto.ProductUpdateCommand;
+import com.node5.catalogservice.product.application.port.ProductIndexEventPort;
 import com.node5.catalogservice.product.domain.Product;
 import com.node5.catalogservice.product.domain.ProductRepository;
 import com.node5.catalogservice.product.domain.ProductStatus;
-import com.node5.catalogservice.product.exception.OnSaleProductNotFoundException;
-import com.node5.catalogservice.product.exception.ProductNotFoundException;
-import com.node5.catalogservice.product.exception.ShopForbiddenException;
-import com.node5.catalogservice.product.exception.ShopNotFoundException;
-import com.node5.catalogservice.shop.client.ShopServiceClient;
+import com.node5.catalogservice.product.event.ProductIndexEvent;
+import com.node5.catalogservice.product.exception.ProductErrorCode;
+import com.node5.catalogservice.shop.client.ShopOwnershipClient;
+import com.node5.common.exception.BaseException;
 
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 
-/**
- * 상품(Product) 도메인의 비즈니스 로직을 담당합니다.
- * <p>
- * - 상품 조회 / 생성 / 수정 / 상태 변경<br>
- * - 판매자 소유권 검증 (Shop-Service 연동)<br>
- * - 상품 변경 시 검색 색인 동기화를 위한 Kafka 이벤트를 발행
- */
 @Service
 @RequiredArgsConstructor
 public class ProductService {
 
 	private final ProductRepository productRepository;
-	private final ProductIndexProducer productIndexProducer;
-	private final ShopServiceClient shopServiceClient;
+	private final ProductIndexEventPort productIndexEventPort;
+	private final ShopOwnershipClient shopOwnershipClient;
 
 	public Page<ProductInfo> getOnSaleProducts(Pageable pageable) {
 		return productRepository.findByStatus(ProductStatus.ON_SALE, pageable)
@@ -51,23 +43,21 @@ public class ProductService {
 	}
 
 	@Transactional
-	public ProductInfo createProduct(UUID memberId, ProductCommand command) {
-		validateShopOwnership(memberId, command.shopId());
+	public ProductInfo createProduct(UUID memberId, UUID shopId, ProductCommand command) {
+		validateShopOwnership(memberId, shopId);
 
 		Product product = Product.create(
-			command.shopId(),
+			shopId,
 			command.name(),
 			command.description(),
 			command.price(),
-			command.stock(),
 			command.status(),
 			command.category(),
-			command.thumbnailUrl()
+			command.thumbnailKey()
 		);
 
 		Product saved = productRepository.save(product);
-		productIndexProducer.sendProductIndexEvent(saved);
-
+		productIndexEventPort.publish(ProductIndexEvent.create(saved));
 		return ProductInfo.from(saved);
 	}
 
@@ -76,18 +66,16 @@ public class ProductService {
 		Product product = getProductOrThrow(productId);
 		validateShopOwnership(memberId, product.getShopId());
 
-		product.applyPatch(
+		product.applyUpdate(
 			command.name(),
 			command.description(),
 			command.price(),
-			command.stock(),
 			command.category(),
-			command.thumbnailUrl()
+			command.thumbnailKey()
 		);
 
 		Product saved = productRepository.save(product);
-		productIndexProducer.sendProductUpdateEvent(saved);
-
+		productIndexEventPort.publish(ProductIndexEvent.update(saved));
 		return ProductInfo.from(saved);
 	}
 
@@ -99,8 +87,7 @@ public class ProductService {
 		product.changeStatus(status);
 
 		Product saved = productRepository.save(product);
-		productIndexProducer.sendProductUpdateEvent(saved);
-
+		productIndexEventPort.publish(ProductIndexEvent.update(saved));
 		return ProductInfo.from(saved);
 	}
 
@@ -112,7 +99,7 @@ public class ProductService {
 		product.discontinue();
 
 		Product saved = productRepository.save(product);
-		productIndexProducer.sendProductUpdateEvent(saved);
+		productIndexEventPort.publish(ProductIndexEvent.update(saved));
 	}
 
 	public Page<ProductInfo> getProductsByShop(UUID memberId, UUID shopId, Pageable pageable) {
@@ -122,12 +109,6 @@ public class ProductService {
 			.map(ProductInfo::from);
 	}
 
-	/**
-	 * 상품 ID 목록에 대해 상품의 상점 ID를 조회합니다.
-	 * <p>
-	 * - 요청된 모든 상품이 존재해야 하며<br>
-	 * - 하나라도 존재하지 않으면 예외를 반환합니다.
-	 */
 	@Transactional(readOnly = true)
 	public Map<UUID, UUID> getShopIdsByProductIds(List<UUID> productIds) {
 
@@ -140,7 +121,7 @@ public class ProductService {
 		List<Product> products = productRepository.findAllByIdIn(distinctIds);
 
 		if (products.size() != distinctIds.size()) {
-			throw new ProductNotFoundException();
+			throw new BaseException(ProductErrorCode.PRODUCT_NOT_FOUND);
 		}
 
 		return products.stream()
@@ -149,21 +130,25 @@ public class ProductService {
 
 	private Product getProductOrThrow(UUID productId) {
 		return productRepository.findById(productId)
-			.orElseThrow(ProductNotFoundException::new);
+			.orElseThrow(() -> new BaseException(ProductErrorCode.PRODUCT_NOT_FOUND));
 	}
 
 	private Product getOnSaleProductOrThrow(UUID productId) {
 		return productRepository.findByIdAndStatus(productId, ProductStatus.ON_SALE)
-			.orElseThrow(OnSaleProductNotFoundException::new);
+			.orElseThrow(() -> new BaseException(ProductErrorCode.ON_SALE_PRODUCT_NOT_FOUND));
 	}
 
 	private void validateShopOwnership(UUID memberId, UUID shopId) {
 		try {
-			shopServiceClient.getShopInfo(memberId, shopId);
+			UUID ownerMemberId = shopOwnershipClient.getOwnerMemberId(shopId);
+
+			if (!ownerMemberId.equals(memberId)) {
+				throw new BaseException(ProductErrorCode.SHOP_FORBIDDEN);
+			}
 		} catch (FeignException.NotFound e) {
-			throw new ShopNotFoundException();
-		} catch (FeignException.Forbidden e) {
-			throw new ShopForbiddenException();
+			throw new BaseException(ProductErrorCode.SHOP_NOT_FOUND);
+		} catch (FeignException e) {
+			throw new BaseException(ProductErrorCode.SHOP_SERVICE_UNAVAILABLE);
 		}
 	}
 }

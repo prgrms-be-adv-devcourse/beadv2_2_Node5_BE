@@ -20,21 +20,20 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
-import com.node5.catalogservice.kafka.producer.ProductIndexProducer;
 import com.node5.catalogservice.product.application.dto.ProductCommand;
 import com.node5.catalogservice.product.application.dto.ProductInfo;
 import com.node5.catalogservice.product.application.dto.ProductUpdateCommand;
+import com.node5.catalogservice.product.application.port.ProductIndexEventPort;
 import com.node5.catalogservice.product.domain.Product;
 import com.node5.catalogservice.product.domain.ProductCategory;
 import com.node5.catalogservice.product.domain.ProductRepository;
 import com.node5.catalogservice.product.domain.ProductStatus;
-import com.node5.catalogservice.product.exception.OnSaleProductNotFoundException;
-import com.node5.catalogservice.product.exception.ProductNotFoundException;
-import com.node5.catalogservice.product.exception.ProductStatusChangeNotAllowedException;
-import com.node5.catalogservice.product.exception.ShopForbiddenException;
-import com.node5.catalogservice.product.exception.ShopNotFoundException;
-import com.node5.catalogservice.shop.client.ShopServiceClient;
+import com.node5.catalogservice.product.event.ProductIndexEvent;
+import com.node5.catalogservice.product.event.ProductIndexEventType;
+import com.node5.catalogservice.product.exception.ProductErrorCode;
+import com.node5.catalogservice.shop.client.ShopOwnershipClient;
 import com.node5.catalogservice.testsupport.ProductTestFactory;
+import com.node5.common.exception.BaseException;
 
 import feign.FeignException;
 import feign.Request;
@@ -47,10 +46,10 @@ class ProductServiceTest {
 	private ProductRepository productRepository;
 
 	@Mock
-	private ProductIndexProducer productIndexProducer;
+	private ProductIndexEventPort productIndexEventPort;
 
 	@Mock
-	private ShopServiceClient shopServiceClient;
+	private ShopOwnershipClient shopOwnershipClient;
 
 	@InjectMocks
 	private ProductService productService;
@@ -64,83 +63,120 @@ class ProductServiceTest {
 		UUID shopId = uuid();
 
 		ProductCommand command = new ProductCommand(
-			shopId,
 			"name",
 			"desc",
 			BigDecimal.valueOf(1000),
-			10,
 			ProductStatus.ON_SALE,
 			anyCategory(),
 			"thumb.png"
 		);
 
-		given(shopServiceClient.getShopInfo(memberId, shopId)).willReturn(null);
+		given(shopOwnershipClient.getOwnerMemberId(shopId)).willReturn(memberId);
 
 		Product saved = ProductTestFactory.onSale();
 		given(productRepository.save(any(Product.class))).willReturn(saved);
 
 		// when
-		ProductInfo result = productService.createProduct(memberId, command);
+		ProductInfo result = productService.createProduct(memberId, shopId, command);
 
 		// then
 		assertThat(result).isNotNull();
-		then(shopServiceClient).should().getShopInfo(memberId, shopId);
+		then(shopOwnershipClient).should().getOwnerMemberId(shopId);
 		then(productRepository).should().save(any(Product.class));
-		then(productIndexProducer).should().sendProductIndexEvent(saved);
+
+		then(productIndexEventPort).should().publish(argThat(e ->
+			e != null
+				&& e.productId().equals(saved.getId())
+				&& e.type() == ProductIndexEventType.CREATE
+		));
 	}
 
 	@Test
-	void 상품_생성시_존재하지_않는_상점이면_ShopNotFoundException() {
+	void 상품_생성시_존재하지_않는_상점이면_SHOP_NOT_FOUND_BaseException() {
 		// given
 		UUID memberId = uuid();
 		UUID shopId = uuid();
 
 		ProductCommand command = new ProductCommand(
-			shopId,
 			"name",
 			"desc",
 			BigDecimal.valueOf(1000),
-			10,
 			ProductStatus.ON_SALE,
 			anyCategory(),
 			"thumb.png"
 		);
 
-		given(shopServiceClient.getShopInfo(memberId, shopId)).willThrow(feignNotFound());
+		given(shopOwnershipClient.getOwnerMemberId(shopId)).willThrow(feignNotFound());
 
 		// when & then
-		assertThatThrownBy(() -> productService.createProduct(memberId, command))
-			.isInstanceOf(ShopNotFoundException.class);
+		assertThatThrownBy(() -> productService.createProduct(memberId, shopId, command))
+			.isInstanceOf(BaseException.class)
+			.satisfies(ex -> {
+				BaseException be = (BaseException) ex;
+				assertThat(be.getErrorCode()).isEqualTo(ProductErrorCode.SHOP_NOT_FOUND);
+			});
 
 		then(productRepository).shouldHaveNoInteractions();
-		then(productIndexProducer).shouldHaveNoInteractions();
+		then(productIndexEventPort).shouldHaveNoInteractions();
 	}
 
 	@Test
-	void 상품_생성시_상점_소유자가_아니면_ShopForbiddenException() {
+	void 상품_생성시_상점_소유자가_아니면_SHOP_FORBIDDEN_BaseException() {
 		// given
 		UUID memberId = uuid();
 		UUID shopId = uuid();
 
 		ProductCommand command = new ProductCommand(
-			shopId,
 			"name",
 			"desc",
 			BigDecimal.valueOf(1000),
-			10,
 			ProductStatus.ON_SALE,
 			anyCategory(),
 			"thumb.png"
 		);
 
-		given(shopServiceClient.getShopInfo(memberId, shopId)).willThrow(feignForbidden());
+		UUID otherOwner = uuid();
+		given(shopOwnershipClient.getOwnerMemberId(shopId)).willReturn(otherOwner);
 
 		// when & then
-		assertThatThrownBy(() -> productService.createProduct(memberId, command))
-			.isInstanceOf(ShopForbiddenException.class);
+		assertThatThrownBy(() -> productService.createProduct(memberId, shopId, command))
+			.isInstanceOf(BaseException.class)
+			.satisfies(ex -> {
+				BaseException be = (BaseException) ex;
+				assertThat(be.getErrorCode()).isEqualTo(ProductErrorCode.SHOP_FORBIDDEN);
+			});
 
 		then(productRepository).shouldHaveNoInteractions();
-		then(productIndexProducer).shouldHaveNoInteractions();
+		then(productIndexEventPort).shouldHaveNoInteractions();
+	}
+
+	@Test
+	void 상품_생성시_상점서비스_장애면_SHOP_SERVICE_UNAVAILABLE_BaseException() {
+		// given
+		UUID memberId = uuid();
+		UUID shopId = uuid();
+
+		ProductCommand command = new ProductCommand(
+			"name",
+			"desc",
+			BigDecimal.valueOf(1000),
+			ProductStatus.ON_SALE,
+			anyCategory(),
+			"thumb.png"
+		);
+
+		given(shopOwnershipClient.getOwnerMemberId(shopId)).willThrow(feignInternalServerError());
+
+		// when & then
+		assertThatThrownBy(() -> productService.createProduct(memberId, shopId, command))
+			.isInstanceOf(BaseException.class)
+			.satisfies(ex -> {
+				BaseException be = (BaseException) ex;
+				assertThat(be.getErrorCode()).isEqualTo(ProductErrorCode.SHOP_SERVICE_UNAVAILABLE);
+			});
+
+		then(productRepository).shouldHaveNoInteractions();
+		then(productIndexEventPort).shouldHaveNoInteractions();
 	}
 
 	@Test
@@ -156,13 +192,12 @@ class ProductServiceTest {
 			"newName",
 			"newDesc",
 			BigDecimal.valueOf(2000),
-			20,
 			anyCategory(),
 			"newThumb.png"
 		);
 
 		given(productRepository.findById(productId)).willReturn(Optional.of(existing));
-		given(shopServiceClient.getShopInfo(memberId, shopId)).willReturn(null);
+		given(shopOwnershipClient.getOwnerMemberId(shopId)).willReturn(memberId);
 		given(productRepository.save(existing)).willReturn(existing);
 
 		// when
@@ -170,13 +205,18 @@ class ProductServiceTest {
 
 		// then
 		assertThat(result).isNotNull();
-		then(shopServiceClient).should().getShopInfo(memberId, shopId);
+		then(shopOwnershipClient).should().getOwnerMemberId(shopId);
 		then(productRepository).should().save(existing);
-		then(productIndexProducer).should().sendProductUpdateEvent(existing);
+
+		then(productIndexEventPort).should().publish(argThat(e ->
+			e != null
+				&& e.productId().equals(existing.getId())
+				&& e.type() == ProductIndexEventType.UPDATE
+		));
 	}
 
 	@Test
-	void 상품_수정시_상품이_없으면_ProductNotFoundException() {
+	void 상품_수정시_상품이_없으면_PRODUCT_NOT_FOUND_BaseException() {
 		// given
 		UUID memberId = uuid();
 		UUID productId = uuid();
@@ -188,17 +228,20 @@ class ProductServiceTest {
 			null,
 			null,
 			null,
-			null,
 			null
 		);
 
 		// when & then
 		assertThatThrownBy(() -> productService.updateProduct(memberId, productId, patch))
-			.isInstanceOf(ProductNotFoundException.class);
+			.isInstanceOf(BaseException.class)
+			.satisfies(ex -> {
+				BaseException be = (BaseException) ex;
+				assertThat(be.getErrorCode()).isEqualTo(ProductErrorCode.PRODUCT_NOT_FOUND);
+			});
 
-		then(shopServiceClient).shouldHaveNoInteractions();
+		then(shopOwnershipClient).shouldHaveNoInteractions();
 		then(productRepository).should(never()).save(any());
-		then(productIndexProducer).shouldHaveNoInteractions();
+		then(productIndexEventPort).shouldHaveNoInteractions();
 	}
 
 	@Test
@@ -211,7 +254,7 @@ class ProductServiceTest {
 		UUID shopId = existing.getShopId();
 
 		given(productRepository.findById(productId)).willReturn(Optional.of(existing));
-		given(shopServiceClient.getShopInfo(memberId, shopId)).willReturn(null);
+		given(shopOwnershipClient.getOwnerMemberId(shopId)).willReturn(memberId);
 		given(productRepository.save(existing)).willReturn(existing);
 
 		// when
@@ -220,7 +263,8 @@ class ProductServiceTest {
 		// then
 		assertThat(result).isNotNull();
 		then(productRepository).should().save(existing);
-		then(productIndexProducer).should().sendProductUpdateEvent(existing);
+
+		then(productIndexEventPort).should().publish(any(ProductIndexEvent.class));
 	}
 
 	@Test
@@ -233,7 +277,7 @@ class ProductServiceTest {
 		UUID shopId = existing.getShopId();
 
 		given(productRepository.findById(productId)).willReturn(Optional.of(existing));
-		given(shopServiceClient.getShopInfo(memberId, shopId)).willReturn(null);
+		given(shopOwnershipClient.getOwnerMemberId(shopId)).willReturn(memberId);
 		given(productRepository.save(existing)).willReturn(existing);
 
 		// when
@@ -241,7 +285,7 @@ class ProductServiceTest {
 
 		// then
 		then(productRepository).should().save(existing);
-		then(productIndexProducer).should().sendProductUpdateEvent(existing);
+		then(productIndexEventPort).should().publish(any(ProductIndexEvent.class));
 	}
 
 	@Test
@@ -262,7 +306,7 @@ class ProductServiceTest {
 	}
 
 	@Test
-	void 판매중_상품_단건조회시_없으면_OnSaleProductNotFoundException() {
+	void 판매중_상품_단건조회시_없으면_ON_SALE_PRODUCT_NOT_FOUND_BaseException() {
 		// given
 		UUID productId = uuid();
 
@@ -271,7 +315,11 @@ class ProductServiceTest {
 
 		// when & then
 		assertThatThrownBy(() -> productService.getOnSaleProduct(productId))
-			.isInstanceOf(OnSaleProductNotFoundException.class);
+			.isInstanceOf(BaseException.class)
+			.satisfies(ex -> {
+				BaseException be = (BaseException) ex;
+				assertThat(be.getErrorCode()).isEqualTo(ProductErrorCode.ON_SALE_PRODUCT_NOT_FOUND);
+			});
 	}
 
 	@Test
@@ -284,7 +332,7 @@ class ProductServiceTest {
 	}
 
 	@Test
-	void 상품ID목록으로_shopId조회시_하나라도_없으면_ProductNotFoundException() {
+	void 상품ID목록으로_shopId조회시_하나라도_없으면_PRODUCT_NOT_FOUND_BaseException() {
 		// given
 		UUID p1 = uuid();
 		UUID p2 = uuid();
@@ -294,7 +342,11 @@ class ProductServiceTest {
 
 		// when & then
 		assertThatThrownBy(() -> productService.getShopIdsByProductIds(List.of(p1, p2)))
-			.isInstanceOf(ProductNotFoundException.class);
+			.isInstanceOf(BaseException.class)
+			.satisfies(ex -> {
+				BaseException be = (BaseException) ex;
+				assertThat(be.getErrorCode()).isEqualTo(ProductErrorCode.PRODUCT_NOT_FOUND);
+			});
 	}
 
 	@Test
@@ -337,7 +389,7 @@ class ProductServiceTest {
 		UUID memberId = uuid();
 		UUID shopId = uuid();
 
-		given(shopServiceClient.getShopInfo(memberId, shopId)).willReturn(null);
+		given(shopOwnershipClient.getOwnerMemberId(shopId)).willReturn(memberId);
 
 		Page<Product> page = new PageImpl<>(
 			List.of(ProductTestFactory.onSale()),
@@ -351,12 +403,12 @@ class ProductServiceTest {
 
 		// then
 		assertThat(result.getTotalElements()).isEqualTo(1);
-		then(shopServiceClient).should().getShopInfo(memberId, shopId);
+		then(shopOwnershipClient).should().getOwnerMemberId(shopId);
 		then(productRepository).should().findByShopId(shopId, DEFAULT_PAGE);
 	}
 
 	@Test
-	void 이미_판매중단된_상품은_상태를_변경할_수_없다() {
+	void 판매중단된_상품_상태변경시_PRODUCT_STATUS_CHANGE_NOT_ALLOWED_BaseException() {
 		// given
 		UUID memberId = uuid();
 
@@ -365,27 +417,39 @@ class ProductServiceTest {
 		UUID shopId = discontinued.getShopId();
 
 		given(productRepository.findById(productId)).willReturn(Optional.of(discontinued));
-		given(shopServiceClient.getShopInfo(memberId, shopId)).willReturn(null);
+		given(shopOwnershipClient.getOwnerMemberId(shopId)).willReturn(memberId);
 
 		// when & then
-		assertThatThrownBy(() -> productService.updateStatus(memberId, productId, ProductStatus.HIDDEN))
-			.isInstanceOf(ProductStatusChangeNotAllowedException.class);
+		assertThatThrownBy(() ->
+			productService.updateStatus(memberId, productId, ProductStatus.HIDDEN)
+		)
+			.isInstanceOf(BaseException.class)
+			.satisfies(ex -> {
+				BaseException be = (BaseException) ex;
+				assertThat(be.getErrorCode())
+					.isEqualTo(ProductErrorCode.PRODUCT_STATUS_CHANGE_NOT_ALLOWED);
+			});
 
 		then(productRepository).should(never()).save(any());
-		then(productIndexProducer).shouldHaveNoInteractions();
+		then(productIndexEventPort).shouldHaveNoInteractions();
 	}
 
 	@Test
-	void 특정상점_상품조회시_소유자가_아니면_ShopForbiddenException() {
+	void 특정상점_상품조회시_소유자가_아니면_SHOP_FORBIDDEN_BaseException() {
 		// given
 		UUID memberId = uuid();
 		UUID shopId = uuid();
 
-		given(shopServiceClient.getShopInfo(memberId, shopId)).willThrow(feignForbidden());
+		UUID otherOwner = uuid();
+		given(shopOwnershipClient.getOwnerMemberId(shopId)).willReturn(otherOwner);
 
 		// when & then
 		assertThatThrownBy(() -> productService.getProductsByShop(memberId, shopId, PageRequest.of(0, 10)))
-			.isInstanceOf(ShopForbiddenException.class);
+			.isInstanceOf(BaseException.class)
+			.satisfies(ex -> {
+				BaseException be = (BaseException) ex;
+				assertThat(be.getErrorCode()).isEqualTo(ProductErrorCode.SHOP_FORBIDDEN);
+			});
 
 		then(productRepository).shouldHaveNoInteractions();
 	}
@@ -406,8 +470,8 @@ class ProductServiceTest {
 		return new FeignException.NotFound("NOT_FOUND", request(), null, null);
 	}
 
-	private static FeignException.Forbidden feignForbidden() {
-		return new FeignException.Forbidden("FORBIDDEN", request(), null, null);
+	private static FeignException.InternalServerError feignInternalServerError() {
+		return new FeignException.InternalServerError("INTERNAL_SERVER_ERROR", request(), null, null);
 	}
 
 	private static Request request() {

@@ -1,7 +1,6 @@
 package com.node5.catalogservice.product.presentation.dto;
 
 import java.math.BigDecimal;
-import java.util.UUID;
 
 import com.node5.catalogservice.product.application.dto.ProductCommand;
 import com.node5.catalogservice.product.domain.ProductCategory;
@@ -11,7 +10,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.PositiveOrZero;
 
 @Schema(description = "상품 등록 요청")
 public record ProductRequest(
@@ -28,11 +26,6 @@ public record ProductRequest(
 	@Positive(message = "가격은 0보다 커야 합니다.")
 	BigDecimal price,
 
-	@Schema(description = "재고 수량", example = "50")
-	@NotNull(message = "재고 수량은 필수입니다.")
-	@PositiveOrZero(message = "재고 수량은 0 이상이어야 합니다.")
-	Integer stock,
-
 	@Schema(description = "상품 상태(선택, 미입력 시 ON_SALE)", example = "ON_SALE")
 	ProductStatus status,
 
@@ -40,20 +33,18 @@ public record ProductRequest(
 	@NotNull(message = "카테고리는 필수입니다.")
 	ProductCategory category,
 
-	@Schema(description = "대표 이미지 URL", example = "https://cdn.example.com/product/thumbnail.jpg")
-	String thumbnailUrl
+	@Schema(description = "대표 이미지 객체 키", example = "product/550e8400-e29b-41d4-a716-446655440000")
+	String thumbnailKey
 ) {
 
-	public ProductCommand toCommand(UUID shopId) {
+	public ProductCommand toCommand() {
 		return new ProductCommand(
-			shopId,
 			name,
 			description,
 			price,
-			stock,
-			status,
+			status != null ? status : ProductStatus.ON_SALE,
 			category,
-			thumbnailUrl
+			thumbnailKey
 		);
 	}
 }

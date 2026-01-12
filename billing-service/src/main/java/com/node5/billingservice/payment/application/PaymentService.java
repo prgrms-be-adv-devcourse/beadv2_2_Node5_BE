@@ -10,6 +10,9 @@ import com.node5.billingservice.payment.exception.PaymentException;
 import com.node5.billingservice.payment.infrastructure.PaymentFailureRepositoryAdapter;
 import com.node5.billingservice.payment.infrastructure.PaymentRepositoryAdapter;
 import com.node5.billingservice.wallet.domain.Wallet;
+import com.node5.billingservice.wallet.domain.WalletTransactionLog;
+import com.node5.billingservice.wallet.domain.WalletTransactionLogGroupType;
+import com.node5.billingservice.wallet.domain.WalletTransactionLogRepository;
 import com.node5.billingservice.wallet.exception.WalletException;
 import com.node5.billingservice.wallet.infrastructure.WalletRepositoryAdapter;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +27,9 @@ import java.util.Objects;
 import java.util.UUID;
 
 import static com.node5.billingservice.payment.exception.PaymentErrorCode.*;
+import static com.node5.billingservice.wallet.domain.WalletTransactionLogStatus.CANCELED;
+import static com.node5.billingservice.wallet.domain.WalletTransactionLogStatus.COMPLETED;
+import static com.node5.billingservice.wallet.domain.WalletTransactionLogType.*;
 import static com.node5.billingservice.wallet.exception.WalletErrorCode.WALLET_NOT_FOUND;
 
 @Service
@@ -35,6 +41,7 @@ public class PaymentService {
     private final PaymentRepositoryAdapter paymentRepositoryAdapter;
     private final PaymentFailureRepositoryAdapter paymentFailureRepositoryAdapter;
     private final WalletRepositoryAdapter walletRepositoryAdapter;
+    private final WalletTransactionLogRepository walletTransactionLogRepository;
 
     private final TossPaymentClient tossPaymentClient;
 
@@ -85,6 +92,17 @@ public class PaymentService {
         payment.confirm(tossPayment);
         paymentRepositoryAdapter.save(payment);
         wallet.deposit(tossPayment.totalAmount());
+
+        WalletTransactionLog transactionLog = WalletTransactionLog.builder()
+                .memberId(memberId)
+                .referenceId(command.orderId())
+                .type(CHARGE)
+                .groupType(WalletTransactionLogGroupType.IN)
+                .amount(command.amount())
+                .balanceAfter(wallet.getBalance())
+                .status(COMPLETED)
+                .build();
+        walletTransactionLogRepository.save(transactionLog);
 
         log.info("Payment confirmed: " + payment.getId());
         return PaymentInfo.from(payment);
@@ -143,6 +161,19 @@ public class PaymentService {
         payment.cancel();
         paymentRepositoryAdapter.save(payment);
         wallet.withdraw(tossPayment.totalAmount());
+
+        walletTransactionLogRepository.updateStatusByTransactionId(memberId, command.orderId(), CHARGE, COMPLETED, CANCELED);
+
+        WalletTransactionLog transactionLog = WalletTransactionLog.builder()
+                .memberId(memberId)
+                .referenceId(command.orderId())
+                .type(CHARGE_CANCEL)
+                .groupType(WalletTransactionLogGroupType.OUT)
+                .amount(command.amount())
+                .balanceAfter(wallet.getBalance())
+                .status(COMPLETED)
+                .build();
+        walletTransactionLogRepository.save(transactionLog);
 
         log.info("Payment canceled: " + payment.getId());
         return PaymentInfo.from(payment);
