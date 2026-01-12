@@ -1,24 +1,33 @@
 spring:
   config:
     import: optional:configserver:http://localhost:8888
+
   elasticsearch:
     uris: http://localhost:9200
     connection-timeout: 1s
     socket-timeout: 3s
+
   cloud:
     config:
       fail-fast: true
+
   kafka:
     bootstrap-servers: localhost:9092
+
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
     consumer:
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       group-id: catalog-service-search
+
+      key-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+
       properties:
-        spring.json.trusted.packages: "com.node5.catalogservice.*"
+        spring.deserializer.key.delegate.class: org.apache.kafka.common.serialization.StringDeserializer
+        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
+        spring.json.trusted.packages: "com.node5.common.event,com.node5.catalogservice.*"
 
 management:
   endpoints:
@@ -33,13 +42,14 @@ shop-service:
   url: http://localhost:8085
 
 app:
+  kafka:
+    topics:
+      member-deleted: member-service.member-deleted.v1
+      product-index: product-index
+
   search:
     index:
       product: products
-
-    kafka:
-      topics:
-        product-index: product-index-topic
 
   s3:
     bucket: ${S3_BUCKET_NAME}

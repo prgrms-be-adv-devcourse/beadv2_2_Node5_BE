@@ -18,15 +18,14 @@ public class KafkaProductIndexEventConsumer {
 	private final ProductSearchRepository productSearchRepository;
 
 	@KafkaListener(
-		topics = "${app.search.kafka.topics.product-index}",
+		topics = "${app.kafka.topics.product-index}",
 		groupId = "${spring.kafka.consumer.group-id:catalog-service-search}"
 	)
 	public void consume(ProductIndexEvent event) {
 
 		String productId = event.productId().toString();
 
-		log.info("Kafka 상품 색인 이벤트 수신, productId={}, type={}",
-			productId, event.type());
+		log.info("Kafka 상품 색인 이벤트 수신, productId={}, type={}", productId, event.type());
 
 		try {
 			ProductDocument document = new ProductDocument(

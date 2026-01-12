@@ -78,7 +78,7 @@ public class CartService {
 	}
 
 	public CartItemInfo updateItem(UUID memberId, UUID cartItemId, CartItemUpdateCommand command) {
-		UUID cartId = getOrCreateCartId(memberId);
+		UUID cartId = getCartIdOrThrow(memberId);
 
 		CartItem cartItem = cartItemRepository.findByIdAndCartId(cartItemId, cartId)
 			.orElseThrow(() -> new BaseException(CartErrorCode.CART_ITEM_NOT_FOUND));
@@ -91,7 +91,7 @@ public class CartService {
 	}
 
 	public void removeItem(UUID memberId, UUID cartItemId) {
-		UUID cartId = getOrCreateCartId(memberId);
+		UUID cartId = getCartIdOrThrow(memberId);
 
 		CartItem cartItem = cartItemRepository.findByIdAndCartId(cartItemId, cartId)
 			.orElseThrow(() -> new BaseException(CartErrorCode.CART_ITEM_NOT_FOUND));
@@ -109,6 +109,12 @@ public class CartService {
 		return cartRepository.findByMemberId(memberId)
 			.orElseGet(() -> cartRepository.save(Cart.create(memberId)))
 			.getId();
+	}
+
+	private UUID getCartIdOrThrow(UUID memberId) {
+		return cartRepository.findByMemberId(memberId)
+			.map(Cart::getId)
+			.orElseThrow(() -> new BaseException(CartErrorCode.CART_NOT_FOUND));
 	}
 
 	private Product getProductOrThrow(UUID productId) {

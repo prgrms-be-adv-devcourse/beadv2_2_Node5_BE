@@ -25,4 +25,9 @@ public class CartRepositoryAdapter implements CartRepository {
 	public Optional<Cart> findByMemberId(UUID memberId) {
 		return cartJpaRepository.findByMemberId(memberId);
 	}
+
+	@Override
+	public void delete(Cart cart) {
+		cartJpaRepository.delete(cart);
+	}
 }
