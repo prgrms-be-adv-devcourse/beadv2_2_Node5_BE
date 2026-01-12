@@ -7,7 +7,8 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@ConfigurationProperties(prefix = "app.search.kafka.topics")
+@ConfigurationProperties(prefix = "app.kafka.topics")
 public class KafkaTopicsProperties {
 	private String productIndex;
+	private String memberDeleted;
 }
