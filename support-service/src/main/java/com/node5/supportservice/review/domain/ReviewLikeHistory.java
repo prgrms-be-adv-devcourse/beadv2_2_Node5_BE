@@ -10,10 +10,10 @@ import lombok.NoArgsConstructor;
 import java.util.UUID;
 
 @Entity
-@Table(name = "review_like", schema = "support")
+@Table(name = "review_like_history", schema = "support")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ReviewLike extends BaseEntity {
+public class ReviewLikeHistory extends BaseEntity {
 
     @Id
     private UUID id;
@@ -25,7 +25,7 @@ public class ReviewLike extends BaseEntity {
     private UUID reviewId;
 
     @Builder
-    public ReviewLike(UUID memberId, UUID reviewId) {
+    public ReviewLikeHistory(UUID memberId, UUID reviewId) {
         this.id = UUID.randomUUID();
         this.memberId = memberId;
         this.reviewId = reviewId;

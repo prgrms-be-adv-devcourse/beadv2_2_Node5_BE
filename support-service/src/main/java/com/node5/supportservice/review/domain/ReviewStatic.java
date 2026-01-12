@@ -9,11 +9,11 @@ import java.math.RoundingMode;
 import java.util.UUID;
 
 @Entity
-@Table(name = "review", schema = "support",
+@Table(name = "review_static", schema = "support",
         uniqueConstraints = {@UniqueConstraint(name = "uk_review_product", columnNames = "product_id")})
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Review extends BaseEntity {
+public class ReviewStatic extends BaseEntity {
 
     @Id
     @Column(columnDefinition = "uuid")
@@ -41,7 +41,7 @@ public class Review extends BaseEntity {
     private int ratingCount5;
 
     @Builder
-    public Review(UUID productId) {
+    public ReviewStatic(UUID productId) {
         this.id = UUID.randomUUID(); // ID 자동 생성 예시
         this.productId = productId;
         this.reviewCount = 0;

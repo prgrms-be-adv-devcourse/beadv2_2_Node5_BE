@@ -11,7 +11,7 @@ CREATE TABLE support."review_summary" (
     CONSTRAINT uk_review_summary_product_rating UNIQUE (product_id, rating)
 );
 
-CREATE TABLE support."review" (
+CREATE TABLE support."review_static" (
     id uuid NOT NULL,
     product_id uuid NOT NULL,
     review_count int NOT NULL,
@@ -41,7 +41,7 @@ CREATE TABLE support."review_detail" (
     CONSTRAINT uk_review_detail_product_member UNIQUE (product_id, member_id)
 );
 
-CREATE TABLE support."review_like" (
+CREATE TABLE support."review_like_history" (
     id uuid NOT NULL,
     member_id uuid NOT NULL,
     review_id uuid NOT NULL,

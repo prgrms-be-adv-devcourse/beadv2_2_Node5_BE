@@ -1,6 +1,6 @@
 package com.node5.supportservice.review.infrastructure;
 
-import com.node5.supportservice.review.domain.ReviewLike;
+import com.node5.supportservice.review.domain.ReviewLikeHistory;
 import com.node5.supportservice.review.domain.ReviewLikeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -18,7 +18,7 @@ public class ReviewLikeRepositoryAdapter implements ReviewLikeRepository {
     }
 
     @Override
-    public ReviewLike save(ReviewLike reviewLike) {
+    public ReviewLikeHistory save(ReviewLikeHistory reviewLike) {
         return reviewLikeJpaRepository.save(reviewLike);
     }
 }

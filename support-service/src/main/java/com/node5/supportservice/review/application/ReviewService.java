@@ -52,7 +52,7 @@ public class ReviewService {
 
         if (!reviewRepository.existsByProductId(command.productId())) {
             try {
-                reviewRepository.save(Review.builder()
+                reviewRepository.save(ReviewStatic.builder()
                         .productId(command.productId())
                         .build());
             } catch (DataIntegrityViolationException ignored) {
@@ -78,7 +78,7 @@ public class ReviewService {
 
     // 상품에 리뷰 통계 정보 조회
     public ReviewInfo getReviewInfo(UUID memberId, UUID productId) {
-        Review review = reviewRepository.findByProductId(productId);
+        ReviewStatic review = reviewRepository.findByProductId(productId);
         if (review == null) {
             throw new ReviewException(ReviewErrorCode.REVIEW_NOT_FOUND);
         }
@@ -87,7 +87,7 @@ public class ReviewService {
     }
 
     // 상품에 리뷰 상세 정보 조회
-    public Page<ReviewDetailInfo> getReviewDetails(UUID memberId, UUID productId, Pageable pageable) {
+    public Page<ReviewDetailInfo> getReviewDetails(UUID productId, Pageable pageable) {
         Page<ReviewDetail> reviewDetailsPage = reviewDetailRepository.findByProductIdOrderByCreatedAtDesc(productId, pageable);
         return reviewDetailsPage.map(ReviewDetailInfo::from);
     }
@@ -144,7 +144,7 @@ public class ReviewService {
         }
 
         // 공감 기록 저장
-        reviewLikeRepository.save(ReviewLike.builder()
+        reviewLikeRepository.save(ReviewLikeHistory.builder()
                 .reviewId(reviewId)
                 .memberId(memberId)
                 .build());

@@ -40,10 +40,9 @@ public class ReviewController {
 
     @Operation(summary = "리뷰 상세 조회", description = "상품의 리뷰 상세 정보를 조회한다.")
     @GetMapping("/detail/{productId}")
-    public ResponseEntity<Page<ReviewDetailInfo>> getReviewDetails(@RequestHeader("Member-Id") UUID memberId,
-                                                                 @PathVariable UUID productId,
+    public ResponseEntity<Page<ReviewDetailInfo>> getReviewDetails(@PathVariable UUID productId,
                                                                  Pageable pageable) {
-        return ResponseEntity.ok(reviewService.getReviewDetails(memberId, productId, pageable));
+        return ResponseEntity.ok(reviewService.getReviewDetails(productId, pageable));
     }
 
     @Operation(summary = "리뷰 수정", description = "회원의 리뷰를 수정한다.")

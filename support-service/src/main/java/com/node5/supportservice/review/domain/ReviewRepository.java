@@ -3,9 +3,9 @@ package com.node5.supportservice.review.domain;
 import java.util.UUID;
 
 public interface ReviewRepository {
-    Review findByProductId(UUID productId);
+    ReviewStatic findByProductId(UUID productId);
 
-    Review save(Review review);
+    ReviewStatic save(ReviewStatic review);
 
     void incrementStatistics(UUID productId, Integer rating);
 

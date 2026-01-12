@@ -1,6 +1,6 @@
 package com.node5.supportservice.review.application.dto;
 
-import com.node5.supportservice.review.domain.Review;
+import com.node5.supportservice.review.domain.ReviewStatic;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -16,7 +16,7 @@ public record ReviewInfo(
         Integer ratingCount4,
         Integer ratingCount5
 ) {
-    public static ReviewInfo from(Review review, BigDecimal averageRating) {
+    public static ReviewInfo from(ReviewStatic review, BigDecimal averageRating) {
         return new ReviewInfo(
                 review.getId(),
                 review.getProductId(),

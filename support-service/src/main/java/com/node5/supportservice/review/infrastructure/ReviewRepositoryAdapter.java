@@ -1,6 +1,6 @@
 package com.node5.supportservice.review.infrastructure;
 
-import com.node5.supportservice.review.domain.Review;
+import com.node5.supportservice.review.domain.ReviewStatic;
 import com.node5.supportservice.review.domain.ReviewRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -13,12 +13,12 @@ public class ReviewRepositoryAdapter implements ReviewRepository {
     private final ReviewJpaRepository reviewJpaRepository;
 
     @Override
-    public Review findByProductId(UUID productId) {
+    public ReviewStatic findByProductId(UUID productId) {
         return reviewJpaRepository.findByProductId(productId);
     }
 
     @Override
-    public Review save(Review review) {
+    public ReviewStatic save(ReviewStatic review) {
         return reviewJpaRepository.save(review);
     }
 

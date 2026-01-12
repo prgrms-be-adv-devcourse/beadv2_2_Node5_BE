@@ -1,7 +1,6 @@
 package com.node5.supportservice.review.domain;
 
 import com.node5.common.domain.BaseEntity;
-import com.node5.supportservice.review.application.dto.ReviewCreateCommand;
 import com.node5.supportservice.review.application.dto.ReviewUpdateCommand;
 import com.node5.supportservice.review.exception.ReviewErrorCode;
 import com.node5.supportservice.review.exception.ReviewException;

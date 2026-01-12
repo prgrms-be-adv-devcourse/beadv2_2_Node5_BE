@@ -5,5 +5,5 @@ import java.util.UUID;
 public interface ReviewLikeRepository {
     Boolean existsByReviewIdAndMemberId(UUID reviewId, UUID memberId);
 
-    ReviewLike save(ReviewLike reviewLike);
+    ReviewLikeHistory save(ReviewLikeHistory reviewLike);
 }
