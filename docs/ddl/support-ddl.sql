@@ -1,4 +1,5 @@
 CREATE SCHEMA IF NOT EXISTS support;
+CREATE EXTENSION IF NOT EXISTS vector;
 
 CREATE TABLE support."review_summary" (
 	id uuid NOT NULL,
@@ -50,3 +51,19 @@ CREATE TABLE support."review_like_history" (
     CONSTRAINT pk_review_like PRIMARY KEY (id),
     CONSTRAINT uk_review_like_member_review UNIQUE (member_id, review_id)
 );
+
+CREATE TABLE support."product_embedding" (
+    id uuid NOT NULL,
+    product_id uuid NOT NULL,
+    content text NOT NULL,
+    status varchar(20) NOT NULL,
+    embedding vector(1536) NOT NULL,
+    created_at timestamp NOT NULL,
+    modified_at timestamp NOT NULL,
+    CONSTRAINT pk_product_embedding PRIMARY KEY (id),
+    CONSTRAINT uk_product_embedding_product UNIQUE (product_id)
+);
+
+CREATE INDEX idx_product_embedding_embedding
+    ON support."product_embedding"
+    USING ivfflat (embedding vector_cosine_ops);
