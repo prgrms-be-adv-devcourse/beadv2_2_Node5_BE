@@ -4,6 +4,7 @@ CREATE EXTENSION IF NOT EXISTS vector;
 CREATE TABLE support."review_summary" (
 	id uuid NOT NULL,
 	product_id uuid NOT NULL,
+    summarized_review_count int NOT NULL,
     pros_summary text NOT NULL,
     cons_summary text NOT NULL,
     summary_start_date date NOT NULL,

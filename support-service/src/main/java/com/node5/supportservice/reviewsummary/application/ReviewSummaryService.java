@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -15,9 +14,9 @@ import java.util.UUID;
 public class ReviewSummaryService {
     private final ReviewSummaryRepository reviewSummaryRepository;
 
-    public List<ReviewSummaryInfoResponse> getReviewSummaries(UUID productId) {
-        return reviewSummaryRepository.findByProductIdOrderByRatingDesc(productId).stream()
+    public ReviewSummaryInfoResponse getReviewSummaries(UUID productId) {
+        return reviewSummaryRepository.findByProductId(productId)
                 .map(ReviewSummaryInfoResponse::from)
-                .toList();
+                .orElseGet(ReviewSummaryInfoResponse::empty);
     }
 }

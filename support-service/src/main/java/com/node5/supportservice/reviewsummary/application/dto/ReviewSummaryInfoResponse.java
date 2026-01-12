@@ -5,12 +5,16 @@ import com.node5.supportservice.reviewsummary.domain.ReviewSummary;
 import java.time.LocalDateTime;
 
 public record ReviewSummaryInfoResponse(
-        int rating,
         LocalDateTime summarizedAt,
-        String summary
+        String prosSummary,
+        String consSummary
 ) {
+    public static ReviewSummaryInfoResponse empty() {
+        return new ReviewSummaryInfoResponse(null, null, null);
+    }
+
     public static ReviewSummaryInfoResponse from(ReviewSummary reviewSummary) {
-        return new ReviewSummaryInfoResponse(reviewSummary.getRating(), reviewSummary.getModifiedAt(), reviewSummary.getSummary());
+        return new ReviewSummaryInfoResponse(reviewSummary.getModifiedAt(), reviewSummary.getProsSummary(), reviewSummary.getConsSummary());
     }
 
 }
