@@ -66,8 +66,7 @@ public class MonthlyReviewSummaryJobConfig {
     ) {
         return new StepBuilder("monthlyReviewSummaryStep", jobRepository)
                 .<UUID, ReviewSummaryCommand>chunk(CHUNK_SIZE, transactionManager)
-//                .reader(productIdsReader)
-                .reader(new ListItemReader<>(reviewTestData.getProductIds()))
+                .reader(productIdsReader)
                 .processor(monthlyReviewSummaryProcessor)
                 .writer(reviewSummaryWriter)
                 .build();
