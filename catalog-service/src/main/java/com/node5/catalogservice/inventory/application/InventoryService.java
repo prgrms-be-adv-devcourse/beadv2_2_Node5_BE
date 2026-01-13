@@ -1,5 +1,7 @@
 package com.node5.catalogservice.inventory.application;
 
+import java.util.UUID;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,6 +16,7 @@ import com.node5.catalogservice.inventory.domain.StockRepository;
 import com.node5.catalogservice.inventory.domain.StockReservation;
 import com.node5.catalogservice.inventory.domain.StockReservationRepository;
 import com.node5.catalogservice.inventory.exception.InventoryErrorCode;
+import com.node5.catalogservice.inventory.presentation.dto.StockResponse;
 import com.node5.common.exception.BaseException;
 
 import lombok.RequiredArgsConstructor;
@@ -152,5 +155,13 @@ public class InventoryService {
 
 		Stock stock = Stock.create(command.productId(), command.quantity());
 		stockRepository.save(stock);
+	}
+
+	@Transactional(readOnly = true)
+	public StockResponse getStock(UUID productId) {
+		Stock stock = stockRepository.findById(productId)
+			.orElseThrow(() -> new BaseException(InventoryErrorCode.INVENTORY_NOT_FOUND));
+
+		return StockResponse.from(stock);
 	}
 }

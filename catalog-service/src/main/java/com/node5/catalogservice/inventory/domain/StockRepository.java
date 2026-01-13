@@ -1,5 +1,6 @@
 package com.node5.catalogservice.inventory.domain;
 
+import java.util.Optional;
 import java.util.UUID;
 
 public interface StockRepository {
@@ -16,4 +17,6 @@ public interface StockRepository {
 	int increase(UUID productId, int quantity);
 
 	Stock save(Stock stock);
+
+	Optional<Stock> findById(UUID productId);
 }

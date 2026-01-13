@@ -1,5 +1,6 @@
 package com.node5.catalogservice.inventory.infrastructure;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.stereotype.Repository;
@@ -33,5 +34,10 @@ public class StockRepositoryAdapter implements StockRepository {
 	@Override
 	public Stock save(Stock stock) {
 		return stockJpaRepository.save(stock);
+	}
+
+	@Override
+	public Optional<Stock> findById(UUID productId) {
+		return stockJpaRepository.findById(productId);
 	}
 }
