@@ -43,7 +43,7 @@ spring:
         default-requeue-rejected: false
   kafka:
     # 1. 공통 설정: 카프카 클러스터 주소
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: ${KAFKA_HOST}:9092
     listener:
       ack-mode: manual
 
