@@ -6,15 +6,14 @@ import java.time.LocalDateTime;
 
 public record ReviewSummaryInfoResponse(
         LocalDateTime summarizedAt,
-        String prosSummary,
-        String consSummary
+        String summary
 ) {
     public static ReviewSummaryInfoResponse empty() {
-        return new ReviewSummaryInfoResponse(null, null, null);
+        return new ReviewSummaryInfoResponse(null, null);
     }
 
     public static ReviewSummaryInfoResponse from(ReviewSummary reviewSummary) {
-        return new ReviewSummaryInfoResponse(reviewSummary.getModifiedAt(), reviewSummary.getProsSummary(), reviewSummary.getConsSummary());
+        return new ReviewSummaryInfoResponse(reviewSummary.getModifiedAt(), reviewSummary.getSummary());
     }
 
 }

@@ -17,4 +17,9 @@ public class ReviewSummaryRepositoryAdaptor implements ReviewSummaryRepository {
     public Optional<ReviewSummary> findByProductId(UUID productId) {
         return reviewSummaryJpaRepository.findByProductId(productId);
     }
+
+    @Override
+    public void save(ReviewSummary reviewSummary) {
+        reviewSummaryJpaRepository.save(reviewSummary);
+    }
 }

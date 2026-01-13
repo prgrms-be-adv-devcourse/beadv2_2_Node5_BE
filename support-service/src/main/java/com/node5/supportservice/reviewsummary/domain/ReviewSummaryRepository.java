@@ -5,4 +5,5 @@ import java.util.UUID;
 
 public interface ReviewSummaryRepository {
     Optional<ReviewSummary> findByProductId(UUID productId);
+    void save(ReviewSummary reviewSummary);
 }
