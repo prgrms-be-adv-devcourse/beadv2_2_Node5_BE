@@ -11,6 +11,7 @@ import com.node5.catalogservice.inventory.application.InventoryService;
 import com.node5.catalogservice.inventory.application.dto.StockReservationInfo;
 import com.node5.catalogservice.inventory.presentation.dto.StockCommitRequest;
 import com.node5.catalogservice.inventory.presentation.dto.StockHoldRequest;
+import com.node5.catalogservice.inventory.presentation.dto.StockReleaseRequest;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +32,12 @@ public class StockInternalController {
 	@PostMapping("/commit")
 	public ResponseEntity<Void> commit(@Valid @RequestBody StockCommitRequest request) {
 		inventoryService.commit(request.toCommand());
+		return ResponseEntity.ok().build();
+	}
+
+	@PostMapping("/release")
+	public ResponseEntity<Void> release(@Valid @RequestBody StockReleaseRequest request) {
+		inventoryService.release(request.toCommand());
 		return ResponseEntity.ok().build();
 	}
 }
