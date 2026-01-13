@@ -17,13 +17,13 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("internal/stocks/reservations")
+@RequestMapping("/internal/stocks/reservations")
 @RequiredArgsConstructor
 public class StockInternalController {
 
 	private final InventoryService inventoryService;
 
-	@PostMapping
+	@PostMapping("/hold")
 	public ResponseEntity<StockReservationInfo> hold(@Valid @RequestBody StockHoldRequest request) {
 		StockReservationInfo result = inventoryService.hold(request.toCommand());
 		return ResponseEntity.status(HttpStatus.CREATED).body(result);
