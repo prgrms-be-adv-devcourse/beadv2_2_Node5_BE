@@ -16,21 +16,21 @@ public interface ProductEmbeddingJpaRepository extends JpaRepository<ProductEmbe
             select product_id
             from support.product_embedding
             where status = 'ACTIVE'
-            order by embedding <-> :embedding
+            order by embedding <-> CAST(:embedding AS vector)
             limit :limit
             """, nativeQuery = true)
-    List<UUID> findSimilarActiveProductIds(@Param("embedding") float[] embedding, @Param("limit") int limit);
+    List<UUID> findSimilarActiveProductIds(@Param("embedding") String embedding, @Param("limit") int limit);
 
     @Query(value = """
             select product_id
             from support.product_embedding
             where status = 'ACTIVE'
               and product_id not in (:excludedProductIds)
-            order by embedding <-> :embedding
+            order by embedding <-> CAST(:embedding AS vector)
             limit :limit
             """, nativeQuery = true)
     List<UUID> findSimilarActiveProductIdsExcluding(
-            @Param("embedding") float[] embedding,
+            @Param("embedding") String embedding,
             @Param("excludedProductIds") List<UUID> excludedProductIds,
             @Param("limit") int limit
     );
