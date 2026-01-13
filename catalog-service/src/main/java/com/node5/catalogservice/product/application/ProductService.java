@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.node5.catalogservice.product.application.dto.ProductCommand;
 import com.node5.catalogservice.product.application.dto.ProductInfo;
 import com.node5.catalogservice.product.application.dto.ProductUpdateCommand;
+import com.node5.catalogservice.product.application.port.ProductDiscontinuedEventPort;
 import com.node5.catalogservice.product.application.port.ProductEmbeddingEventPort;
 import com.node5.catalogservice.product.application.port.ProductIndexEventPort;
 import com.node5.catalogservice.product.domain.Product;
@@ -22,6 +23,8 @@ import com.node5.catalogservice.product.domain.ProductStatus;
 import com.node5.catalogservice.product.event.ProductIndexEvent;
 import com.node5.catalogservice.product.exception.ProductErrorCode;
 import com.node5.catalogservice.shop.client.ShopOwnershipClient;
+import com.node5.common.event.ProductDiscontinuedEvent;
+import com.node5.common.event.ProductEmbeddingEvent;
 import com.node5.common.exception.BaseException;
 
 import feign.FeignException;
@@ -34,6 +37,7 @@ public class ProductService {
 	private final ProductRepository productRepository;
 	private final ProductIndexEventPort productIndexEventPort;
 	private final ProductEmbeddingEventPort productEmbeddingEventPort;
+	private final ProductDiscontinuedEventPort productDiscontinuedEventPort;
 	private final ShopOwnershipClient shopOwnershipClient;
 
 	public Page<ProductInfo> getOnSaleProducts(Pageable pageable) {
@@ -107,6 +111,12 @@ public class ProductService {
 		Product saved = productRepository.save(product);
 		productIndexEventPort.publish(ProductIndexEvent.update(saved));
 		productEmbeddingEventPort.publish(toEmbeddingEvent(saved));
+
+		productDiscontinuedEventPort.publish(
+			new ProductDiscontinuedEvent(
+				UUID.randomUUID(), saved.getId(), saved.getModifiedAt(), LocalDateTime.now()
+			)
+		);
 	}
 
 	public Page<ProductInfo> getProductsByShop(UUID memberId, UUID shopId, Pageable pageable) {
@@ -172,8 +182,8 @@ public class ProductService {
 		}
 	}
 
-	private com.node5.common.event.ProductEmbeddingEvent toEmbeddingEvent(Product product) {
-		return new com.node5.common.event.ProductEmbeddingEvent(
+	private ProductEmbeddingEvent toEmbeddingEvent(Product product) {
+		return new ProductEmbeddingEvent(
 			UUID.randomUUID(),
 			product.getId(),
 			product.getName(),
