@@ -141,4 +141,10 @@ public class MemberService {
         Member member = getNotDeletedMemberOrThrow(UUID.fromString(memberId));
         return member.getEmail();
     }
+
+    public String getMemberNickname(UUID memberId) {
+        Member member = memberRepository.findById(memberId).orElseThrow(
+                () -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
+        return member.getNickname();
+    }
 }

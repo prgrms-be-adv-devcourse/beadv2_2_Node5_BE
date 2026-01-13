@@ -12,12 +12,14 @@ public record OAuthRegisterRequest(
         String email,
         @NotBlank(message = "name은 필수 입니다.")
         String name,
+        @NotBlank(message = "nickname은 필수 입니다.")
+        String nickname,
         @NotBlank(message = "phoneNumber은 필수 입니다.")
         String phoneNumber,
         @NotBlank(message = "address는 필수 입니다.")
         String address
 ) {
     public OAuthRegisterCommand toCommand() {
-        return new OAuthRegisterCommand(temporaryToken, email, name, phoneNumber, address);
+        return new OAuthRegisterCommand(temporaryToken, email, name, nickname, phoneNumber, address);
     }
 }
