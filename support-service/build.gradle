@@ -1,6 +1,11 @@
+repositories {
+    maven { url 'https://repo.spring.io/milestone' }
+}
+
 dependencies {
     implementation project(':common')
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
 
     implementation 'org.springframework.boot:spring-boot-starter-amqp'
 
@@ -19,4 +24,8 @@ dependencies {
 
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     runtimeOnly 'org.postgresql:postgresql'
+
+    implementation 'org.springframework.ai:spring-ai-openai-spring-boot-starter:1.0.0-M6'
+    implementation 'org.springframework.ai:spring-ai-pgvector-store-spring-boot-starter:1.0.0-M6'
+    implementation 'org.springframework.ai:spring-ai-core:1.0.0-M6'
 }
