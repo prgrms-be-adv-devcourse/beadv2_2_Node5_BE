@@ -11,14 +11,12 @@ services:
       - ./letsencrypt:/etc/letsencrypt
 
   database:
-    image: postgres:17-alpine
+    image: pgvector/pgvector:pg17 # pgvector Extension이 설치된 postgresql 17버전
     restart: unless-stopped
     environment:
       POSTGRES_USER: node5
       POSTGRES_PASSWORD: 1234
       POSTGRES_DB: my_routine
-      LANG: ko_KR.utf8
-      LC_ALL: ko_KR.utf8
     ports:
       - "5432:5432"
     volumes:
