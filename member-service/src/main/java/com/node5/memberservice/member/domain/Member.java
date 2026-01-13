@@ -98,6 +98,7 @@ public class Member extends BaseEntity {
 
     public void modifyInfo(MemberModifyCommand command) {
         this.name = command.name();
+        this.nickname = command.nickname();
         this.phoneNumber = command.phoneNumber();
         this.address = command.address();
     }
