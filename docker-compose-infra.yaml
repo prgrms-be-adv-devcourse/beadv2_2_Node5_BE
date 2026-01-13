@@ -7,8 +7,8 @@ services:
       - '81:81'
       - '443:443'
     volumes:
-      - ./data:/data
-      - ./letsencrypt:/etc/letsencrypt
+      - npm_data:/data
+      - npm_letsencrypt:/etc/letsencrypt
 
   database:
     image: pgvector/pgvector:pg17 # pgvector Extension이 설치된 postgresql 17버전
@@ -99,3 +99,5 @@ volumes:
   postgres_data:
   redis_data:
   es_data:
+  npm_data:
+  npm_letsencrypt:
