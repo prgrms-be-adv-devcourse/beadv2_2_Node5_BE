@@ -135,6 +135,14 @@ public class ProductService {
 			.collect(Collectors.toMap(Product::getId, Product::getShopId));
 	}
 
+	@Transactional(readOnly = true)
+	public List<Product> getProductsByIds(List<UUID> productIds) {
+		if (productIds == null || productIds.isEmpty()) {
+			return List.of();
+		}
+		return productRepository.findAllByIdInAndStatus(productIds, ProductStatus.ON_SALE);
+	}
+
 	private Product getProductOrThrow(UUID productId) {
 		return productRepository.findById(productId)
 			.orElseThrow(() -> new BaseException(ProductErrorCode.PRODUCT_NOT_FOUND));
