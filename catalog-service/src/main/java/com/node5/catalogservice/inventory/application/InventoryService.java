@@ -5,6 +5,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.node5.catalogservice.inventory.application.dto.StockCommitCommand;
 import com.node5.catalogservice.inventory.application.dto.StockHoldCommand;
+import com.node5.catalogservice.inventory.application.dto.StockReleaseCommand;
 import com.node5.catalogservice.inventory.application.dto.StockReservationInfo;
 import com.node5.catalogservice.inventory.domain.ReservationStatus;
 import com.node5.catalogservice.inventory.domain.StockRepository;
@@ -84,5 +85,59 @@ public class InventoryService {
 		if (updated == 0) {
 			throw new BaseException(InventoryErrorCode.RESERVATION_ALREADY_RELEASED);
 		}
+	}
+
+	@Transactional
+	public void release(StockReleaseCommand command) {
+
+		// 1) 예약 조회
+		StockReservation reservation = reservationRepository
+			.findByOrderIdAndProductId(command.orderId(), command.productId())
+			.orElseThrow(() -> new BaseException(InventoryErrorCode.RESERVATION_NOT_FOUND));
+
+		// 2) 멱등: 이미 RELEASED면 성공 처리
+		if (reservation.getStatus() == ReservationStatus.RELEASED) {
+			return;
+		}
+
+		// 3) 정책: COMMITTED 상태는 해제 불가
+		if (reservation.getStatus() == ReservationStatus.COMMITTED) {
+			throw new BaseException(InventoryErrorCode.RESERVATION_ALREADY_COMMITTED);
+		}
+
+		// 4) HELD -> RELEASED 조건부 전이 (동시 commit/release 경쟁에서도 1번만 성공)
+		int updated = reservationRepository.updateStatus(
+			command.orderId(),
+			command.productId(),
+			ReservationStatus.HELD,
+			ReservationStatus.RELEASED
+		);
+
+		// 5) 상태 전이에 성공한 경우에만 재고 복구
+		if (updated == 1) {
+			int restored = stockRepository.increase(reservation.getProductId(), reservation.getQuantity());
+			if (restored == 0) {
+				throw new BaseException(InventoryErrorCode.INVENTORY_NOT_FOUND);
+			}
+			return;
+		}
+
+		// 6) row=0이면 이미 다른 트랜잭션에서 상태가 바뀐 상태
+		StockReservation latest = reservationRepository
+			.findByOrderIdAndProductId(command.orderId(), command.productId())
+			.orElseThrow(() -> new BaseException(InventoryErrorCode.RESERVATION_NOT_FOUND));
+
+		// 7) 멱등: 이미 RELEASED면 성공
+		if (latest.getStatus() == ReservationStatus.RELEASED) {
+			return;
+		}
+
+		// 8) COMMITTED로 바뀐 경우 해제 불가
+		if (latest.getStatus() == ReservationStatus.COMMITTED) {
+			throw new BaseException(InventoryErrorCode.RESERVATION_ALREADY_COMMITTED);
+		}
+
+		// 9) 그 외는 비정상 케이스로 간주
+		throw new BaseException(InventoryErrorCode.INVALID_REQUEST);
 	}
 }
