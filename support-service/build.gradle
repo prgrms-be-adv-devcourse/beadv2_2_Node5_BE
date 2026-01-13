@@ -18,6 +18,10 @@ dependencies {
     implementation 'org.springframework.cloud:spring-cloud-starter-config'
 
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0'
+    implementation 'org.springframework.ai:spring-ai-pgvector-store-spring-boot-starter'
+    implementation 'org.springframework.ai:spring-ai-openai-spring-boot-starter'
+
+    implementation 'org.springframework.kafka:spring-kafka'
 
     implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
 
@@ -25,4 +29,10 @@ dependencies {
     runtimeOnly 'org.postgresql:postgresql'
 
     implementation 'org.springframework.ai:spring-ai-openai-spring-boot-starter:1.0.0-M6'
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.ai:spring-ai-bom:1.0.0-M4"
+    }
 }
