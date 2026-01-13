@@ -21,4 +21,6 @@ public interface ProductRepository {
 	Product save(Product product);
 
 	List<Product> findAllByIdIn(Collection<UUID> ids);
+
+	List<Product> findAllByIdInAndStatus(Collection<UUID> ids, ProductStatus status);
 }

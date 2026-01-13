@@ -64,7 +64,7 @@ public class SettlementScheduler {
             Runnable executeJob = () -> {
                 try {
                     JobParameters params = new JobParametersBuilder()
-                            .addLong("timestamp", System.currentTimeMillis())
+                            //.addLong("timestamp", System.currentTimeMillis())
                             .addString("shopId", shopId.toString())
                             .addString("startDate", startDate)
                             .addString("endDate", endDate)
