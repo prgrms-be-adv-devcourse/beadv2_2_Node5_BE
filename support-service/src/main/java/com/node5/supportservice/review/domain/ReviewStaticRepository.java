@@ -2,10 +2,12 @@ package com.node5.supportservice.review.domain;
 
 import java.util.UUID;
 
-public interface ReviewRepository {
+public interface ReviewStaticRepository {
     ReviewStatic findByProductId(UUID productId);
 
     ReviewStatic save(ReviewStatic review);
+
+    void deleteByProductId(UUID productId);
 
     void incrementStatistics(UUID productId, Integer rating);
 

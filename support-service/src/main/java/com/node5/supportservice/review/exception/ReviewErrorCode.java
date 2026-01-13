@@ -13,7 +13,12 @@ public enum ReviewErrorCode implements BaseErrorCode {
     REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND.value(), "REVIEW_005", "리뷰를 찾을 수 없습니다."),
     REVIEW_ALREADY_LIKED(HttpStatus.BAD_REQUEST.value(), "REVIEW_006", "이미 공감한 리뷰입니다"),
     REVIEW_ALREADY_EXISTS(HttpStatus.BAD_REQUEST.value(), "REVIEW_007", "이미 작성된 리뷰가 존재합니다."),
-    REVIEW_CANNOT_LIKE_OWN(HttpStatus.BAD_REQUEST.value(), "REVIEW_008", "본인의 리뷰는 공감할 수 없습니다.");
+    REVIEW_CANNOT_LIKE_OWN(HttpStatus.BAD_REQUEST.value(), "REVIEW_008", "본인의 리뷰는 공감할 수 없습니다."),
+    REVIEW_NO_LIKES(HttpStatus.BAD_REQUEST.value(), "REVIEW_009", "공감 수가 0인 리뷰입니다."),
+    REVIEW_NOT_ENOUGH_FOR_SIMILARITY_SEARCH(HttpStatus.BAD_REQUEST.value(), "REVIEW_010", "유사도 검색을 위한 충분한 리뷰가 존재하지 않습니다."),
+    REVIEW_DELETED(HttpStatus.BAD_REQUEST.value(), "REVIEW_011", "삭제된 리뷰입니다."),
+    PRODUCT_DISCONTINUED(HttpStatus.BAD_REQUEST.value(), "REVIEW_012", "비활성화된 상품입니다."),
+    PRODUCT_SERVICE_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE.value(), "REVIEW_013" , "PRODUCT_SERVICE_UNAVAILABLE");
 
     private final int status;
     private final String code;

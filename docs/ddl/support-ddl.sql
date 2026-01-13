@@ -27,6 +27,8 @@ CREATE TABLE support."review_static" (
     CONSTRAINT uk_review_product UNIQUE (product_id)
 );
 
+CREATE EXTENSION IF NOT EXISTS vector;
+
 CREATE TABLE support."review_detail" (
     id uuid NOT NULL,
     product_id uuid NOT NULL,
@@ -36,11 +38,19 @@ CREATE TABLE support."review_detail" (
     rating int NOT NULL,
     body text NULL,
     like_count int NOT NULL,
+    embedding vector(1536),
     created_at timestamp NOT NULL,
     modified_at timestamp NOT NULL,
+    deleted_at timestamp NULL,
     CONSTRAINT pk_review_detail PRIMARY KEY (id),
     CONSTRAINT uk_review_detail_product_member UNIQUE (product_id, member_id)
 );
+
+CREATE INDEX IF NOT EXISTS idx_review_detail_embedding
+    ON support.review_detail
+    USING ivfflat (embedding vector_cosine_ops)
+    WITH (lists = 100)
+    WHERE deleted_at IS NULL;
 
 CREATE TABLE support."review_like_history" (
     id uuid NOT NULL,
