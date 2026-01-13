@@ -12,6 +12,9 @@ import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -20,7 +23,7 @@ public class ChatClient {
 
     public String generateRecommendation(String prompt, String systemPrompt) {
         try {
-            java.util.List<org.springframework.ai.chat.messages.Message> messages = new java.util.ArrayList<>();
+            List<Message> messages = new ArrayList<>();
             if (StringUtils.hasText(systemPrompt)) {
                 messages.add(new SystemMessage(systemPrompt));
             }
