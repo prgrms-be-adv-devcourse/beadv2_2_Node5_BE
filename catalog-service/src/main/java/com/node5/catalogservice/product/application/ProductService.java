@@ -1,5 +1,6 @@
 package com.node5.catalogservice.product.application;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -13,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.node5.catalogservice.product.application.dto.ProductCommand;
 import com.node5.catalogservice.product.application.dto.ProductInfo;
 import com.node5.catalogservice.product.application.dto.ProductUpdateCommand;
+import com.node5.catalogservice.product.application.port.ProductEmbeddingEventPort;
 import com.node5.catalogservice.product.application.port.ProductIndexEventPort;
 import com.node5.catalogservice.product.domain.Product;
 import com.node5.catalogservice.product.domain.ProductRepository;
@@ -31,6 +33,7 @@ public class ProductService {
 
 	private final ProductRepository productRepository;
 	private final ProductIndexEventPort productIndexEventPort;
+	private final ProductEmbeddingEventPort productEmbeddingEventPort;
 	private final ShopOwnershipClient shopOwnershipClient;
 
 	public Page<ProductInfo> getOnSaleProducts(Pageable pageable) {
@@ -58,6 +61,7 @@ public class ProductService {
 
 		Product saved = productRepository.save(product);
 		productIndexEventPort.publish(ProductIndexEvent.create(saved));
+		productEmbeddingEventPort.publish(toEmbeddingEvent(saved));
 		return ProductInfo.from(saved);
 	}
 
@@ -76,6 +80,7 @@ public class ProductService {
 
 		Product saved = productRepository.save(product);
 		productIndexEventPort.publish(ProductIndexEvent.update(saved));
+		productEmbeddingEventPort.publish(toEmbeddingEvent(saved));
 		return ProductInfo.from(saved);
 	}
 
@@ -88,6 +93,7 @@ public class ProductService {
 
 		Product saved = productRepository.save(product);
 		productIndexEventPort.publish(ProductIndexEvent.update(saved));
+		productEmbeddingEventPort.publish(toEmbeddingEvent(saved));
 		return ProductInfo.from(saved);
 	}
 
@@ -100,6 +106,7 @@ public class ProductService {
 
 		Product saved = productRepository.save(product);
 		productIndexEventPort.publish(ProductIndexEvent.update(saved));
+		productEmbeddingEventPort.publish(toEmbeddingEvent(saved));
 	}
 
 	public Page<ProductInfo> getProductsByShop(UUID memberId, UUID shopId, Pageable pageable) {
@@ -150,5 +157,18 @@ public class ProductService {
 		} catch (FeignException e) {
 			throw new BaseException(ProductErrorCode.SHOP_SERVICE_UNAVAILABLE);
 		}
+	}
+
+	private com.node5.common.event.ProductEmbeddingEvent toEmbeddingEvent(Product product) {
+		return new com.node5.common.event.ProductEmbeddingEvent(
+			UUID.randomUUID(),
+			product.getId(),
+			product.getName(),
+			product.getDescription(),
+			product.getCategory().name(),
+			product.getStatus().name(),
+			product.getModifiedAt(),
+			LocalDateTime.now()
+		);
 	}
 }
