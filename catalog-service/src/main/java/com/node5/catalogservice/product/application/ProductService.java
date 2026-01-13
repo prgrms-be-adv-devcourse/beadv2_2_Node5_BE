@@ -148,6 +148,11 @@ public class ProductService {
 			.orElseThrow(() -> new BaseException(ProductErrorCode.PRODUCT_NOT_FOUND));
 	}
 
+	@Transactional(readOnly = true)
+	public boolean isReviewable(UUID productId) {
+		return productRepository.findByIdAndStatus(productId, ProductStatus.ON_SALE).isPresent();
+	}
+
 	private Product getOnSaleProductOrThrow(UUID productId) {
 		return productRepository.findByIdAndStatus(productId, ProductStatus.ON_SALE)
 			.orElseThrow(() -> new BaseException(ProductErrorCode.ON_SALE_PRODUCT_NOT_FOUND));

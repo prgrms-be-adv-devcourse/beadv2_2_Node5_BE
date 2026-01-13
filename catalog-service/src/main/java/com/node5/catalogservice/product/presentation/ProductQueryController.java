@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.node5.catalogservice.product.application.ProductService;
 import com.node5.catalogservice.product.application.dto.ProductInfo;
+import com.node5.catalogservice.product.presentation.dto.ProductReviewStatusResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -46,5 +47,15 @@ public class ProductQueryController {
 	})
 	public ResponseEntity<ProductInfo> getProduct(@Parameter(description = "상품 ID") @PathVariable UUID productId) {
 		return ResponseEntity.ok(productService.getOnSaleProduct(productId));
+	}
+
+	@GetMapping("/{productId}/review-status")
+	@Operation(summary = "상품 리뷰 작성 가능 여부 조회", description = "상품이 존재하고 판매 중(ON_SALE) 상태이면 true, 그 외에는 false를 반환합니다.")
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "리뷰 작성 가능 여부 조회 성공")
+	})
+	public ResponseEntity<ProductReviewStatusResponse> canPostReview(@Parameter(description = "상품 ID") @PathVariable UUID productId) {
+		boolean reviewable = productService.isReviewable(productId);
+		return ResponseEntity.ok(new ProductReviewStatusResponse(reviewable));
 	}
 }
