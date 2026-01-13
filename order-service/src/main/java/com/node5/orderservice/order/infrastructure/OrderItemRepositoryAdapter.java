@@ -28,4 +28,9 @@ public class OrderItemRepositoryAdapter implements OrderItemRepository {
         return orderItemJpaRepository.findByOrderIdIn(orderIds);
     }
 
+    @Override
+    public List<UUID> findTop5IdByOrderIdInOrderByCreatedAtDesc(List<UUID> orderIds) {
+        return orderItemJpaRepository.findTop5IdByOrderIdInOrderByCreatedAtDesc(orderIds);
+    }
+
 }
