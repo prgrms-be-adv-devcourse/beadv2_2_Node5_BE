@@ -5,9 +5,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.node5.catalogservice.inventory.application.dto.StockCommitCommand;
 import com.node5.catalogservice.inventory.application.dto.StockHoldCommand;
+import com.node5.catalogservice.inventory.application.dto.StockRegisterCommand;
 import com.node5.catalogservice.inventory.application.dto.StockReleaseCommand;
 import com.node5.catalogservice.inventory.application.dto.StockReservationInfo;
 import com.node5.catalogservice.inventory.domain.ReservationStatus;
+import com.node5.catalogservice.inventory.domain.Stock;
 import com.node5.catalogservice.inventory.domain.StockRepository;
 import com.node5.catalogservice.inventory.domain.StockReservation;
 import com.node5.catalogservice.inventory.domain.StockReservationRepository;
@@ -139,5 +141,16 @@ public class InventoryService {
 
 		// 9) 그 외는 비정상 케이스로 간주
 		throw new BaseException(InventoryErrorCode.INVALID_REQUEST);
+	}
+
+	@Transactional
+	public void registerStock(StockRegisterCommand command) {
+
+		if (stockRepository.existsById(command.productId())) {
+			throw new BaseException(InventoryErrorCode.INVENTORY_ALREADY_EXISTS);
+		}
+
+		Stock stock = Stock.create(command.productId(), command.quantity());
+		stockRepository.save(stock);
 	}
 }

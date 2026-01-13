@@ -24,4 +24,11 @@ public class Stock extends BaseEntity {
 
 	protected Stock() {
 	}
+
+	public static Stock create(UUID productId, int quantity) {
+		Stock stock = new Stock();
+		stock.productId = productId;
+		stock.quantity = quantity;
+		return stock;
+	}
 }

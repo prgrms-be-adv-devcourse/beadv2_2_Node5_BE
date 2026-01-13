@@ -16,7 +16,9 @@ public enum InventoryErrorCode implements BaseErrorCode {
 
 	RESERVATION_NOT_FOUND(404, "RESERVATION_NOT_FOUND", "해당 예약이 존재하지 않습니다."),
 	RESERVATION_ALREADY_COMMITTED(409, "RESERVATION_ALREADY_COMMITTED", "이미 확정된 예약입니다."),
-	RESERVATION_ALREADY_RELEASED(409, "RESERVATION_ALREADY_RELEASED", "이미 해제된 예약입니다.");
+	RESERVATION_ALREADY_RELEASED(409, "RESERVATION_ALREADY_RELEASED", "이미 해제된 예약입니다."),
+
+	INVENTORY_ALREADY_EXISTS(409, "INVENTORY_ALREADY_EXISTS", "이미 재고가 등록되어 있습니다.");
 
 	private final int status;
 	private final String code;

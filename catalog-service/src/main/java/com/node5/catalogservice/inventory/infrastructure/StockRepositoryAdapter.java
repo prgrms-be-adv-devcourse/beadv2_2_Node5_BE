@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Repository;
 
+import com.node5.catalogservice.inventory.domain.Stock;
 import com.node5.catalogservice.inventory.domain.StockRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -27,5 +28,10 @@ public class StockRepositoryAdapter implements StockRepository {
 	@Override
 	public int increase(UUID productId, int quantity) {
 		return stockJpaRepository.increase(productId, quantity);
+	}
+
+	@Override
+	public Stock save(Stock stock) {
+		return stockJpaRepository.save(stock);
 	}
 }

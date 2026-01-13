@@ -14,4 +14,6 @@ public interface StockRepository {
 	 * 재고 복구: 성공이면 1, 실패면 0 (stock row가 없으면 0)
 	 */
 	int increase(UUID productId, int quantity);
+
+	Stock save(Stock stock);
 }
