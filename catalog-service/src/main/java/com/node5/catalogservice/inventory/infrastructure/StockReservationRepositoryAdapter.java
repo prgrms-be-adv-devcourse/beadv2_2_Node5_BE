@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Repository;
 
+import com.node5.catalogservice.inventory.domain.ReservationStatus;
 import com.node5.catalogservice.inventory.domain.StockReservation;
 import com.node5.catalogservice.inventory.domain.StockReservationRepository;
 
@@ -24,5 +25,10 @@ public class StockReservationRepositoryAdapter implements StockReservationReposi
 	@Override
 	public StockReservation save(StockReservation reservation) {
 		return stockReservationJpaRepository.save(reservation);
+	}
+
+	@Override
+	public int updateStatus(UUID orderId, UUID productId, ReservationStatus fromStatus, ReservationStatus toStatus) {
+		return stockReservationJpaRepository.updateStatus(orderId, productId, fromStatus, toStatus);
 	}
 }

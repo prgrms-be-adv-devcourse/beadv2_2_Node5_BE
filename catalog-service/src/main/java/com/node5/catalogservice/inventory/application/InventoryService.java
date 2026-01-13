@@ -3,8 +3,10 @@ package com.node5.catalogservice.inventory.application;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.node5.catalogservice.inventory.application.dto.StockCommitCommand;
 import com.node5.catalogservice.inventory.application.dto.StockHoldCommand;
 import com.node5.catalogservice.inventory.application.dto.StockReservationInfo;
+import com.node5.catalogservice.inventory.domain.ReservationStatus;
 import com.node5.catalogservice.inventory.domain.StockRepository;
 import com.node5.catalogservice.inventory.domain.StockReservation;
 import com.node5.catalogservice.inventory.domain.StockReservationRepository;
@@ -50,5 +52,37 @@ public class InventoryService {
 
 		StockReservation saved = reservationRepository.save(reservation);
 		return StockReservationInfo.from(saved);
+	}
+
+
+	@Transactional
+	public void commit(StockCommitCommand command) {
+
+		StockReservation reservation = reservationRepository
+			.findByOrderIdAndProductId(command.orderId(), command.productId())
+			.orElseThrow(() -> new BaseException(InventoryErrorCode.RESERVATION_NOT_FOUND));
+
+		// 1) 멱등: 이미 COMMITTED면 성공 처리
+		if (reservation.getStatus() == ReservationStatus.COMMITTED) {
+			return;
+		}
+
+		// 2) 정책: RELEASED면 commit 불가
+		if (reservation.getStatus() == ReservationStatus.RELEASED) {
+			throw new BaseException(InventoryErrorCode.RESERVATION_ALREADY_RELEASED);
+		}
+
+		// 3) HELD -> COMMITTED 조건부 전이 (동시 commit/release 경쟁에서도 1번만 성공)
+		int updated = reservationRepository.updateStatus(
+			command.orderId(),
+			command.productId(),
+			ReservationStatus.HELD,
+			ReservationStatus.COMMITTED
+		);
+
+		// 4) row=0이면 HELD가 아니라는 뜻(대부분 동시 release로 바뀐 케이스)
+		if (updated == 0) {
+			throw new BaseException(InventoryErrorCode.RESERVATION_ALREADY_RELEASED);
+		}
 	}
 }
