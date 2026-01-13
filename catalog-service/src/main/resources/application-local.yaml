@@ -46,6 +46,7 @@ app:
     topics:
       member-deleted: member-service.member-deleted.v1
       product-index: product-index
+      product-embedding: ai-service.product-embedding.v1
 
   search:
     index:
