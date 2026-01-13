@@ -28,8 +28,6 @@ CREATE TABLE support."review_static" (
     CONSTRAINT uk_review_product UNIQUE (product_id)
 );
 
-CREATE EXTENSION IF NOT EXISTS vector;
-
 CREATE TABLE support."review_detail" (
     id uuid NOT NULL,
     product_id uuid NOT NULL,

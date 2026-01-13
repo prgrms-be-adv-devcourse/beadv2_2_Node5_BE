@@ -112,7 +112,7 @@ public class MonthlyReviewSummaryJobConfig {
                 }
 
                 String prompt = reviewSummaryTemplate
-                        .replace("{{prevSummary}}", prevSummary)
+                        .replace("{{prev_summary}}", prevSummary)
                         .replace("{{reviews}}",
                                 reviews.stream()
                                         .map(r -> "- " + r)
