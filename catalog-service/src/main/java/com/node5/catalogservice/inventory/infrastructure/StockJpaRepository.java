@@ -21,4 +21,12 @@ public interface StockJpaRepository extends JpaRepository<Stock, UUID> {
 		   AND s.quantity >= :qty
 	""")
 	int decreaseIfEnough(@Param("productId") UUID productId, @Param("qty") int qty);
+
+	@Modifying(clearAutomatically = true, flushAutomatically = true)
+	@Query("""
+		UPDATE Stock s
+		   SET s.quantity = s.quantity + :qty
+		 WHERE s.productId = :productId
+	""")
+	int increase(@Param("productId") UUID productId, @Param("qty") int qty);
 }

@@ -23,4 +23,9 @@ public class StockRepositoryAdapter implements StockRepository {
 	public boolean decreaseIfEnough(UUID productId, int quantity) {
 		return stockJpaRepository.decreaseIfEnough(productId, quantity) == 1;
 	}
+
+	@Override
+	public int increase(UUID productId, int quantity) {
+		return stockJpaRepository.increase(productId, quantity);
+	}
 }
