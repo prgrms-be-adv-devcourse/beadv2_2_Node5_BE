@@ -17,10 +17,16 @@ services:
       POSTGRES_USER: node5
       POSTGRES_PASSWORD: 1234
       POSTGRES_DB: my_routine
+      LANG: ko_KR.utf8
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    command: >
+      bash -c "apt-get update && apt-get install -y locales 
+      && sed -i 's/# ko_KR.UTF-8 UTF-8/ko_KR.UTF-8 UTF-8/' /etc/locale.gen 
+      && locale-gen ko_KR.UTF-8 
+      && exec docker-entrypoint.sh postgres"
     healthcheck: # Healthcheck 추가
       test: ["CMD-SHELL", "pg_isready -U node5 -d my_routine"]
       interval: 5s
