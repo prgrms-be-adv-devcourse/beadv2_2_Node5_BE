@@ -4,6 +4,7 @@ import com.node5.supportservice.recommendation.exception.RecommendationErrorCode
 import com.node5.supportservice.recommendation.exception.RecommendationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.ChatModel;
@@ -13,7 +14,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.List; java.util.List;
 
 @Component
 @RequiredArgsConstructor
