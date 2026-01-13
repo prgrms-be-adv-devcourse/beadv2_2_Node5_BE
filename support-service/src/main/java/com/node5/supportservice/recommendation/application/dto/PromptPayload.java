@@ -1,30 +1,30 @@
 package com.node5.supportservice.recommendation.application.dto;
 
-import com.node5.supportservice.recommendation.presentation.dto.RecommendationRequest;
+import com.node5.supportservice.recommendation.client.dto.ProductSummaryListResponse;
 import java.util.ArrayList;
 import java.util.List;
 
 public record PromptPayload(
-    String instruction,
-    List<ProductPayload> orderItemList,
-    List<ProductPayload> cartItemList
+        String instruction,
+        List<ProductPayload> orderItemList,
+        List<ProductPayload> cartItemList
 ) {
     public record ProductPayload(
-        String name,
-        String category,
-        String description
+            String name,
+            String category,
+            String description
     ) { }
 
-    public static List<ProductPayload> fromItems(List<RecommendationRequest.ProductItem> items) {
+    public static List<ProductPayload> fromItems(List<ProductSummaryListResponse.ProductSummaryResponse> items) {
         if (items == null) {
             return List.of();
         }
         List<ProductPayload> payloads = new ArrayList<>();
-        for (RecommendationRequest.ProductItem item : items) {
+        for (ProductSummaryListResponse.ProductSummaryResponse item : items) {
             payloads.add(new ProductPayload(
-                trim(item.getName(), 80),
-                trim(item.getCategory(), 40),
-                trim(item.getDescription(), 200)
+                    trim(item.name(), 80),
+                    trim(item.category(), 40),
+                    trim(item.description(), 200)
             ));
         }
         return payloads;

@@ -11,5 +11,5 @@ public interface OrderItemRepository {
 
     List<OrderItem> findByOrderIdIn(List<UUID> orderIds);
 
-
+    List<UUID> findTop5IdByOrderIdInOrderByCreatedAtDesc(List<UUID> orderIds);
 }

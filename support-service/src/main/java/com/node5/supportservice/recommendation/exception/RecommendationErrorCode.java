@@ -14,7 +14,9 @@ public enum RecommendationErrorCode implements BaseErrorCode {
     PROMPT_SERIALIZATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR.value(), "RECOMMENDATION_004", "프롬프트 직렬화에 실패했습니다."),
     OPENAI_EMBEDDING_MODEL_MISSING(HttpStatus.INTERNAL_SERVER_ERROR.value(), "RECOMMENDATION_005", "OpenAI 임베딩 모델이 없습니다."),
     OPENAI_EMBEDDING_REQUEST_FAILED(HttpStatus.SERVICE_UNAVAILABLE.value(), "RECOMMENDATION_006", "OpenAI 임베딩 요청에 실패했습니다."),
-    OPENAI_EMBEDDING_RESPONSE_EMPTY(HttpStatus.BAD_GATEWAY.value(), "RECOMMENDATION_007", "OpenAI 임베딩 응답이 비어 있습니다.");
+    OPENAI_EMBEDDING_RESPONSE_EMPTY(HttpStatus.BAD_GATEWAY.value(), "RECOMMENDATION_007", "OpenAI 임베딩 응답이 비어 있습니다."),
+    PRODUCT_SERVICE_REQUEST_FAILED(HttpStatus.SERVICE_UNAVAILABLE.value(), "RECOMMENDATION_008", "상품 서비스 요청에 실패했습니다."),
+    ORDER_SERVICE_REQUEST_FAILED(HttpStatus.SERVICE_UNAVAILABLE.value(), "RECOMMENDATION_009", "주문 서비스 요청에 실패했습니다.");
 
     private final int status;
     private final String code;
