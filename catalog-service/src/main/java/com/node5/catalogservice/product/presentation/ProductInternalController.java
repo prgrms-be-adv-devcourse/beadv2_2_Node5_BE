@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -55,5 +57,10 @@ public class ProductInternalController {
 			.toList();
 
 		return ResponseEntity.ok(new ProductSummaryListResponse(summaries));
+	}
+
+	@GetMapping("/ids")
+	public ResponseEntity<List<UUID>> getProductIds(@ParameterObject Pageable pageable) {
+		return ResponseEntity.ok(productService.getOnSaleProductIds(pageable));
 	}
 }

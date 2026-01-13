@@ -159,6 +159,13 @@ public class ProductService {
 	}
 
 	@Transactional(readOnly = true)
+	public List<UUID> getOnSaleProductIds(Pageable pageable) {
+		return productRepository.findByStatus(ProductStatus.ON_SALE, pageable)
+			.map(Product::getId)
+			.getContent();
+	}
+
+	@Transactional(readOnly = true)
 	public boolean isReviewable(UUID productId) {
 		return productRepository.findByIdAndStatus(productId, ProductStatus.ON_SALE).isPresent();
 	}
