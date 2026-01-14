@@ -11,7 +11,6 @@ import com.node5.supportservice.recommendation.client.openfeign.CatalogClient;
 import com.node5.supportservice.recommendation.domain.ProductEmbeddingRepository;
 import com.node5.supportservice.recommendation.exception.RecommendationErrorCode;
 import com.node5.supportservice.recommendation.exception.RecommendationException;
-import com.node5.supportservice.recommendation.client.openai.ChatClient;
 import com.node5.supportservice.recommendation.client.openai.EmbeddingClient;
 
 import java.util.ArrayList;
@@ -37,7 +36,7 @@ public class RecommendationService {
     private static final int MAX_LIMIT = 10;
 
     private final ProductEmbeddingRepository productEmbeddingRepository;
-    private final ChatClient chatClient;
+    private final ChatService chatService;
     private final EmbeddingClient embeddingClient;
     private final ObjectMapper objectMapper;
     private final CatalogClient catalogClient;
@@ -58,8 +57,8 @@ public class RecommendationService {
         List<UUID> existedProductIds = getExistedProductIds(cartItemProductIds, recentOrderProductIds);
 
         // LLM
-        String prompt = createPrompt(orderItemResponse.products(), cartItemResponse.products());
-        String tasteSummary = chatClient.generateRecommendation(prompt, SYSTEM_PROMPT);
+        String userPrompt = createPrompt(orderItemResponse.products(), cartItemResponse.products());
+        String tasteSummary = chatService.callLlm(SYSTEM_PROMPT, userPrompt, "Recommendation");
 
         // Embedding
         float[] embedding = embeddingClient.embed(tasteSummary);
