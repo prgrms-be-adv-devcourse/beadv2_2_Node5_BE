@@ -11,4 +11,6 @@ import lombok.Setter;
 public class KafkaTopicsProperties {
 	private String productIndex;
 	private String memberDeleted;
+	private String productEmbedding;
+	private String productDiscontinued;
 }

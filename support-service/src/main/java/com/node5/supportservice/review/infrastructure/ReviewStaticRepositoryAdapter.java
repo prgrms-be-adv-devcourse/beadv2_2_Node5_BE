@@ -1,7 +1,7 @@
 package com.node5.supportservice.review.infrastructure;
 
 import com.node5.supportservice.review.domain.ReviewStatic;
-import com.node5.supportservice.review.domain.ReviewRepository;
+import com.node5.supportservice.review.domain.ReviewStaticRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -9,8 +9,8 @@ import java.util.UUID;
 
 @Repository
 @RequiredArgsConstructor
-public class ReviewRepositoryAdapter implements ReviewRepository {
-    private final ReviewJpaRepository reviewJpaRepository;
+public class ReviewStaticRepositoryAdapter implements ReviewStaticRepository {
+    private final ReviewStaticJpaRepository reviewJpaRepository;
 
     @Override
     public ReviewStatic findByProductId(UUID productId) {
@@ -20,6 +20,11 @@ public class ReviewRepositoryAdapter implements ReviewRepository {
     @Override
     public ReviewStatic save(ReviewStatic review) {
         return reviewJpaRepository.save(review);
+    }
+
+    @Override
+    public void deleteByProductId(UUID productId) {
+        reviewJpaRepository.deleteByProductId(productId);
     }
 
     @Override

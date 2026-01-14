@@ -21,13 +21,13 @@ public class MemberController {
 
     private final MemberService memberService;
 
-    @Operation(summary = "회원 단건 조회", description = "회원 ID로 회원을 조회합니다.")
+    @Operation(summary = "내 회원 정보 조회", description = "내 회원 정보를 조회합니다.")
     @GetMapping("/me")
     public ResponseEntity<MemberInfoResponse> findById(@Parameter(hidden = true) @RequestHeader("Member-Id") UUID memberId) {
         return ResponseEntity.ok(memberService.findById(memberId));
     }
 
-    @Operation(summary = "회원 정보 수정", description = "회원 정보를 수정합니다.")
+    @Operation(summary = "내 회원 정보 수정", description = "내 회원 정보를 수정합니다.")
     @PutMapping("/me")
     public ResponseEntity<MemberInfoResponse> modifyMember(
             @Parameter(hidden = true) @RequestHeader("Member-Id") UUID memberId,

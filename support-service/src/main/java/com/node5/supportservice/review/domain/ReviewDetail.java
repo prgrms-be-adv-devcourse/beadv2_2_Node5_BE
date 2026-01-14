@@ -10,6 +10,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -49,6 +50,12 @@ public class ReviewDetail extends BaseEntity {
     @Column(name = "like_count", nullable = false)
     private int likeCount;
 
+    @Column(name = "embedding", columnDefinition = "vector(1536)")
+    private Object embedding;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
     @Builder
     public ReviewDetail(UUID productId, UUID memberId, String nickname, UUID orderId, int rating, String body) {
         this.id = UUID.randomUUID();
@@ -75,4 +82,21 @@ public class ReviewDetail extends BaseEntity {
             throw new ReviewException(ReviewErrorCode.REVIEW_UNAUTHORIZED);
         }
     }
+
+    public void delete() {
+        this.deletedAt = LocalDateTime.now();
+    }
+
+    public void validateNotDeleted() {
+        if (this.deletedAt != null) {
+            throw new ReviewException(ReviewErrorCode.REVIEW_DELETED);
+        }
+    }
+
+    public void validateSelfLike(UUID memberId) {
+        if (this.memberId.equals(memberId)) {
+            throw new ReviewException(ReviewErrorCode.REVIEW_CANNOT_LIKE_OWN);
+        }
+    }
+
 }

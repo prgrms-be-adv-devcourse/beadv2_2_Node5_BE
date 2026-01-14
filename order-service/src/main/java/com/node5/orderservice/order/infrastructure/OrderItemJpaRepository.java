@@ -12,4 +12,5 @@ public interface OrderItemJpaRepository extends JpaRepository<OrderItem, UUID> {
 
     List<OrderItem> findByOrderIdIn(List<UUID> orderIds);
 
+    List<UUID> findTop5IdByOrderIdInOrderByCreatedAtDesc(List<UUID> orderIds);
 }

@@ -64,4 +64,8 @@ public class OrderRepositoryAdapter implements OrderRepository {
         return orderJpaRepository.findByStatus(orderStatus);
     }
 
+    @Override
+    public List<UUID> findRecentOrderIds(UUID memberId, LocalDateTime threeMonthsAgo) {
+        return orderJpaRepository.findRecentOrderIds(memberId, threeMonthsAgo);
+    }
 }

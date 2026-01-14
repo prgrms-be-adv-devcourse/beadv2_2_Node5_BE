@@ -8,7 +8,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.UUID;
 
-public interface ReviewJpaRepository extends JpaRepository<ReviewStatic, UUID> {
+public interface ReviewStaticJpaRepository extends JpaRepository<ReviewStatic, UUID> {
     ReviewStatic findByProductId(UUID productId);
 
     @Modifying
@@ -43,4 +43,5 @@ public interface ReviewJpaRepository extends JpaRepository<ReviewStatic, UUID> {
             "WHERE r.productId = :productId")
     void updateStatisticsOnReviewEdit(UUID productId, Integer oldRating, Integer newRating);
     Boolean existsByProductId(UUID productId);
+    void deleteByProductId(UUID productId);
 }

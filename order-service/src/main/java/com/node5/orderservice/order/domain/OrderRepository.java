@@ -27,4 +27,6 @@ public interface OrderRepository {
     List<Order> saveAll(List<Order> paidOrders);
 
     List<Order> findByStatus(OrderStatus orderStatus);
+
+    List<UUID> findRecentOrderIds(UUID memberId, LocalDateTime threeMonthsAgo);
 }

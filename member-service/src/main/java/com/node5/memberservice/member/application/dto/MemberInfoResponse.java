@@ -8,6 +8,7 @@ public record MemberInfoResponse(
         UUID id,
         String email,
         String name,
+        String nickname,
         String phoneNumber,
         String address
 ) {
@@ -17,6 +18,7 @@ public record MemberInfoResponse(
                 member.getId(),
                 member.getEmail(),
                 member.getName(),
+                member.getNickname(),
                 member.getPhoneNumber(),
                 member.getAddress()
         );
