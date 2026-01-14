@@ -29,6 +29,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -109,7 +110,13 @@ public class MonthlyReviewSummaryJobConfig {
 
                 // Todo - productId, summaryYear, summaryMonth로 정제된 리뷰 읽어옴 아직 없음
                 ReviewSearchSimilarCommand command = new ReviewSearchSimilarCommand(summaryYear, summaryMonth);
-                List<String> reviews = reviewService.searchSimilarReviewDetails(productId, command).stream().map(ReviewDetailInfo::body).toList();
+                List<String> reviews;
+                try {
+                    reviews = reviewService.searchSimilarReviewDetails(productId, command).stream().map(ReviewDetailInfo::body).toList();
+                } catch (Exception e) {
+                    log.info("리뷰 없음, productId={}, {}-{}", productId, summaryYear, summaryMonth);
+                    return null;
+                }
 //                List<String> reviews = testData.getReviews(productId);
                 if (reviews.isEmpty()) {
                     log.info("리뷰 없음, productId={}, {}-{}", productId, summaryYear, summaryMonth);
