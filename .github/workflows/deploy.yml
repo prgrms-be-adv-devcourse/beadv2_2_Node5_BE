@@ -35,7 +35,7 @@ jobs:
           INFRA_PATTERN=$(echo "$INFRA" | jq -r '. | join("|")')
           ALL_PATTERN=$(echo "$ALL" | jq -r '. | join("|")')
           
-          # 2. 비교 대상 설정 (수동: dev...feat / 자동: main dev)
+          # 2. 비교 대상 설정 (수동: dev...feat / 자동: before..sha)
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             git fetch origin develop
             BASE="origin/develop"; HEAD="HEAD"
