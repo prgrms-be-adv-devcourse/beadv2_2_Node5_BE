@@ -5,7 +5,7 @@ import com.node5.supportservice.reviewsummary.domain.ReviewSummaryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -14,7 +14,12 @@ public class ReviewSummaryRepositoryAdaptor implements ReviewSummaryRepository {
     private final ReviewSummaryJpaRepository reviewSummaryJpaRepository;
 
     @Override
-    public List<ReviewSummary> findByProductIdOrderByRatingDesc(UUID productId) {
-        return reviewSummaryJpaRepository.findByProductIdOrderByRatingDesc(productId);
+    public Optional<ReviewSummary> findByProductId(UUID productId) {
+        return reviewSummaryJpaRepository.findByProductId(productId);
+    }
+
+    @Override
+    public void save(ReviewSummary reviewSummary) {
+        reviewSummaryJpaRepository.save(reviewSummary);
     }
 }

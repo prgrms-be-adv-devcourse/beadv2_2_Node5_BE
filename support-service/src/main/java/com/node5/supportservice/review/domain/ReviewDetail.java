@@ -103,7 +103,6 @@ public class ReviewDetail extends BaseEntity {
             throw new ReviewException(ReviewErrorCode.REVIEW_CANNOT_LIKE_OWN);
         }
     }
-
     public void updateEmbedding(float[] vector) {
         this.embedding = vector;
     }
