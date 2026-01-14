@@ -414,15 +414,18 @@ data:
           enable-auto-commit: false
           properties:
             spring.json.trusted.packages: "com.node5.common.event"
-      ai:
-        openai:
-          api-key: ${OPENAI_API_KEY}
-          base-url: https://api.openai.com/
-          chat:
-            options:
-              model: gpt-4o-mini
-              temperature: 0.6
-              max-tokens: 256
+        ai:
+          openai:
+            api-key: ${OPEN_AI_API_KEY}
+            base-url: https://api.openai.com
+            chat:
+              options:
+                model: gpt-4.1-nano
+                max-completion-tokens: 512
+                temperature: 1.0
+            embedding:
+              options:
+                model: text-embedding-3-small
     kafka:
       topics:
         review-created: support-service.review-created.v1
