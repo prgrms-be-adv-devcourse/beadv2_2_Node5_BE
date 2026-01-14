@@ -46,11 +46,10 @@ public interface ReviewDetailJpaRepository extends JpaRepository<ReviewDetail, U
     @Query(value = """
     SELECT * FROM support.review_detail 
     WHERE product_id = :productId 
-      AND id != :reviewId
+      AND id != :reviewId 
       AND deleted_at IS NULL
-    ORDER BY embedding OPERATOR(public.<=>) (
-        SELECT embedding FROM support.review_detail WHERE id = :reviewId
-    )
+      AND (embedding OPERATOR(public.<=>) (SELECT embedding FROM support.review_detail WHERE id = :reviewId)) < 0.4
+    ORDER BY embedding OPERATOR(public.<=>) (SELECT embedding FROM support.review_detail WHERE id = :reviewId) ASC 
     LIMIT 4
     """, nativeQuery = true)
     List<ReviewDetail> findSimilarReviews(
