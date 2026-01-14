@@ -13,6 +13,9 @@ public interface ReviewDetailRepository {
     // 상품별 리뷰 조회 (최신순, 삭제된 리뷰 제외)
     Page<ReviewDetail> findAllLatestByProduct(UUID productId, Pageable pageable);
 
+    // 상품별 리뷰 조회 (추천순, 삭제된 리뷰 제외)
+    Page<ReviewDetail> findAllRecommendedByProduct(UUID productId, Pageable pageable);
+
     // 회원별 리뷰 조회 (최신순, 삭제된 리뷰 제외)
     Page<ReviewDetail> findAllLatestByMember(UUID memberId, Pageable pageable);
 

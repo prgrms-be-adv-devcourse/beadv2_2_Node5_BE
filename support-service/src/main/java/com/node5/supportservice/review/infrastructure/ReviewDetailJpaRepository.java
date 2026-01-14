@@ -22,6 +22,20 @@ public interface ReviewDetailJpaRepository extends JpaRepository<ReviewDetail, U
     // 회원별 리뷰 조회 (최신순, 삭제된 리뷰 제외)
     Page<ReviewDetail> findByMemberIdAndDeletedAtIsNullOrderByCreatedAtDesc(UUID memberId, Pageable pageable);
 
+    // 상품별 리뷰 조회 (추천순, 삭제된 리뷰 제외)
+    @Query(value = """
+    SELECT * FROM support.review_detail 
+    WHERE product_id = :productId 
+      AND deleted_at IS NULL
+    ORDER BY (like_count * EXP(-0.001 * (CURRENT_DATE - created_at::date))) DESC
+    """,
+    countQuery = """
+    SELECT count(*) FROM support.review_detail
+    WHERE product_id = :productId AND deleted_at IS NULL
+    """,
+    nativeQuery = true)
+    Page<ReviewDetail> findRecommendedReviews(@Param("productId") UUID productId, Pageable pageable);
+
     // 리뷰 공감 수 증가
     @Modifying
     @Query("UPDATE ReviewDetail r SET r.likeCount = r.likeCount + 1 " +
