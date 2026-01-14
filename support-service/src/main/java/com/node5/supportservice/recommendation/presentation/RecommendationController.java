@@ -26,7 +26,7 @@ public class RecommendationController {
             @RequestBody ProductRecommendationRequest request) {
         ProductRecommendationInfo recommendationInfo = recommendationService.recommendProducts(
                 memberId,
-                request.cartItemIds(),
+                request.cartItemProductIds(),
                 request.limit()
         );
         return ResponseEntity.ok(recommendationInfo);
@@ -35,9 +35,9 @@ public class RecommendationController {
     @PostMapping("/taste")
     public ResponseEntity<RecommendationResponse> recommendTaste(
             @RequestHeader("Member-Id") UUID memberId,
-            @RequestBody List<UUID> cartItemIds
+            @RequestBody List<UUID> cartItemProductIds
     ) {
-        RecommendationService.Result result = recommendationService.recommendTaste(memberId, cartItemIds);
+        RecommendationService.Result result = recommendationService.recommendTaste(memberId, cartItemProductIds);
         return ResponseEntity.ok(new RecommendationResponse(
             result.tasteSummary(),
             result.embedding()

@@ -17,6 +17,7 @@ import com.node5.supportservice.recommendation.client.openai.EmbeddingClient;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.UUID;
 
@@ -32,7 +33,8 @@ public class RecommendationService {
     private static final String SYSTEM_PROMPT =
             "너는 반드시 요청된 형식을 지키며 1문장만 출력한다. 추가 설명이나 목록은 금지한다.";
 
-    private static final int DEFAULT_LIMIT = 10;
+    private static final int DEFAULT_LIMIT = 5;
+    private static final int MAX_LIMIT = 10;
 
     private final ProductEmbeddingRepository productEmbeddingRepository;
     private final ChatClient chatClient;
@@ -42,17 +44,18 @@ public class RecommendationService {
     private final OrderClient orderClient;
 
     // 장바구니 아이템 받아서 취향 임베딩 반환
-    public Result recommendTaste(UUID memberId, List<UUID> cartItemIds) {
+    public Result recommendTaste(UUID memberId, List<UUID> cartItemProductIds) {
         // 장바구니 내역
-        ProductSummaryListResponse cartItemResponse = getProductInfo(memberId, cartItemIds, "장바구니");
+        ProductSummaryListResponse cartItemResponse = getProductInfo(memberId, cartItemProductIds, "장바구니");
         log.info("조회된 장바구니 내역 size: {}", cartItemResponse.products().size());
 
         // 주문 내역
-        List<UUID> recentOrderIds = getRecentOrderIds(memberId);
-        ProductSummaryListResponse orderItemResponse = getProductInfo(memberId, recentOrderIds, "주문");
+        List<UUID> recentOrderProductIds = getRecentOrderIds(memberId);
+        ProductSummaryListResponse orderItemResponse = getProductInfo(memberId, recentOrderProductIds, "주문");
         log.info("조회된 주문 내역 size: {}", orderItemResponse.products().size());
 
-        List<UUID> existedProductIds = getExistedProductIds(cartItemIds, recentOrderIds);
+        // 장바구니 내역, 주문 내역에 포함되어 있는 상품 리스트
+        List<UUID> existedProductIds = getExistedProductIds(cartItemProductIds, recentOrderProductIds);
 
         // LLM
         String prompt = createPrompt(orderItemResponse.products(), cartItemResponse.products());
@@ -66,19 +69,26 @@ public class RecommendationService {
         return new Result(tasteSummary, embedding, existedProductIds);
     }
 
-    private List<UUID> getExistedProductIds(List<UUID> cartItemIds, List<UUID> recentOrderIds) {
-        return null; //TODO
+    private List<UUID> getExistedProductIds(List<UUID> cartItemProductIds, List<UUID> recentOrderProductIds) {
+        LinkedHashSet<UUID> merged = new LinkedHashSet<>();
+        if (cartItemProductIds != null) {
+            merged.addAll(cartItemProductIds);
+        }
+        if (recentOrderProductIds != null) {
+            merged.addAll(recentOrderProductIds);
+        }
+        return new ArrayList<>(merged);
     }
 
     // 취향 임베딩 입력받아서 추천 상품 리스트 반환
-    public ProductRecommendationInfo recommendProducts(UUID memberId, List<UUID> cartItemIds, Integer limit) {
-        Result result = recommendTaste(memberId, cartItemIds);
+    public ProductRecommendationInfo recommendProducts(UUID memberId, List<UUID> cartItemProductIds, Integer limit) {
+        Result result = recommendTaste(memberId, cartItemProductIds);
 
         float[] preferenceEmbedding = result.embedding();
         List<UUID> excludedProductIds = result.existedProductIds;
 
         if (preferenceEmbedding == null || preferenceEmbedding.length == 0) {
-            return ProductRecommendationInfo.of(Collections.emptyList()); //TODO: 예외처리로 변환
+            throw new RecommendationException(RecommendationErrorCode.OPENAI_EMBEDDING_RESPONSE_EMPTY);
         }
 
         List<UUID> recommendList = new ArrayList<>();
@@ -155,6 +165,9 @@ public class RecommendationService {
     private int resolveLimit(Integer limit) {
         if (limit == null || limit <= 0) {
             return DEFAULT_LIMIT;
+        }
+        if (limit > MAX_LIMIT) {
+            throw new RecommendationException(RecommendationErrorCode.RECOMMENDATION_LIMIT_TOO_HIGH);
         }
         return limit;
     }

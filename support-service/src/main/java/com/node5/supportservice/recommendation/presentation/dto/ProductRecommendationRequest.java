@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.UUID;
 
 public record ProductRecommendationRequest(
-        List<UUID> cartItemIds,
+        List<UUID> cartItemProductIds,
         Integer limit
 ) {
 }
