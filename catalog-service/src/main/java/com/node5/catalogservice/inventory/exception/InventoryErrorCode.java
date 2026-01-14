@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 public enum InventoryErrorCode implements BaseErrorCode {
 
 	INVALID_REQUEST(400, "INVENTORY_INVALID_REQUEST", "요청 값이 올바르지 않습니다."),
+	INVALID_QUANTITY(400, "INVALID_QUANTITY", "수량은 0 이상이어야 합니다."),
 	INVENTORY_NOT_FOUND(404, "INVENTORY_NOT_FOUND", "해당 상품의 재고가 존재하지 않습니다."),
 	OUT_OF_STOCK(409, "OUT_OF_STOCK", "재고가 부족합니다."),
 	RESERVATION_ALREADY_PROCESSED(409, "RESERVATION_ALREADY_PROCESSED", "이미 처리된 예약입니다."),

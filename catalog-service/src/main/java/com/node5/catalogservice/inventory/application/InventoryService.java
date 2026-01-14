@@ -164,4 +164,16 @@ public class InventoryService {
 
 		return StockResponse.from(stock);
 	}
+
+	@Transactional
+	public StockResponse updateStockQuantity(UUID productId, int quantity) {
+
+		Stock stock = stockRepository.findById(productId)
+			.orElseThrow(() -> new BaseException(InventoryErrorCode.INVENTORY_NOT_FOUND));
+
+		stock.updateQuantity(quantity);
+		Stock saved = stockRepository.save(stock);
+
+		return StockResponse.from(saved);
+	}
 }

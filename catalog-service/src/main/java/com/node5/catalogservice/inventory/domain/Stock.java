@@ -1,8 +1,11 @@
 package com.node5.catalogservice.inventory.domain;
 
+import static com.node5.catalogservice.inventory.exception.InventoryErrorCode.*;
+
 import java.util.UUID;
 
 import com.node5.common.domain.BaseEntity;
+import com.node5.common.exception.BaseException;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -30,5 +33,12 @@ public class Stock extends BaseEntity {
 		stock.productId = productId;
 		stock.quantity = quantity;
 		return stock;
+	}
+
+	public void updateQuantity(int quantity) {
+		if (quantity < 0) {
+			throw new BaseException(INVALID_QUANTITY);
+		}
+		this.quantity = quantity;
 	}
 }
