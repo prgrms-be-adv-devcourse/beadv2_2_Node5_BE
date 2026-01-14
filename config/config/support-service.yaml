@@ -63,16 +63,16 @@ spring:
         spring.json.trusted.packages: "com.node5.common.event"
   ai:
     openai:
-      api-key: ${OPENAI_API_KEY}
-      base-url: https://api.openai.com/
+      api-key: ${OPEN_AI_API_KEY}
+      base-url: https://api.openai.com
       chat:
         options:
-          model: gpt-4o-mini # OpenAI에서 지원하는 경량 4o 모델
-          # 낮은 값(0.0~0.3): 답변이 더 일관되고 보수적임. 사실성/정확도가 중요하거나 포맷 준수(예: JSON 출력, 코드 생성)할 때 유리.
-          # 중간 값(0.4~0.7): 적당한 변주를 허용하면서도 안정성을 유지. 안내/추천형 챗봇에 무난.
-          # 높은 값(0.7~1.0): 더 창의적이고 다양하지만 일관성·사실성이 떨어질 수 있음. 아이디어 브레인스토밍이나 문구 생성 등에 사용.
-          temperature: 0.6
-          max-tokens: 256
+          model: gpt-4.1-nano
+          max-completion-tokens: 512
+          temperature: 1.0
+      embedding:
+        options:
+          model: text-embedding-3-small
 kafka:
   topics:
     review-created: support-service.review-created.v1
