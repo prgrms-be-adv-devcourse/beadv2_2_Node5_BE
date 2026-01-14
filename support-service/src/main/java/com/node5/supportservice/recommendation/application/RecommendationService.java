@@ -52,6 +52,8 @@ public class RecommendationService {
         ProductSummaryListResponse orderItemResponse = getProductInfo(memberId, recentOrderIds, "주문");
         log.info("조회된 주문 내역 size: {}", orderItemResponse.products().size());
 
+        List<UUID> existedProductIds = getExistedProductIds(cartItemIds, recentOrderIds);
+
         // LLM
         String prompt = createPrompt(orderItemResponse.products(), cartItemResponse.products());
         String tasteSummary = chatClient.generateRecommendation(prompt, SYSTEM_PROMPT);
@@ -61,13 +63,22 @@ public class RecommendationService {
         log.info("** LLM TASTE SUMMARY: {}", tasteSummary);
         log.info("** LLM TASTE EMBEDDING: {}", Arrays.toString(embedding));
 
-        return new Result(tasteSummary, embedding);
+        return new Result(tasteSummary, embedding, existedProductIds);
+    }
+
+    private List<UUID> getExistedProductIds(List<UUID> cartItemIds, List<UUID> recentOrderIds) {
+        return null; //TODO
     }
 
     // 취향 임베딩 입력받아서 추천 상품 리스트 반환
-    public ProductRecommendationInfo recommendProducts(float[] preferenceEmbedding, List<UUID> excludedProductIds, Integer limit) {
+    public ProductRecommendationInfo recommendProducts(UUID memberId, List<UUID> cartItemIds, Integer limit) {
+        Result result = recommendTaste(memberId, cartItemIds);
+
+        float[] preferenceEmbedding = result.embedding();
+        List<UUID> excludedProductIds = result.existedProductIds;
+
         if (preferenceEmbedding == null || preferenceEmbedding.length == 0) {
-            return ProductRecommendationInfo.of(Collections.emptyList());
+            return ProductRecommendationInfo.of(Collections.emptyList()); //TODO: 예외처리로 변환
         }
 
         List<UUID> recommendList = new ArrayList<>();
@@ -139,7 +150,7 @@ public class RecommendationService {
                 + "[주문 내역 기반 생활 패턴 1~2개]을 보인다. 특히 [장바구니 기반 핵심 속성 1~2개]을 선호한다.\"";
     }
 
-    public record Result(String tasteSummary, float[] embedding) {}
+    public record Result(String tasteSummary, float[] embedding, List<UUID> existedProductIds) {}
 
     private int resolveLimit(Integer limit) {
         if (limit == null || limit <= 0) {

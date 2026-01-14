@@ -21,10 +21,12 @@ public class RecommendationController {
 
     @Operation(summary = "상품 추천", description = "사용자 취향 임베딩을 기반으로 상품을 추천한다.")
     @PostMapping
-    public ResponseEntity<ProductRecommendationInfo> recommend(@RequestBody ProductRecommendationRequest request) {
+    public ResponseEntity<ProductRecommendationInfo> recommend(
+            @RequestHeader("Member-Id") UUID memberId,
+            @RequestBody ProductRecommendationRequest request) {
         ProductRecommendationInfo recommendationInfo = recommendationService.recommendProducts(
-                request.preferenceEmbedding(),
-                request.excludedProductIds(),
+                memberId,
+                request.cartItemIds(),
                 request.limit()
         );
         return ResponseEntity.ok(recommendationInfo);
