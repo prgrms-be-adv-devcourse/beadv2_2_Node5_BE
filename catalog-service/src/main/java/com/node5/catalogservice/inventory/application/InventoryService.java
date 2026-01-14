@@ -147,14 +147,14 @@ public class InventoryService {
 	}
 
 	@Transactional
-	public void registerStock(StockRegisterCommand command) {
+	public StockResponse upsertStockQuantity(UUID productId, int quantity) {
+		Stock stock = stockRepository.findById(productId)
+			.orElseGet(() -> Stock.create(productId, 0));
 
-		if (stockRepository.existsById(command.productId())) {
-			throw new BaseException(InventoryErrorCode.INVENTORY_ALREADY_EXISTS);
-		}
+		stock.updateQuantity(quantity);
 
-		Stock stock = Stock.create(command.productId(), command.quantity());
-		stockRepository.save(stock);
+		Stock saved = stockRepository.save(stock);
+		return StockResponse.from(saved);
 	}
 
 	@Transactional(readOnly = true)
@@ -163,17 +163,5 @@ public class InventoryService {
 			.orElseThrow(() -> new BaseException(InventoryErrorCode.INVENTORY_NOT_FOUND));
 
 		return StockResponse.from(stock);
-	}
-
-	@Transactional
-	public StockResponse updateStockQuantity(UUID productId, int quantity) {
-
-		Stock stock = stockRepository.findById(productId)
-			.orElseThrow(() -> new BaseException(InventoryErrorCode.INVENTORY_NOT_FOUND));
-
-		stock.updateQuantity(quantity);
-		Stock saved = stockRepository.save(stock);
-
-		return StockResponse.from(saved);
 	}
 }

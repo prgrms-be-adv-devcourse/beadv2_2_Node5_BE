@@ -32,15 +32,13 @@ public class InventoryController {
 
 	private final InventoryService inventoryService;
 
-	@PostMapping
-	@Operation(summary = "상품 재고 등록", description = "상품 재고를 신규 등록합니다.")
-	@ApiResponses({
-		@ApiResponse(responseCode = "201", description = "상품 재고 등록 성공"),
-		@ApiResponse(responseCode = "400", description = "요청 값이 유효하지 않습니다.")
-	})
-	public ResponseEntity<Void> register(@Valid @RequestBody StockRegisterRequest request) {
-		inventoryService.registerStock(request.toCommand());
-		return ResponseEntity.status(HttpStatus.CREATED).build();
+	@PutMapping("/{productId}")
+	public ResponseEntity<StockResponse> updateStock(
+		@PathVariable UUID productId,
+		@Valid @RequestBody StockUpdateRequest request
+	) {
+		StockResponse response = inventoryService.upsertStockQuantity(productId, request.quantity());
+		return ResponseEntity.ok(response);
 	}
 
 	@GetMapping("/{productId}")
@@ -51,24 +49,6 @@ public class InventoryController {
 	})
 	public ResponseEntity<StockResponse> getStock(@PathVariable UUID productId) {
 		StockResponse response = inventoryService.getStock(productId);
-		return ResponseEntity.ok(response);
-	}
-
-	@PutMapping("/{productId}")
-	@Operation(summary = "상품 재고 변경", description = "상품 재고 수량을 변경합니다.")
-	@ApiResponses({
-		@ApiResponse(responseCode = "200", description = "상품 재고 변경 성공"),
-		@ApiResponse(responseCode = "400", description = "요청 값이 유효하지 않습니다."),
-		@ApiResponse(responseCode = "404", description = "상품 재고가 존재하지 않습니다.")
-	})
-	public ResponseEntity<StockResponse> updateStock(
-		@PathVariable UUID productId,
-		@Valid @RequestBody StockUpdateRequest request
-	) {
-		StockResponse response = inventoryService.updateStockQuantity(
-			productId,
-			request.quantity()
-		);
 		return ResponseEntity.ok(response);
 	}
 }
