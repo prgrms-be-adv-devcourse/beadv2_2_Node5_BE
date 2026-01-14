@@ -5,6 +5,7 @@ import com.node5.common.event.ReviewCreatedEvent;
 import com.node5.supportservice.review.application.dto.*;
 import com.node5.supportservice.review.client.MemberClient;
 import com.node5.supportservice.review.client.ProductClient;
+import com.node5.supportservice.review.client.dto.ProductStatusResponse;
 import com.node5.supportservice.review.domain.*;
 import com.node5.supportservice.review.exception.ReviewErrorCode;
 import com.node5.supportservice.review.exception.ReviewException;
@@ -23,8 +24,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -60,14 +60,14 @@ public class ReviewService {
             throw new ReviewException(ReviewErrorCode.MEMBER_SERVICE_UNAVAILABLE);
         }
 
-        boolean isProductValid; //상품 상태 체크
         try {
-            isProductValid = productClient.canPostReview(command.productId()); // 상품 상태 체크
-            if (!isProductValid) {
+            ProductStatusResponse response = productClient.canPostReview(command.productId()); // 상품 상태 체크
+            if (!response.isReviewable()) {
                 throw new ReviewException(ReviewErrorCode.PRODUCT_DISCONTINUED);
             }
         } catch (FeignException e) {
-            throw new ReviewException(ReviewErrorCode.PRODUCT_DISCONTINUED);
+            log.error("Can't post review product with id {}", command.productId(), e);
+            throw new ReviewException(ReviewErrorCode.PRODUCT_SERVICE_UNAVAILABLE);
         }
 
         if (!reviewRepository.existsByProductId(command.productId())) {
@@ -240,33 +240,31 @@ public class ReviewService {
             end = date.withDayOfMonth(date.lengthOfMonth()).atTime(LocalTime.MAX);
             reviewCount = reviewDetailRepository.countReviewsBetween(productId, start, end);
         }
-        //리뷰가 10개 미만일 경우 예외 처리
+        // 리뷰가 10개 미만일 경우 예외 처리
         if (reviewCount < 10) {
-            throw new ReviewException(ReviewErrorCode.REVIEW_NOT_ENOUGH_FOR_SIMILARITY_SEARCH);
+            return Collections.emptyList();
         }
+        // 공감 1위 리뷰 조회 (orElseThrow 대신 Optional 처리)
+        Optional<ReviewDetail> topLikedReviewOpt = (command.referenceMonth() == 0)
+                ? reviewDetailRepository.findTopReview(productId)
+                : reviewDetailRepository.findTopReviewBetween(productId, start, end);
 
-        ReviewDetail topLikedReview;
-        if (command.referenceMonth() == 0) {
-            // 전체 기간 동안 공감 수 1위 리뷰 조회
-            topLikedReview = reviewDetailRepository.findTopReview(productId)
-                    .orElseThrow(() -> new ReviewException(ReviewErrorCode.REVIEW_NOT_FOUND));
-        } else {
-            // 최근 1개월 동안 공감 수 1위 리뷰 조회
-            topLikedReview = reviewDetailRepository.findTopReviewBetween(productId, start, end)
-                    .orElseThrow(() -> new ReviewException(ReviewErrorCode.REVIEW_NOT_FOUND));
+        // 데이터가 없거나 공감 수가 0인 경우 빈 리스트 반환
+        if (topLikedReviewOpt.isEmpty() || topLikedReviewOpt.get().getLikeCount() == 0) {
+            return Collections.emptyList();
         }
-
-        // 공감 수가 0인 경우 예외 처리
-        if (topLikedReview.getLikeCount() == 0) {
-            throw new ReviewException(ReviewErrorCode.REVIEW_NO_LIKES);
-        }
+        ReviewDetail topLikedReview = topLikedReviewOpt.get();
         // 유사한 리뷰 조회
         List<ReviewDetail> similarReviews = reviewDetailRepository.findSimilarReviews(
                 productId,
                 topLikedReview.getId()
         );
-        similarReviews.add(0, topLikedReview);
-        return similarReviews.stream()
+
+        List<ReviewDetail> allReviews = new ArrayList<>();
+        allReviews.add(topLikedReview);
+        allReviews.addAll(similarReviews);
+
+        return allReviews.stream()
                 .map(ReviewDetailInfo::from)
                 .toList();
     }
