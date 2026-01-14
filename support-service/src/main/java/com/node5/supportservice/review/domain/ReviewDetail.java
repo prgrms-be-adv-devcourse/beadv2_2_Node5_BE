@@ -104,8 +104,12 @@ public class ReviewDetail extends BaseEntity {
         }
     }
 
+<<<<<<< HEAD
     public void updateEmbedding(float[] vector) {
         this.embedding = vector;
     }
 
 }
+=======
+}
+>>>>>>> a992d8a (feat: 리뷰 요약 ai 수정)

@@ -1,8 +1,10 @@
 package com.node5.supportservice.reviewsummary.batch;
 
+import com.node5.supportservice.review.application.ReviewService;
+import com.node5.supportservice.review.application.dto.ReviewDetailInfo;
+import com.node5.supportservice.review.application.dto.ReviewSearchSimilarCommand;
 import com.node5.supportservice.reviewsummary.batch.dto.ReviewSummaryCommand;
-import com.node5.supportservice.reviewsummary.client.LocalLLMChatClient;
-import com.node5.supportservice.reviewsummary.client.dto.LocalLLMResponse;
+import com.node5.supportservice.reviewsummary.client.LLMChatClient;
 import com.node5.supportservice.reviewsummary.domain.ReviewSummary;
 import com.node5.supportservice.reviewsummary.domain.ReviewSummaryRepository;
 import com.node5.supportservice.reviewsummary.utils.PromptLoader;
@@ -19,7 +21,6 @@ import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
-import org.springframework.batch.item.support.ListItemReader;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -38,8 +39,7 @@ import java.util.stream.Collectors;
 public class MonthlyReviewSummaryJobConfig {
     private static final int CHUNK_SIZE = 1;
     private final ReviewSummaryRepository reviewSummaryRepository;
-    private final ReviewTestData reviewTestData;
-//    private final ReviewService reviewService;
+    private final ReviewService reviewService;
 
     @Bean
     public Job monthlyReviewSummaryJob(JobRepository jobRepository, Step monthlyReviewSummaryStep) {
@@ -81,7 +81,7 @@ public class MonthlyReviewSummaryJobConfig {
     @Bean
     @StepScope
     public ItemProcessor<UUID, ReviewSummaryCommand> monthlyReviewSummaryProcessor(
-            LocalLLMChatClient chatClient,
+            LLMChatClient chatClient,
             String reviewSummaryTemplate,
             @Value("#{jobParameters['batchStartDate']}") String batchStartDate
     ) {
@@ -105,7 +105,8 @@ public class MonthlyReviewSummaryJobConfig {
                 }
 
                 // Todo - productId, summaryYear, summaryMonth로 정제된 리뷰 읽어옴 아직 없음
-                List<String> reviews = reviewTestData.getReviews(productId);
+                ReviewSearchSimilarCommand command = new ReviewSearchSimilarCommand(summaryYear, summaryMonth);
+                List<ReviewDetailInfo> reviews = reviewService.searchSimilarReviewDetails(productId, command);
                 if (reviews.isEmpty()) {
                     log.info("리뷰 없음, productId={}, {}-{}", productId, summaryYear, summaryMonth);
                     return null;
@@ -115,16 +116,16 @@ public class MonthlyReviewSummaryJobConfig {
                         .replace("{{prev_summary}}", prevSummary)
                         .replace("{{reviews}}",
                                 reviews.stream()
-                                        .map(r -> "- " + r)
+                                        .map(r -> "- " + r.body())
                                         .collect(Collectors.joining("\n"))
                         );
 
-                LocalLLMResponse res = chatClient.reviewSummary(prompt);
+                String summary = chatClient.reviewSummary(prompt);
 
                 LocalDate startDate = LocalDate.of(summaryYear, summaryMonth, 1);
                 LocalDate endDate = startDate.plusMonths(1).minusDays(1);
 
-                return new ReviewSummaryCommand(productId, res.response(), startDate, endDate);
+                return new ReviewSummaryCommand(productId, summary, startDate, endDate);
             } catch (Exception e) {
                 log.warn("LLM 요약 실패, productId: {}", productId, e);
                 return null;
@@ -134,6 +135,6 @@ public class MonthlyReviewSummaryJobConfig {
 
     @Bean
     public String reviewSummaryTemplate(PromptLoader promptLoader) {
-        return promptLoader.load("review-summary-v1-local.txt");
+        return promptLoader.load("review-summary-v1-gpt.txt");
     }
 }

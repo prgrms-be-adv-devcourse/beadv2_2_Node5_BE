@@ -18,10 +18,10 @@ public class LocalLLMChatClient {
     private static final String baseUrl = "http://localhost:11434";
     private static final String model = "qwen2.5:7b";
 
-    public LocalLLMResponse reviewSummary(String prompt){
+    public String reviewSummary(String systemPrompt){
         Map<String, Object> body = Map.of(
                 "model", model,
-                "prompt", prompt,
+                "prompt", systemPrompt,
                 "stream", false,
                 "num_predict", 160,
                 "num_ctx", 1024,
@@ -42,6 +42,10 @@ public class LocalLLMChatClient {
                 LocalLLMResponse.class
         );
 
-        return response.getBody();
+        if (response.getBody() == null){
+            throw new RuntimeException("Local LLM API Error");
+        }
+
+        return response.getBody().response();
     }
 }

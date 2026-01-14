@@ -1,7 +1,7 @@
 package com.node5.supportservice.reviewsummary.client;
 
-import com.node5.supportservice.recommendation.exception.RecommendationErrorCode;
-import com.node5.supportservice.recommendation.exception.RecommendationException;
+import com.node5.supportservice.reviewsummary.exception.ReviewSummaryErrorCode;
+import com.node5.supportservice.reviewsummary.exception.ReviewSummaryException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.messages.Message;
@@ -11,7 +11,6 @@ import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.openai.OpenAiChatOptions;
-import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -24,13 +23,13 @@ import java.util.List;
 public class LLMChatClient {
     private final ChatModel chatModel;
 
-    public String reviewSummary(String prompt, String systemPrompt) {
+    public String reviewSummary(String systemPrompt) {
         try {
             List<Message> messages = new ArrayList<>();
             if (StringUtils.hasText(systemPrompt)) {
                 messages.add(new SystemMessage(systemPrompt));
             }
-            messages.add(new UserMessage(prompt));
+            messages.add(new UserMessage("요약을 생성하라."));
 
             OpenAiChatOptions options = OpenAiChatOptions.builder()
                     .maxCompletionTokens(256)
@@ -40,15 +39,20 @@ public class LLMChatClient {
             ChatResponse response = chatModel.call(new Prompt(messages, options));
             if (response == null || response.getResults() == null || response.getResults().isEmpty()) {
                 log.warn("OpenAI chat response empty. response={}", response);
+                throw new ReviewSummaryException(ReviewSummaryErrorCode.OPENAI_RESPONSE_EMPTY);
             }
             String content = response.getResults().get(0).getOutput().getText();
             if (!StringUtils.hasText(content)) {
                 log.warn("OpenAI chat response empty content. response={}", response);
+                throw new ReviewSummaryException(ReviewSummaryErrorCode.OPENAI_RESPONSE_EMPTY);
             }
             return content.trim();
-        } catch (Exception ex) {
+        } catch (ReviewSummaryException ex) {
+            throw ex;
+        }
+        catch (Exception ex) {
             log.warn("OpenAI chat request failed. message={}", ex.getMessage());
-            throw new RecommendationException(RecommendationErrorCode.OPENAI_REQUEST_FAILED);
+            throw new ReviewSummaryException(ReviewSummaryErrorCode.OPENAI_REQUEST_FAILED);
         }
     }
 }
