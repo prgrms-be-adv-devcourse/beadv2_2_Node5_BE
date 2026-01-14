@@ -109,6 +109,15 @@ jobs:
       - name: Deploy Core Infra
         run: |
           kubectl apply -f k8s/config-repo-configmap.yaml
+          
+          ENV_PATH="/home/ubuntu/env"
+          for env_file in $ENV_PATH/.env.*; do
+            [ -e "$env_file" ] || continue
+            svc_name=$(basename "$env_file" | sed 's/^\.env\.//')
+            kubectl create secret generic ${svc_name}-secret \
+            --from-env-file="$env_file" \
+            --dry-run=client -o yaml | kubectl apply -f -
+          done
 
           for svc in config discovery apigateway; do
             kubectl apply -f k8s/$svc.yaml
