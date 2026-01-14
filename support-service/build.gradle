@@ -33,9 +33,3 @@ dependencies {
     implementation 'org.springframework.ai:spring-ai-pgvector-store-spring-boot-starter:1.0.0-M6'
     implementation 'org.springframework.ai:spring-ai-core:1.0.0-M6'
 }
-
-dependencyManagement {
-    imports {
-        mavenBom "org.springframework.ai:spring-ai-bom:1.0.0-M4"
-    }
-}
