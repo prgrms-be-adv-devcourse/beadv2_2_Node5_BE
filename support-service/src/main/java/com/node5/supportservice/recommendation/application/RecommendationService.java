@@ -2,16 +2,19 @@ package com.node5.supportservice.recommendation.application;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.node5.supportservice.recommendation.application.dto.ProductRecommendationInfo;
 import com.node5.supportservice.recommendation.application.dto.PromptPayload;
 import com.node5.supportservice.recommendation.client.dto.ProductIdsRequest;
 import com.node5.supportservice.recommendation.client.dto.ProductSummaryListResponse;
 import com.node5.supportservice.recommendation.client.openfeign.OrderClient;
 import com.node5.supportservice.recommendation.client.openfeign.ProductClient;
+import com.node5.supportservice.recommendation.domain.ProductEmbeddingRepository;
 import com.node5.supportservice.recommendation.exception.RecommendationErrorCode;
 import com.node5.supportservice.recommendation.exception.RecommendationException;
 import com.node5.supportservice.recommendation.client.openai.ChatClient;
 import com.node5.supportservice.recommendation.client.openai.EmbeddingClient;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -28,12 +31,17 @@ public class RecommendationService {
     private static final String SYSTEM_PROMPT =
             "너는 반드시 요청된 형식을 지키며 1문장만 출력한다. 추가 설명이나 목록은 금지한다.";
 
+    private static final int DEFAULT_LIMIT = 10;
+
+    private final ProductEmbeddingRepository productEmbeddingRepository;
     private final ChatClient chatClient;
     private final EmbeddingClient embeddingClient;
     private final ObjectMapper objectMapper;
     private final ProductClient productClient;
     private final OrderClient orderClient;
 
+    // TODO: 리네이밍 필요
+    // 장바구니 아이템 받아서 취향 임베딩 반환
     public Result recommend(UUID memberId, List<UUID> cartItemIds) {
         // 장바구니 내역
         ProductSummaryListResponse cartItemResponse = getProductInfo(memberId, cartItemIds, "장바구니");
@@ -54,6 +62,22 @@ public class RecommendationService {
         log.info("** LLM TASTE EMBEDDING: {}", embedding);
 
         return new Result(tasteSummary, embedding);
+    }
+
+    // 취향 임베딩 입력받아서 추천 상품 리스트 반환
+    public ProductRecommendationInfo recommendProducts(float[] preferenceEmbedding, List<UUID> excludedProductIds, Integer limit) {
+        if (preferenceEmbedding == null || preferenceEmbedding.length == 0) {
+            return ProductRecommendationInfo.of(Collections.emptyList());
+        }
+
+        List<UUID> recommendList = new ArrayList<>();
+        int resolvedLimit = resolveLimit(limit);
+        if (excludedProductIds == null || excludedProductIds.isEmpty()) {
+            recommendList = productEmbeddingRepository.findSimilarActiveProductIds(preferenceEmbedding, resolvedLimit);
+        } else {
+            recommendList = productEmbeddingRepository.findSimilarActiveProductIdsExcluding(preferenceEmbedding, excludedProductIds, resolvedLimit);
+        }
+        return ProductRecommendationInfo.of(recommendList);
     }
 
     private ProductSummaryListResponse getProductInfo(UUID memberId, List<UUID> ids, String context) {
@@ -116,4 +140,11 @@ public class RecommendationService {
     }
 
     public record Result(String tasteSummary, List<Double> embedding) {}
+
+    private int resolveLimit(Integer limit) {
+        if (limit == null || limit <= 0) {
+            return DEFAULT_LIMIT;
+        }
+        return limit;
+    }
 }
