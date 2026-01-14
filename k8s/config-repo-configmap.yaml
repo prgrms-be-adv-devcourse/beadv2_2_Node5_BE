@@ -377,6 +377,9 @@ data:
             format_sql: true
             jdbc:
               time_zone: Asia/Seoul
+      batch:
+        jdbc:
+          initialize-schema: never
       mail:
         host: smtp.gmail.com
         port: 587
