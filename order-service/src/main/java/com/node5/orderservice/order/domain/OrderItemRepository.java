@@ -1,5 +1,7 @@
 package com.node5.orderservice.order.domain;
 
+import org.springframework.data.domain.Pageable;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -11,5 +13,5 @@ public interface OrderItemRepository {
 
     List<OrderItem> findByOrderIdIn(List<UUID> orderIds);
 
-    List<UUID> findTop5IdByOrderIdInOrderByCreatedAtDesc(List<UUID> orderIds);
+    List<UUID> findRecentProductIds(List<UUID> orderIds, Pageable pageable);
 }
