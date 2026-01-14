@@ -5,6 +5,8 @@ import com.node5.supportservice.recommendation.client.openai.EmbeddingClient;
 import com.node5.supportservice.recommendation.domain.ProductEmbedding;
 import com.node5.supportservice.recommendation.domain.ProductEmbeddingRepository;
 import com.node5.supportservice.recommendation.domain.ProductEmbeddingStatus;
+import com.node5.supportservice.recommendation.exception.RecommendationErrorCode;
+import com.node5.supportservice.recommendation.exception.RecommendationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -28,26 +30,24 @@ public class ProductEmbeddingService {
         upsertEmbedding(event.productId(), event.name(), event.description(), event.category(), status);
     }
 
+    // 컨트롤러 api 요청 시 연결되는 upsert 메소드
+    public void upsertEmbedding(UUID productId, String name, String description, String category, String productStatus) {
+        ProductEmbeddingStatus status = resolveEventStatus(productStatus);
+        upsertEmbedding(productId, name, description, category, status);
+    }
+
+    // 이벤트 수신 시 연결되는 upsert 메소드
     public void upsertEmbedding(UUID productId, String name, String description, String category, ProductEmbeddingStatus status) {
         String content = buildContent(name, description, category);
+        validateContent(content);
         float[] embedding = embeddingClient.embed(content);
 
-        ProductEmbedding embeddingEntity = productEmbeddingRepository.findByProductId(productId)
-                .map(existing -> {
-                    existing.update(content, status, embedding);
-                    return existing;
-                })
-                .orElseGet(() -> ProductEmbedding.create(productId, content, status, embedding));
-
+        ProductEmbedding embeddingEntity = ProductEmbedding.create(productId, content, status, embedding);
         productEmbeddingRepository.save(embeddingEntity);
     }
 
     public void deleteEmbedding(UUID productId) {
-        productEmbeddingRepository.findByProductId(productId)
-                .ifPresent(embedding -> {
-                    embedding.markDeleted();
-                    productEmbeddingRepository.save(embedding);
-                });
+        productEmbeddingRepository.markDeletedByProductId(productId);
     }
 
     private String buildContent(String name, String description, String category) {
@@ -55,6 +55,12 @@ public class ProductEmbeddingService {
         String safeDescription = description == null ? "" : description;
         String safeCategory = category == null ? "" : category;
         return String.format("%s %s %s", safeName, safeCategory, safeDescription);
+    }
+
+    private void validateContent(String content) {
+        if (content == null || content.trim().isEmpty()) {
+            throw new RecommendationException(RecommendationErrorCode.PRODUCT_EMBEDDING_CONTENT_EMPTY);
+        }
     }
 
     private ProductEmbeddingStatus resolveEventStatus(String productStatus) {
