@@ -8,18 +8,6 @@ spring:
   cloud:
     config:
       fail-fast: true
-  kafka:
-    bootstrap-servers: ${KAFKA_HOST}:9092
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-    consumer:
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-      group-id: catalog-service-search
-      properties:
-        spring.json.trusted.packages: "com.node5.catalogservice.*"
-
 
 apigateway:
   host: http://apigateway-service:8000
