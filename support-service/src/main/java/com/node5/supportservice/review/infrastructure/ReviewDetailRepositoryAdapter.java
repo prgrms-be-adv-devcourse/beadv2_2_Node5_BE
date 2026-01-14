@@ -24,6 +24,11 @@ public class ReviewDetailRepositoryAdapter implements ReviewDetailRepository {
         return reviewDetailJpaRepository.findByProductIdAndDeletedAtIsNullOrderByCreatedAtDesc(productId, pageable);
     }
 
+    @Override
+    public Page<ReviewDetail> findAllRecommendedByProduct(UUID productId, Pageable pageable) {
+        return reviewDetailJpaRepository.findRecommendedReviews(productId, pageable);
+    }
+
     // 회원별 리뷰 조회 (최신순, 삭제된 리뷰 제외)
     @Override
     public Page<ReviewDetail> findAllLatestByMember(UUID memberId, Pageable pageable) {
