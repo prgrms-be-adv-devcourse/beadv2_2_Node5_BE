@@ -4,6 +4,10 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      feature_branch:
+        description: '비교할 피처 브랜치 이름 (예: feature/123)'
+        required: true
 
 jobs:
   detect:
@@ -30,10 +34,11 @@ jobs:
           INFRA_PATTERN=$(echo "$INFRA" | jq -r '. | join("|")')
           ALL_PATTERN=$(echo "$ALL" | jq -r '. | join("|")')
           
-          # 2. 비교 대상 설정 (수동: main..develop / 자동: before..sha)
+          # 2. 비교 대상 설정 (수동: develop..feat / 자동: before..sha)
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            git fetch origin main develop
-            BASE="origin/main"; HEAD="origin/develop"
+            INPUT="${{ github.event.inputs.feature_branch }}"
+            git fetch origin develop "$INPUT"
+            BASE="origin/develop"; HEAD="origin/$INPUT"
           else
             BASE="${{ github.event.before }}"; HEAD="${{ github.sha }}"
           fi
