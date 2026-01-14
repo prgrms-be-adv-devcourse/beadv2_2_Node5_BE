@@ -1,6 +1,7 @@
 package com.node5.supportservice.review.domain;
 
 import com.node5.common.domain.BaseEntity;
+import com.node5.supportservice.global.util.VectorConverter;
 import com.node5.supportservice.review.application.dto.ReviewUpdateCommand;
 import com.node5.supportservice.review.exception.ReviewErrorCode;
 import com.node5.supportservice.review.exception.ReviewException;
@@ -9,6 +10,8 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -50,8 +53,10 @@ public class ReviewDetail extends BaseEntity {
     @Column(name = "like_count", nullable = false)
     private int likeCount;
 
-    @Column(name = "embedding", columnDefinition = "vector(1536)")
-    private Object embedding;
+    @Convert(converter = VectorConverter.class)
+    @JdbcTypeCode(SqlTypes.OTHER)
+    @Column(name = "embedding", columnDefinition = "vector(1536)", nullable = false)
+    private float[] embedding;
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
@@ -97,6 +102,10 @@ public class ReviewDetail extends BaseEntity {
         if (this.memberId.equals(memberId)) {
             throw new ReviewException(ReviewErrorCode.REVIEW_CANNOT_LIKE_OWN);
         }
+    }
+
+    public void updateEmbedding(float[] vector) {
+        this.embedding = vector;
     }
 
 }

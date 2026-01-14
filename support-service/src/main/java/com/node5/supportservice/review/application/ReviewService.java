@@ -23,7 +23,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -203,8 +202,7 @@ public class ReviewService {
                     .orElseThrow(() -> new ReviewException(ReviewErrorCode.REVIEW_NOT_FOUND));
             String cleanedBody = event.body().replaceAll("\\s+", " ").trim();
             float[] vector = embeddingModel.embed(cleanedBody);
-            String vectorString = Arrays.toString(vector);
-            reviewDetailRepository.updateReviewEmbedding(review.getId(), vectorString);
+            review.updateEmbedding(vector);
             log.info("리뷰 임베딩 생성 및 업데이트 완료: {}", event.reviewId());
         } catch (Exception e) {
             log.error("리뷰 임베딩 생성 실패: {}, ReviewId: {}", e, event.reviewId());
@@ -220,8 +218,7 @@ public class ReviewService {
             try {
                 String cleanedBody = review.getBody().replaceAll("\\s+", " ").trim();
                 float[] vector = embeddingModel.embed(cleanedBody);
-                String vectorString = Arrays.toString(vector);
-                reviewDetailRepository.updateReviewEmbedding(review.getId(), vectorString);
+                review.updateEmbedding(vector);
                 log.info("리뷰 임베딩 생성 및 업데이트 완료: {}", review.getId());
             } catch (Exception e) {
                 log.error("리뷰 임베딩 생성 실패: {}, ReviewId: {}", e, review.getId());

@@ -86,8 +86,8 @@ public class ReviewDetailRepositoryAdapter implements ReviewDetailRepository {
         return reviewDetailJpaRepository.findAllByEmbeddingIsNullOrderByCreatedAtDesc();
     }
 
-    @Override
-    public void updateReviewEmbedding(UUID reviewId, String vector) {
-        reviewDetailJpaRepository.updateReviewEmbedding(reviewId, vector);
-    }
+//    @Override
+//    public void updateReviewEmbedding(UUID reviewId, PGvector vector) {
+//        reviewDetailJpaRepository.updateReviewEmbedding(reviewId, vector);
+//    }
 }

@@ -1,4 +1,4 @@
-package com.node5.supportservice.exception;
+package com.node5.supportservice.global.exception;
 
 import com.node5.common.exception.BaseErrorCode;
 import com.node5.common.exception.BaseException;

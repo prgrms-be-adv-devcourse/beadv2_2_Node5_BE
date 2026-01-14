@@ -43,23 +43,28 @@ public interface ReviewDetailJpaRepository extends JpaRepository<ReviewDetail, U
     //특정 상품에서 최근 1달 동안 공감 수가 가장 많은 리뷰 ID 조회 (삭제된 리뷰 제외)
     Optional<ReviewDetail> findTopByProductIdAndCreatedAtBetweenAndDeletedAtIsNullOrderByLikeCountDesc(UUID productId, LocalDateTime startDate, LocalDateTime endDate);
 
-    // 유사한 리뷰 조회
-    @Query(value = "SELECT * FROM review_detail " +
-            "WHERE product_id = :productId " +
-            "AND id != :reviewId " +
-            "AND (embedding <=> (SELECT embedding FROM review_detail WHERE id = :reviewId)) < 0.4 " + // 범위 제한 추가
-            "ORDER BY embedding <=> (SELECT embedding FROM review_detail WHERE id = :reviewId) ASC " +
-            "LIMIT 4",
-            nativeQuery = true)
-    List<ReviewDetail> findSimilarReviews(UUID productId, UUID reviewId);
+    @Query(value = """
+    SELECT * FROM support.review_detail 
+    WHERE product_id = :productId 
+      AND id != :reviewId
+      AND deleted_at IS NULL
+    ORDER BY embedding OPERATOR(public.<=>) (
+        SELECT embedding FROM support.review_detail WHERE id = :reviewId
+    )
+    LIMIT 4
+    """, nativeQuery = true)
+    List<ReviewDetail> findSimilarReviews(
+            @Param("productId") UUID productId,
+            @Param("reviewId") UUID reviewId
+    );
 
     // 임베딩 되지 않은 리뷰 조회 (테스트용)
     List<ReviewDetail> findAllByEmbeddingIsNullOrderByCreatedAtDesc();
 
-    // 리뷰 임베딩 업데이트
-    @Modifying
-    @Transactional
-    @Query(value = "UPDATE support.review_detail SET embedding = CAST(:vector AS vector) WHERE id = :reviewId", nativeQuery = true)
-    void updateReviewEmbedding(@Param("reviewId") UUID reviewId, @Param("vector") String vector);
+//    // 리뷰 임베딩 업데이트
+//    @Modifying
+//    @Transactional
+//    @Query(value = "UPDATE support.review_detail SET embedding = :vector WHERE id = :reviewId", nativeQuery = true)
+//    void updateReviewEmbedding(@Param("reviewId") UUID reviewId, @Param("vector") PGvector vector);
 
 }
