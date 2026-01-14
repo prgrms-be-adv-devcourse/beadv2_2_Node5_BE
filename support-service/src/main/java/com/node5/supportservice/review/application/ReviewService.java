@@ -116,8 +116,17 @@ public class ReviewService {
     }
 
     // 상품에 리뷰 상세 정보 조회 (최신순)
-    public Page<ReviewDetailInfo> getReviewDetails(UUID productId, Pageable pageable) {
-        Page<ReviewDetail> reviewDetailsPage = reviewDetailRepository.findAllLatestByProduct(productId, pageable);
+    public Page<ReviewDetailInfo> getReviewDetails(UUID productId, String orderBy, Pageable pageable) {
+        Page<ReviewDetail> reviewDetailsPage;
+
+        if (orderBy.equals("recommended")) {
+            // 지수적 감쇠 수식이 적용된 쿼리 호출
+            reviewDetailsPage = reviewDetailRepository.findAllRecommendedByProduct(productId, pageable);
+        } else {
+            // 기본 최신순 등 일반적인 정렬 호출
+            reviewDetailsPage = reviewDetailRepository.findAllLatestByProduct(productId, pageable);
+        }
+
         return reviewDetailsPage.map(ReviewDetailInfo::from);
     }
 
