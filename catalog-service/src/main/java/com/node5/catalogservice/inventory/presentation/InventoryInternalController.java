@@ -19,7 +19,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/internal/stocks/reservations")
 @RequiredArgsConstructor
-public class StockInternalController {
+public class InventoryInternalController {
 
 	private final InventoryService inventoryService;
 
