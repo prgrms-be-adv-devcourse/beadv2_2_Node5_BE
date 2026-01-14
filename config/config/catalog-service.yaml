@@ -44,3 +44,13 @@ app:
       product-index: product-index
       product-embedding: ai-service.product-embedding.v1
       product-discontinued: catalog-service.product-discontinued.v1
+
+  search:
+    index:
+      product: products
+
+  s3:
+    bucket: ${S3_BUCKET_NAME}
+    region: ${AWS_REGION:ap-northeast-2}
+    presigned-url-expiration-seconds: ${S3_PRESIGNED_EXPIRE:600}
+

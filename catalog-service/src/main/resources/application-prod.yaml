@@ -14,16 +14,3 @@ apigateway:
 
 shop-service:
   url: http://shop-service:8085
-
-app:
-  search:
-    index:
-      product: products
-    kafka:
-      topics:
-        product-index: product-index-topic
-
-  s3:
-    bucket: ${S3_BUCKET_NAME}
-    region: ${AWS_REGION:ap-northeast-2}
-    presigned-url-expiration-seconds: ${S3_PRESIGNED_EXPIRE:600}
