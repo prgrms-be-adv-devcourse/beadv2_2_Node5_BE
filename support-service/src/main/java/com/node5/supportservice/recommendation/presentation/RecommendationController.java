@@ -30,13 +30,12 @@ public class RecommendationController {
         return ResponseEntity.ok(recommendationInfo);
     }
 
-    // TODO: 리네이밍
-    @PostMapping
-    public ResponseEntity<RecommendationResponse> recommend(
+    @PostMapping("/taste")
+    public ResponseEntity<RecommendationResponse> recommendTaste(
             @RequestHeader("Member-Id") UUID memberId,
             @RequestBody List<UUID> cartItemIds
     ) {
-        RecommendationService.Result result = recommendationService.recommend(memberId, cartItemIds);
+        RecommendationService.Result result = recommendationService.recommendTaste(memberId, cartItemIds);
         return ResponseEntity.ok(new RecommendationResponse(
             result.tasteSummary(),
             result.embedding()

@@ -7,7 +7,7 @@ import com.node5.supportservice.recommendation.application.dto.PromptPayload;
 import com.node5.supportservice.recommendation.client.dto.ProductIdsRequest;
 import com.node5.supportservice.recommendation.client.dto.ProductSummaryListResponse;
 import com.node5.supportservice.recommendation.client.openfeign.OrderClient;
-import com.node5.supportservice.recommendation.client.openfeign.ProductClient;
+import com.node5.supportservice.recommendation.client.openfeign.CatalogClient;
 import com.node5.supportservice.recommendation.domain.ProductEmbeddingRepository;
 import com.node5.supportservice.recommendation.exception.RecommendationErrorCode;
 import com.node5.supportservice.recommendation.exception.RecommendationException;
@@ -38,12 +38,11 @@ public class RecommendationService {
     private final ChatClient chatClient;
     private final EmbeddingClient embeddingClient;
     private final ObjectMapper objectMapper;
-    private final ProductClient productClient;
+    private final CatalogClient catalogClient;
     private final OrderClient orderClient;
 
-    // TODO: 리네이밍 필요
     // 장바구니 아이템 받아서 취향 임베딩 반환
-    public Result recommend(UUID memberId, List<UUID> cartItemIds) {
+    public Result recommendTaste(UUID memberId, List<UUID> cartItemIds) {
         // 장바구니 내역
         ProductSummaryListResponse cartItemResponse = getProductInfo(memberId, cartItemIds, "장바구니");
         log.info("조회된 장바구니 내역 size: {}", cartItemResponse.products().size());
@@ -88,7 +87,7 @@ public class RecommendationService {
 
         try {
             ResponseEntity<ProductSummaryListResponse> response =
-                    productClient.getProductsByIds(memberId, ProductIdsRequest.from(ids));
+                    catalogClient.getProductsByIds(memberId, ProductIdsRequest.from(ids));
 
             return (response != null && response.getBody() != null)
                     ? response.getBody()
