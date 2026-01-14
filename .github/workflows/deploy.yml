@@ -60,6 +60,10 @@ jobs:
           # 4. 결과 출력
           HAS_CHANGES=$([ "$BUILD_LIST" != "[]" ] && echo "true" || echo "false")
           
+          echo "$CHANGED"
+          echo "Build Target List: $BUILD_LIST"
+          echo "Has Changes: $HAS_CHANGES"
+          
           echo "build_matrix={\"service\":$BUILD_LIST}" >> "$GITHUB_OUTPUT"
           echo "domain_matrix={\"service\":$DOMAIN_LIST}" >> "$GITHUB_OUTPUT"
           echo "has_changes=$HAS_CHANGES" >> "$GITHUB_OUTPUT"
