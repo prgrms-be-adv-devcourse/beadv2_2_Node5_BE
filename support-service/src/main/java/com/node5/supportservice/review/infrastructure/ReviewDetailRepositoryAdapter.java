@@ -47,7 +47,7 @@ public class ReviewDetailRepositoryAdapter implements ReviewDetailRepository {
 
     @Override
     public Boolean existsReview(UUID productId, UUID memberId) {
-        return reviewDetailJpaRepository.existsByProductIdAndMemberIdAndDeletedAtIsNull(productId, memberId);
+        return reviewDetailJpaRepository.existsByProductIdAndMemberId(productId, memberId);
     }
 
     // 전체 기간 특정 상품 리뷰 개수 조회 (삭제된 리뷰 제외)

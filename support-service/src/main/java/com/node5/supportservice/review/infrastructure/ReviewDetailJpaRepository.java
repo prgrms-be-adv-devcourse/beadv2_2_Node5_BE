@@ -28,8 +28,8 @@ public interface ReviewDetailJpaRepository extends JpaRepository<ReviewDetail, U
             "WHERE r.id = :reviewId")
     void incrementLikeCount(@Param("reviewId") UUID reviewId);
 
-    // 특정 회원이 특정 상품에 리뷰를 작성했는지 여부 확인 (삭제된 리뷰 제외)
-    Boolean existsByProductIdAndMemberIdAndDeletedAtIsNull(UUID productId, UUID memberId);
+    // 특정 회원이 특정 상품에 리뷰를 작성했는지 여부 확인
+    Boolean existsByProductIdAndMemberId(UUID productId, UUID memberId);
 
     // 전체 기간 특정 상품 리뷰 개수 조회 (삭제된 리뷰 제외)
     long countByProductIdAndDeletedAtIsNull(UUID productId);
