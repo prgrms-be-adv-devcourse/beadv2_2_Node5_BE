@@ -46,7 +46,7 @@ public interface ReviewDetailRepository {
     // 임베딩되지 않은 리뷰 조회
     List<ReviewDetail> findReviewsWithoutEmbedding();
 
-    // 임베딩 업데이트
-    void updateReviewEmbedding(UUID reviewId, String vector);
+//    // 임베딩 업데이트
+//    void updateReviewEmbedding(UUID reviewId, PGvector vector);
 
 }
