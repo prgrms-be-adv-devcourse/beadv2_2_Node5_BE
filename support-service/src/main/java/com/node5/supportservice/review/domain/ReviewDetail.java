@@ -103,13 +103,8 @@ public class ReviewDetail extends BaseEntity {
             throw new ReviewException(ReviewErrorCode.REVIEW_CANNOT_LIKE_OWN);
         }
     }
-
-<<<<<<< HEAD
     public void updateEmbedding(float[] vector) {
         this.embedding = vector;
     }
 
 }
-=======
-}
->>>>>>> a992d8a (feat: 리뷰 요약 ai 수정)
