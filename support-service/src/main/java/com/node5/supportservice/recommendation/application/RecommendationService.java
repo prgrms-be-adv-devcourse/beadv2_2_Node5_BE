@@ -15,6 +15,7 @@ import com.node5.supportservice.recommendation.client.openai.ChatClient;
 import com.node5.supportservice.recommendation.client.openai.EmbeddingClient;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -57,9 +58,9 @@ public class RecommendationService {
         String tasteSummary = chatClient.generateRecommendation(prompt, SYSTEM_PROMPT);
 
         // Embedding
-        List<Double> embedding = embeddingClient.embed(tasteSummary);
+        float[] embedding = embeddingClient.embed(tasteSummary);
         log.info("** LLM TASTE SUMMARY: {}", tasteSummary);
-        log.info("** LLM TASTE EMBEDDING: {}", embedding);
+        log.info("** LLM TASTE EMBEDDING: {}", Arrays.toString(embedding));
 
         return new Result(tasteSummary, embedding);
     }
@@ -139,7 +140,7 @@ public class RecommendationService {
                 + "[주문 내역 기반 생활 패턴 1~2개]을 보인다. 특히 [장바구니 기반 핵심 속성 1~2개]을 선호한다.\"";
     }
 
-    public record Result(String tasteSummary, List<Double> embedding) {}
+    public record Result(String tasteSummary, float[] embedding) {}
 
     private int resolveLimit(Integer limit) {
         if (limit == null || limit <= 0) {
