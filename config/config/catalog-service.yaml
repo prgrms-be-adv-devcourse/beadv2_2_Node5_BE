@@ -22,3 +22,10 @@ spring:
       initialize-schema: never
 api:
   v1: /api/v1
+
+kafka:
+  topics:
+    member-deleted: member-service.member-deleted.v1
+    product-index: product-index
+    product-embedding: ai-service.product-embedding.v1
+    product-discontinued: catalog-service.product-discontinued.v1
