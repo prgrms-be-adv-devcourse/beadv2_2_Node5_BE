@@ -32,7 +32,7 @@ public class LLMChatClient {
             messages.add(new UserMessage("요약을 생성하라."));
 
             OpenAiChatOptions options = OpenAiChatOptions.builder()
-                    .maxCompletionTokens(256)
+                    .maxCompletionTokens(200)
                     .temperature(0.2)
                     .build();
 

@@ -21,6 +21,7 @@ import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
+import org.springframework.batch.item.support.ListItemReader;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -40,6 +41,7 @@ public class MonthlyReviewSummaryJobConfig {
     private static final int CHUNK_SIZE = 1;
     private final ReviewSummaryRepository reviewSummaryRepository;
     private final ReviewService reviewService;
+//    private final ReviewTestData testData;
 
     @Bean
     public Job monthlyReviewSummaryJob(JobRepository jobRepository, Step monthlyReviewSummaryStep) {
@@ -66,6 +68,7 @@ public class MonthlyReviewSummaryJobConfig {
     ) {
         return new StepBuilder("monthlyReviewSummaryStep", jobRepository)
                 .<UUID, ReviewSummaryCommand>chunk(CHUNK_SIZE, transactionManager)
+//                .reader(new ListItemReader<>(testData.getProductIds()))
                 .reader(productIdsReader)
                 .processor(monthlyReviewSummaryProcessor)
                 .writer(reviewSummaryWriter)
@@ -106,7 +109,8 @@ public class MonthlyReviewSummaryJobConfig {
 
                 // Todo - productId, summaryYear, summaryMonth로 정제된 리뷰 읽어옴 아직 없음
                 ReviewSearchSimilarCommand command = new ReviewSearchSimilarCommand(summaryYear, summaryMonth);
-                List<ReviewDetailInfo> reviews = reviewService.searchSimilarReviewDetails(productId, command);
+                List<String> reviews = reviewService.searchSimilarReviewDetails(productId, command).stream().map(ReviewDetailInfo::body).toList();
+//                List<String> reviews = testData.getReviews(productId);
                 if (reviews.isEmpty()) {
                     log.info("리뷰 없음, productId={}, {}-{}", productId, summaryYear, summaryMonth);
                     return null;
@@ -116,7 +120,7 @@ public class MonthlyReviewSummaryJobConfig {
                         .replace("{{prev_summary}}", prevSummary)
                         .replace("{{reviews}}",
                                 reviews.stream()
-                                        .map(r -> "- " + r.body())
+                                        .map(r -> "- " + r)
                                         .collect(Collectors.joining("\n"))
                         );
 
