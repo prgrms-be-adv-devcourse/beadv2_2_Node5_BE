@@ -17,7 +17,7 @@ public class KafkaProductIndexEventConsumer {
 
 	private final ProductSearchRepository productSearchRepository;
 
-	@KafkaListener(topics = "product-index", groupId = "support-service")
+	@KafkaListener(topics = "catalog-service.product-index.v1", groupId = "support-service")
 	public void consume(ProductIndexEvent event) {
 
 		String productId = event.productId().toString();
