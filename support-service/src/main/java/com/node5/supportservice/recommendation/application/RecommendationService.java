@@ -2,6 +2,7 @@ package com.node5.supportservice.recommendation.application;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.node5.supportservice.chat.ChatService;
 import com.node5.supportservice.recommendation.application.dto.ProductRecommendationInfo;
 import com.node5.supportservice.recommendation.application.dto.PromptPayload;
 import com.node5.supportservice.recommendation.client.dto.ProductIdsRequest;
