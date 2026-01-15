@@ -1,6 +1,6 @@
 package com.node5.supportservice.notification.infrastructure.sender;
 
-import com.node5.supportservice.notification.client.MemberClient;
+import com.node5.supportservice.global.openfeign.client.MemberClient;
 import com.node5.supportservice.notification.domain.message.NotificationMessage;
 import com.node5.supportservice.notification.exception.NotificationErrorCode;
 import com.node5.supportservice.notification.exception.NotificationException;

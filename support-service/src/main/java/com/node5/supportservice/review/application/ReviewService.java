@@ -2,10 +2,10 @@ package com.node5.supportservice.review.application;
 
 import com.node5.common.event.ProductDiscontinuedEvent;
 import com.node5.common.event.ReviewCreatedEvent;
+import com.node5.supportservice.global.openfeign.client.CatalogClient;
+import com.node5.supportservice.global.openfeign.client.MemberClient;
 import com.node5.supportservice.review.application.dto.*;
-import com.node5.supportservice.review.client.MemberClient;
-import com.node5.supportservice.review.client.ProductClient;
-import com.node5.supportservice.review.client.dto.ProductStatusResponse;
+import com.node5.supportservice.global.openfeign.client.dto.ProductStatusResponse;
 import com.node5.supportservice.review.domain.*;
 import com.node5.supportservice.review.exception.ReviewErrorCode;
 import com.node5.supportservice.review.exception.ReviewException;
@@ -38,7 +38,7 @@ public class ReviewService {
     private final ApplicationEventPublisher eventPublisher;
     private final EmbeddingModel embeddingModel;
     private final MemberClient memberClient;
-    private final ProductClient productClient;
+    private final CatalogClient catalogClient;
 
     // 상품에 리뷰 작성
     @Transactional
@@ -61,7 +61,7 @@ public class ReviewService {
         }
 
         try {
-            ProductStatusResponse response = productClient.canPostReview(command.productId()); // 상품 상태 체크
+            ProductStatusResponse response = catalogClient.canPostReview(command.productId()); // 상품 상태 체크
             if (!response.isReviewable()) {
                 throw new ReviewException(ReviewErrorCode.PRODUCT_DISCONTINUED);
             }

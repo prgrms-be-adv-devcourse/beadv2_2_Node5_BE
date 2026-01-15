@@ -1,6 +1,6 @@
 package com.node5.supportservice.recommendation.application.dto;
 
-import com.node5.supportservice.recommendation.client.dto.ProductSummaryListResponse;
+import com.node5.supportservice.global.openfeign.client.dto.ProductSummaryListResponse;
 import java.util.ArrayList;
 import java.util.List;
 
