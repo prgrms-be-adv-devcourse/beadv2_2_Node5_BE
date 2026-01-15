@@ -433,6 +433,7 @@ data:
       topics:
         review-created: support-service.review-created.v1
         product-discontinued: catalog-service.product-discontinued.v1
+        product-embedding: ai-service.product-embedding.v1
     api:
       v1: /api/v1
     

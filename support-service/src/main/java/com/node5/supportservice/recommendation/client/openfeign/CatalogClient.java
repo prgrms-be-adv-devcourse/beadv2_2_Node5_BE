@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.RequestHeader;
 
 import java.util.UUID;
 
-@FeignClient(name = "product-service")
-public interface ProductClient {
+@FeignClient(name = "catalog-service")
+public interface CatalogClient {
 
     @GetMapping("/internal/products/getProductsByIds")
     ResponseEntity<ProductSummaryListResponse> getProductsByIds(

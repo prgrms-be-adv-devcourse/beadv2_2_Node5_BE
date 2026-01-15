@@ -1,12 +1,13 @@
 package com.node5.supportservice.recommendation.client.dto;
 
 import java.util.List;
+import java.util.UUID;
 
 public record ProductSummaryListResponse(
-     List<ProductSummaryResponse> products
+        List<ProductSummaryResponse> products
 ) {
     public record ProductSummaryResponse(
-            Long productId,
+            UUID productId,
             String name,
             String category,
             String description
