@@ -14,13 +14,13 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("internal/recommendations/embeddings")
+@RequestMapping("admin/recommendations/embeddings")
 @RequiredArgsConstructor
-public class ProductEmbeddingInternalController {
+public class AdminProductEmbeddingController {
 
     private final ProductEmbeddingService productEmbeddingService;
 
-    @Operation(summary = "상품 임베딩 수동 생성", description = "카탈로그 서비스에서 상품 ID를 조회해 임베딩을 생성합니다.")
+    @Operation(summary = "상품 임베딩 수동 생성", description = "카탈로그 서비스에서 판매중인 상품 ID를 조회해 임베딩을 생성합니다.")
     @PostMapping("/backfill")
     public ResponseEntity<ProductEmbeddingBackfillResponse> backfillEmbeddings(
             @RequestHeader("Member-Id") UUID memberId,
