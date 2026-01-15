@@ -16,7 +16,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event_name == 'workflow_dispatch' && 'deploy' || github.ref }}
           fetch-depth: 0
 
       - id: detect
@@ -31,10 +30,10 @@ jobs:
           INFRA_PATTERN=$(echo "$INFRA" | jq -r '. | join("|")')
           ALL_PATTERN=$(echo "$ALL" | jq -r '. | join("|")')
           
-          # 2. 비교 대상 설정 (수동: dev..deploy / 자동: before..sha)
+          # 2. 비교 대상 설정 (수동: develop..deploy / 자동: before..sha)
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            git fetch origin develop deploy
-            BASE="origin/develop"; HEAD="origin/deploy"
+            git fetch origin deploy develop
+            BASE="origin/deploy"; HEAD="origin/develop"
             DIFF_SPEC="$BASE..$HEAD" # 수동 배포 시 dev와 deploy 간 변경사항 확인
           else
             BASE="${{ github.event.before }}"; HEAD="${{ github.sha }}"
@@ -77,8 +76,6 @@ jobs:
       matrix: ${{ fromJson(needs.detect.outputs.build_matrix) }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event_name == 'workflow_dispatch' && 'deploy' || github.ref }}
 
       - name: Set up JDK
         uses: actions/setup-java@v4
