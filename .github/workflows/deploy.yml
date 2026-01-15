@@ -31,11 +31,11 @@ jobs:
           INFRA_PATTERN=$(echo "$INFRA" | jq -r '. | join("|")')
           ALL_PATTERN=$(echo "$ALL" | jq -r '. | join("|")')
           
-          # 2. 비교 대상 설정 (수동: dev...deploy / 자동: before..sha)
+          # 2. 비교 대상 설정 (수동: dev..deploy / 자동: before..sha)
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             git fetch origin develop deploy
             BASE="origin/develop"; HEAD="origin/deploy"
-            DIFF_SPEC="$BASE..$HEAD" # 수동 배포 시 feat의 변경사항만 확인
+            DIFF_SPEC="$BASE..$HEAD" # 수동 배포 시 dev와 deploy 간 변경사항 확인
           else
             BASE="${{ github.event.before }}"; HEAD="${{ github.sha }}"
             DIFF_SPEC="$BASE $HEAD" # 자동 배포 시 develop의 모든 변경사항 확인
