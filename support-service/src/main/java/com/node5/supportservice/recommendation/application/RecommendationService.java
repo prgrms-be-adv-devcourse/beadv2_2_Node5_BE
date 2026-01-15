@@ -2,17 +2,22 @@ package com.node5.supportservice.recommendation.application;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.node5.supportservice.chat.ChatService;
+import com.node5.supportservice.recommendation.application.dto.ProductRecommendationInfo;
 import com.node5.supportservice.recommendation.application.dto.PromptPayload;
 import com.node5.supportservice.recommendation.client.dto.ProductIdsRequest;
 import com.node5.supportservice.recommendation.client.dto.ProductSummaryListResponse;
 import com.node5.supportservice.recommendation.client.openfeign.OrderClient;
-import com.node5.supportservice.recommendation.client.openfeign.ProductClient;
+import com.node5.supportservice.recommendation.client.openfeign.CatalogClient;
+import com.node5.supportservice.recommendation.domain.ProductEmbeddingRepository;
 import com.node5.supportservice.recommendation.exception.RecommendationErrorCode;
 import com.node5.supportservice.recommendation.exception.RecommendationException;
-import com.node5.supportservice.recommendation.client.openai.ChatClient;
 import com.node5.supportservice.recommendation.client.openai.EmbeddingClient;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.UUID;
 
@@ -28,32 +33,72 @@ public class RecommendationService {
     private static final String SYSTEM_PROMPT =
             "너는 반드시 요청된 형식을 지키며 1문장만 출력한다. 추가 설명이나 목록은 금지한다.";
 
-    private final ChatClient chatClient;
+    private static final int DEFAULT_LIMIT = 5;
+    private static final int MAX_LIMIT = 10;
+
+    private final ProductEmbeddingRepository productEmbeddingRepository;
+    private final ChatService chatService;
     private final EmbeddingClient embeddingClient;
     private final ObjectMapper objectMapper;
-    private final ProductClient productClient;
+    private final CatalogClient catalogClient;
     private final OrderClient orderClient;
 
-    public Result recommend(UUID memberId, List<UUID> cartItemIds) {
+    // 장바구니 아이템 받아서 취향 임베딩 반환
+    public Result recommendTaste(UUID memberId, List<UUID> cartItemProductIds) {
         // 장바구니 내역
-        ProductSummaryListResponse cartItemResponse = getProductInfo(memberId, cartItemIds, "장바구니");
+        ProductSummaryListResponse cartItemResponse = getProductInfo(memberId, cartItemProductIds, "장바구니");
         log.info("조회된 장바구니 내역 size: {}", cartItemResponse.products().size());
 
         // 주문 내역
-        List<UUID> recentOrderIds = getRecentOrderIds(memberId);
-        ProductSummaryListResponse orderItemResponse = getProductInfo(memberId, recentOrderIds, "주문");
+        List<UUID> recentOrderProductIds = getRecentOrderIds(memberId);
+        ProductSummaryListResponse orderItemResponse = getProductInfo(memberId, recentOrderProductIds, "주문");
         log.info("조회된 주문 내역 size: {}", orderItemResponse.products().size());
 
+        // 장바구니 내역, 주문 내역에 포함되어 있는 상품 리스트
+        List<UUID> existedProductIds = getExistedProductIds(cartItemProductIds, recentOrderProductIds);
+
         // LLM
-        String prompt = createPrompt(orderItemResponse.products(), cartItemResponse.products());
-        String tasteSummary = chatClient.generateRecommendation(prompt, SYSTEM_PROMPT);
+        String userPrompt = createPrompt(orderItemResponse.products(), cartItemResponse.products());
+        String tasteSummary = chatService.callLlm(SYSTEM_PROMPT, userPrompt, "Recommendation");
 
         // Embedding
-        List<Double> embedding = embeddingClient.embed(tasteSummary);
+        float[] embedding = embeddingClient.embed(tasteSummary);
         log.info("** LLM TASTE SUMMARY: {}", tasteSummary);
-        log.info("** LLM TASTE EMBEDDING: {}", embedding);
+        log.info("** LLM TASTE EMBEDDING: {}", Arrays.toString(embedding));
 
-        return new Result(tasteSummary, embedding);
+        return new Result(tasteSummary, embedding, existedProductIds);
+    }
+
+    private List<UUID> getExistedProductIds(List<UUID> cartItemProductIds, List<UUID> recentOrderProductIds) {
+        LinkedHashSet<UUID> merged = new LinkedHashSet<>();
+        if (cartItemProductIds != null) {
+            merged.addAll(cartItemProductIds);
+        }
+        if (recentOrderProductIds != null) {
+            merged.addAll(recentOrderProductIds);
+        }
+        return new ArrayList<>(merged);
+    }
+
+    // 취향 임베딩 입력받아서 추천 상품 리스트 반환
+    public ProductRecommendationInfo recommendProducts(UUID memberId, List<UUID> cartItemProductIds, Integer limit) {
+        Result result = recommendTaste(memberId, cartItemProductIds);
+
+        float[] preferenceEmbedding = result.embedding();
+        List<UUID> excludedProductIds = result.existedProductIds;
+
+        if (preferenceEmbedding == null || preferenceEmbedding.length == 0) {
+            throw new RecommendationException(RecommendationErrorCode.OPENAI_EMBEDDING_RESPONSE_EMPTY);
+        }
+
+        List<UUID> recommendList = new ArrayList<>();
+        int resolvedLimit = resolveLimit(limit);
+        if (excludedProductIds == null || excludedProductIds.isEmpty()) {
+            recommendList = productEmbeddingRepository.findSimilarActiveProductIds(preferenceEmbedding, resolvedLimit);
+        } else {
+            recommendList = productEmbeddingRepository.findSimilarActiveProductIdsExcluding(preferenceEmbedding, excludedProductIds, resolvedLimit);
+        }
+        return ProductRecommendationInfo.of(recommendList);
     }
 
     private ProductSummaryListResponse getProductInfo(UUID memberId, List<UUID> ids, String context) {
@@ -63,7 +108,7 @@ public class RecommendationService {
 
         try {
             ResponseEntity<ProductSummaryListResponse> response =
-                    productClient.getProductsByIds(memberId, ProductIdsRequest.from(ids));
+                    catalogClient.getProductsByIds(memberId, ProductIdsRequest.from(ids));
 
             return (response != null && response.getBody() != null)
                     ? response.getBody()
@@ -115,5 +160,15 @@ public class RecommendationService {
                 + "[주문 내역 기반 생활 패턴 1~2개]을 보인다. 특히 [장바구니 기반 핵심 속성 1~2개]을 선호한다.\"";
     }
 
-    public record Result(String tasteSummary, List<Double> embedding) {}
+    public record Result(String tasteSummary, float[] embedding, List<UUID> existedProductIds) {}
+
+    private int resolveLimit(Integer limit) {
+        if (limit == null || limit <= 0) {
+            return DEFAULT_LIMIT;
+        }
+        if (limit > MAX_LIMIT) {
+            throw new RecommendationException(RecommendationErrorCode.RECOMMENDATION_LIMIT_TOO_HIGH);
+        }
+        return limit;
+    }
 }

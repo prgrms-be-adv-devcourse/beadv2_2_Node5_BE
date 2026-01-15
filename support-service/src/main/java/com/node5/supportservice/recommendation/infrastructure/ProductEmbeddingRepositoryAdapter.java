@@ -2,6 +2,7 @@ package com.node5.supportservice.recommendation.infrastructure;
 
 import com.node5.supportservice.recommendation.domain.ProductEmbedding;
 import com.node5.supportservice.recommendation.domain.ProductEmbeddingRepository;
+import com.node5.supportservice.recommendation.domain.ProductEmbeddingStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.SqlParameterValue;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -11,7 +12,6 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.Types;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -32,10 +32,12 @@ public class ProductEmbeddingRepositoryAdapter implements ProductEmbeddingReposi
                 modified_at = now()
             """;
 
-    @Override
-    public Optional<ProductEmbedding> findByProductId(UUID productId) {
-        return productEmbeddingJpaRepository.findByProductId(productId);
-    }
+    private static final String MARK_DELETED_SQL = """
+            UPDATE support.product_embedding
+            SET status = :status,
+                modified_at = now()
+            WHERE product_id = :productId
+            """;
 
     @Override
     public ProductEmbedding save(ProductEmbedding productEmbedding) {
@@ -47,6 +49,14 @@ public class ProductEmbeddingRepositoryAdapter implements ProductEmbeddingReposi
                 .addValue("embedding", new SqlParameterValue(Types.OTHER, toVectorLiteral(productEmbedding.getEmbedding())));
         namedParameterJdbcTemplate.update(UPSERT_SQL, params);
         return productEmbedding;
+    }
+
+    @Override
+    public void markDeletedByProductId(UUID productId) {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("productId", productId)
+                .addValue("status", ProductEmbeddingStatus.DELETED.name());
+        namedParameterJdbcTemplate.update(MARK_DELETED_SQL, params);
     }
 
     @Override

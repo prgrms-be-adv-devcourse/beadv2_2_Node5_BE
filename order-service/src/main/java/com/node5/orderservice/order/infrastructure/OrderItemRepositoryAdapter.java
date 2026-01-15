@@ -3,6 +3,7 @@ package com.node5.orderservice.order.infrastructure;
 import com.node5.orderservice.order.domain.OrderItem;
 import com.node5.orderservice.order.domain.OrderItemRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -29,8 +30,8 @@ public class OrderItemRepositoryAdapter implements OrderItemRepository {
     }
 
     @Override
-    public List<UUID> findTop5IdByOrderIdInOrderByCreatedAtDesc(List<UUID> orderIds) {
-        return orderItemJpaRepository.findTop5IdByOrderIdInOrderByCreatedAtDesc(orderIds);
+    public List<UUID> findRecentProductIds(List<UUID> orderIds, Pageable pageable) {
+        return orderItemJpaRepository.findRecentProductIds(orderIds, pageable);
     }
 
 }
