@@ -20,6 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.inputs.feature_branch || github.ref }}
           fetch-depth: 0
 
       - id: detect
@@ -34,17 +35,18 @@ jobs:
           INFRA_PATTERN=$(echo "$INFRA" | jq -r '. | join("|")')
           ALL_PATTERN=$(echo "$ALL" | jq -r '. | join("|")')
           
-          # 2. 비교 대상 설정 (수동: develop..feat / 자동: before..sha)
+          # 2. 비교 대상 설정 (수동: dev...feat / 자동: before..sha)
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            INPUT="${{ github.event.inputs.feature_branch }}"
-            git fetch origin develop "$INPUT"
-            BASE="origin/develop"; HEAD="origin/$INPUT"
+            git fetch origin develop
+            BASE="origin/develop"; HEAD="HEAD"
+            DIFF_SPEC="$BASE...$HEAD" # 수동 배포 시 feat의 변경사항만 확인
           else
             BASE="${{ github.event.before }}"; HEAD="${{ github.sha }}"
+            DIFF_SPEC="$BASE $HEAD" # 자동 배포 시 develop의 모든 변경사항 확인
           fi
           
           # 3. 변경 파일 및 서비스 추출
-          CHANGED=$(git diff --name-only $BASE $HEAD || echo "")
+          CHANGED=$(git diff --name-only $DIFF_SPEC || echo "")
           
           # common이 변경되면 전체 서비스, 아니면 해당 디렉토리 서비스만 추출
           if echo "$CHANGED" | grep -qE "^((common|$INFRA_PATTERN)/)"; then
@@ -79,6 +81,8 @@ jobs:
       matrix: ${{ fromJson(needs.detect.outputs.build_matrix) }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.feature_branch || github.ref }}
 
       - name: Set up JDK
         uses: actions/setup-java@v4
