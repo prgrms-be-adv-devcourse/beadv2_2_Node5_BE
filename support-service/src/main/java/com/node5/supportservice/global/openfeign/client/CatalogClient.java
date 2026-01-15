@@ -7,10 +7,7 @@ import jakarta.validation.Valid;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
@@ -18,7 +15,7 @@ import java.util.UUID;
 @FeignClient(name = "catalog-service", contextId = "catalogClient")
 public interface CatalogClient {
 
-    @GetMapping("/internal/products/getProductsByIds")
+    @PostMapping("/internal/products/getProductsByIds")
     ResponseEntity<ProductSummaryListResponse> getProductsByIds(
             @RequestHeader("Member-Id") UUID memberId,
             @Valid @RequestBody ProductIdsRequest request
