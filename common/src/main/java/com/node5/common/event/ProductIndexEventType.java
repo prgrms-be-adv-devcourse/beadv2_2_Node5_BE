@@ -1,4 +1,4 @@
-package com.node5.catalogservice.product.event;
+package com.node5.common.event;
 
 public enum ProductIndexEventType {
 	CREATE,
