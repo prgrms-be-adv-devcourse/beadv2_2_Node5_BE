@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import java.util.List;
 import java.util.UUID;
 
-@FeignClient(name = "catalog-service")
+@FeignClient(name = "catalog-service", contextId = "reviewsummaryCatalogClient")
 public interface CatalogClient {
 
     @GetMapping("/internal/products/ids")

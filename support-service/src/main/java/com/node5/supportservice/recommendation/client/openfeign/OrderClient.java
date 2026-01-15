@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import java.util.List;
 import java.util.UUID;
 
-@FeignClient(name = "order-service")
+@FeignClient(name = "order-service", contextId = "recommendationOrderClient")
 public interface OrderClient {
 
     @GetMapping("/internal/orders/getRecentOrderList")

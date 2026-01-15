@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.UUID;
 
-@FeignClient(name = "member-service")
+@FeignClient(name = "member-service", contextId = "notificationMemberClient")
 public interface MemberClient {
 
     @GetMapping("/internal/members/{memberId}/email")
