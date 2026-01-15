@@ -7,7 +7,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.node5.catalogservice.inventory.application.dto.StockCommitCommand;
 import com.node5.catalogservice.inventory.application.dto.StockHoldCommand;
-import com.node5.catalogservice.inventory.application.dto.StockRegisterCommand;
 import com.node5.catalogservice.inventory.application.dto.StockReleaseCommand;
 import com.node5.catalogservice.inventory.application.dto.StockReservationInfo;
 import com.node5.catalogservice.inventory.domain.ReservationStatus;
@@ -17,8 +16,12 @@ import com.node5.catalogservice.inventory.domain.StockReservation;
 import com.node5.catalogservice.inventory.domain.StockReservationRepository;
 import com.node5.catalogservice.inventory.exception.InventoryErrorCode;
 import com.node5.catalogservice.inventory.presentation.dto.StockResponse;
+import com.node5.catalogservice.product.domain.Product;
+import com.node5.catalogservice.product.domain.ProductRepository;
+import com.node5.catalogservice.shop.client.ShopOwnershipClient;
 import com.node5.common.exception.BaseException;
 
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -27,6 +30,8 @@ public class InventoryService {
 
 	private final StockRepository stockRepository;
 	private final StockReservationRepository reservationRepository;
+	private final ProductRepository productRepository;
+	private final ShopOwnershipClient shopOwnershipClient;
 
 	@Transactional
 	public StockReservationInfo hold(StockHoldCommand command) {
@@ -147,14 +152,16 @@ public class InventoryService {
 	}
 
 	@Transactional
-	public void registerStock(StockRegisterCommand command) {
+	public StockResponse updateStockQuantity(UUID memberId, UUID productId, int quantity) {
+		validateSeller(memberId, productId);
 
-		if (stockRepository.existsById(command.productId())) {
-			throw new BaseException(InventoryErrorCode.INVENTORY_ALREADY_EXISTS);
-		}
+		Stock stock = stockRepository.findById(productId)
+			.orElseGet(() -> Stock.create(productId, 0));
 
-		Stock stock = Stock.create(command.productId(), command.quantity());
-		stockRepository.save(stock);
+		stock.updateQuantity(quantity);
+
+		Stock saved = stockRepository.save(stock);
+		return StockResponse.from(saved);
 	}
 
 	@Transactional(readOnly = true)
@@ -165,15 +172,20 @@ public class InventoryService {
 		return StockResponse.from(stock);
 	}
 
-	@Transactional
-	public StockResponse updateStockQuantity(UUID productId, int quantity) {
+	private void validateSeller(UUID memberId, UUID productId) {
+		Product product = productRepository.findById(productId)
+			.orElseThrow(() -> new BaseException(InventoryErrorCode.PRODUCT_NOT_FOUND));
 
-		Stock stock = stockRepository.findById(productId)
-			.orElseThrow(() -> new BaseException(InventoryErrorCode.INVENTORY_NOT_FOUND));
+		try {
+			UUID ownerMemberId = shopOwnershipClient.getOwnerMemberId(product.getShopId());
 
-		stock.updateQuantity(quantity);
-		Stock saved = stockRepository.save(stock);
-
-		return StockResponse.from(saved);
+			if (!ownerMemberId.equals(memberId)) {
+				throw new BaseException(InventoryErrorCode.SELLER_FORBIDDEN);
+			}
+		} catch (FeignException.NotFound e) {
+			throw new BaseException(InventoryErrorCode.SHOP_NOT_FOUND);
+		} catch (FeignException e) {
+			throw new BaseException(InventoryErrorCode.SHOP_SERVICE_UNAVAILABLE);
+		}
 	}
 }
