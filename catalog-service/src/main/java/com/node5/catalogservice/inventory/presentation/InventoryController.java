@@ -31,6 +31,14 @@ public class InventoryController {
 	private final InventoryService inventoryService;
 
 	@PutMapping("/{productId}")
+	@Operation(summary = "상품 재고 변경", description = "상품 재고 수량을 변경합니다.")
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "상품 재고 변경 성공"),
+		@ApiResponse(responseCode = "400", description = "요청 값이 유효하지 않습니다."),
+		@ApiResponse(responseCode = "403", description = "해당 상품에 대한 권한이 없습니다."),
+		@ApiResponse(responseCode = "404", description = "상품 또는 상점 정보를 찾을 수 없습니다."),
+		@ApiResponse(responseCode = "503", description = "상점 서비스를 사용할 수 없습니다.")
+	})
 	public ResponseEntity<StockResponse> updateStock(
 		@RequestHeader("Member-Id") UUID memberId,
 		@PathVariable UUID productId,
