@@ -154,10 +154,11 @@ public class RecommendationService {
     }
 
     private String promptTemplate() {
-        return "cartItems 70%, orderItems 30% 비중으로 반영해줘."
+        return "cartItems 60%, orderItems 40% 비중으로 반영하되(둘 중 하나만 있을 경우엔 해당 데이터만 100% 활용)"
                 + "장바구니, 주문 내역에서 공통으로 반복되는 속성(카테고리/기능/용도/성향)을 우선 사용해줘."
-                + "형식: \"사용자는 최근 [주요 관심사 1~2개]와 [보조 관심사 1~2개]에 관심이 높고, "
-                + "[주문 내역 기반 생활 패턴 1~2개]을 보인다. 특히 [장바구니 기반 핵심 속성 1~2개]을 선호한다.\"";
+                + "데이터가 없을 경우, 최근 2030 인기 라이프스타일 기반의 대중적인 취향으로 생성해줘."
+                + "응답 형식: \"사용자는 최근 [주요 관심사 1~2개]와 [보조 관심사 1~2개]에 관심이 높고, "
+                + "[생활 패턴 1~2개]을 보인다. 특히 [핵심 선호 속성 1~2개]을 선호한다.\"";
     }
 
     public record Result(String tasteSummary, float[] embedding, List<UUID> existedProductIds) {}
