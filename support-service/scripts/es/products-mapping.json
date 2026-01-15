@@ -1,0 +1,38 @@
+{
+  "settings": {
+    "analysis": {
+      "filter": {
+        "autocomplete_edge": {
+          "type": "edge_ngram",
+          "min_gram": 2,
+          "max_gram": 20
+        }
+      },
+      "analyzer": {
+        "autocomplete_index": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": ["lowercase", "autocomplete_edge"]
+        },
+        "autocomplete_search": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": ["lowercase"]
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "productId": { "type": "keyword" },
+      "name": { "type": "text" },
+      "name_autocomplete": {
+        "type": "text",
+        "analyzer": "autocomplete_index",
+        "search_analyzer": "autocomplete_search"
+      },
+      "category": { "type": "keyword" },
+      "status": { "type": "keyword" }
+    }
+  }
+}
