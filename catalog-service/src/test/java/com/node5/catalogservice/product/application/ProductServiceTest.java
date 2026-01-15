@@ -23,7 +23,7 @@ import com.node5.catalogservice.product.domain.Product;
 import com.node5.catalogservice.product.domain.ProductCategory;
 import com.node5.catalogservice.product.domain.ProductRepository;
 import com.node5.catalogservice.product.domain.ProductStatus;
-import com.node5.catalogservice.product.event.ProductIndexEventType;
+import com.node5.common.event.ProductIndexEventType;
 import com.node5.catalogservice.product.exception.ProductErrorCode;
 import com.node5.catalogservice.shop.client.ShopOwnershipClient;
 import com.node5.catalogservice.testsupport.ProductTestFactory;
