@@ -34,7 +34,7 @@ public class ProductEmbedding extends BaseEntity {
     @Column(nullable = false, length = 20)
     private ProductEmbeddingStatus status;
 
-    @JdbcTypeCode(SqlTypes.VECTOR)
+    @JdbcTypeCode(SqlTypes.OTHER)
     @Column(columnDefinition = "vector(1536)", nullable = false)
     private float[] embedding;
 
