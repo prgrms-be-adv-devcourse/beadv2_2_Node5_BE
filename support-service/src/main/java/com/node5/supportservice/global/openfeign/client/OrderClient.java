@@ -1,4 +1,4 @@
-package com.node5.supportservice.recommendation.client.openfeign;
+package com.node5.supportservice.global.openfeign.client;
 
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import java.util.List;
 import java.util.UUID;
 
-@FeignClient(name = "order-service", contextId = "recommendationOrderClient")
+@FeignClient(name = "order-service", contextId = "orderClient")
 public interface OrderClient {
 
     @GetMapping("/internal/orders/getRecentOrderList")

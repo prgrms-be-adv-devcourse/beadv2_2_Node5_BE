@@ -1,4 +1,4 @@
-package com.node5.supportservice.recommendation.client.dto;
+package com.node5.supportservice.global.openfeign.client.dto;
 
 import java.util.List;
 import java.util.UUID;
