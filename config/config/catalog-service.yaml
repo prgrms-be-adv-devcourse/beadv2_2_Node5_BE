@@ -17,9 +17,6 @@ spring:
         format_sql: true
         jdbc:
           time_zone: Asia/Seoul
-  batch:
-    jdbc:
-      initialize-schema: never
   kafka:
     bootstrap-servers: ${KAFKA_HOST}:9092
     producer:

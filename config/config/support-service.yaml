@@ -1,4 +1,8 @@
 spring:
+  elasticsearch:
+    uris: http://${ES_HOST}:9200
+    connection-timeout: 1s
+    socket-timeout: 3s
   datasource:
     url: ${SPRING_DATASOURCE_URL}
     driver-class-name: org.postgresql.Driver
@@ -80,7 +84,8 @@ kafka:
   topics:
     review-created: support-service.review-created.v1
     product-discontinued: catalog-service.product-discontinued.v1
-    product-embedding: ai-service.product-embedding.v1
+    product-embedding: catalog-service.product-embedding.v1
+    product-index: catalog-service.product-index.v1
 api:
   v1: /api/v1
 
