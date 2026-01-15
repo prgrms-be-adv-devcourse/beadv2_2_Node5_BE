@@ -16,16 +16,6 @@ public class SettlementSourceRepositoryAdapter implements SettlementSourceReposi
     private SettlementSourceJpaRepository sourceJpaRepository;
 
     @Override
-    public List<SettlementSource> findPendingByShopAndPeriod(UUID shopId, LocalDateTime startDate, LocalDateTime endDate) {
-        return sourceJpaRepository.findPendingByShopAndPeriod(shopId, startDate, endDate);
-    }
-
-    @Override
-    public List<SettlementSource> findPendingByPeriod(LocalDateTime startDate, LocalDateTime endDate) {
-        return sourceJpaRepository.findPendingByPeriod(startDate, endDate);
-    }
-
-    @Override
     public List<SettlementSource> saveAll(List<SettlementSource> sources) {
         return sourceJpaRepository.saveAll(sources);
     }
@@ -33,5 +23,10 @@ public class SettlementSourceRepositoryAdapter implements SettlementSourceReposi
     @Override
     public List<UUID> findDistinctShopIds(LocalDateTime startDateTime, LocalDateTime endDateTime) {
         return sourceJpaRepository.findDistinctShopIds(startDateTime, endDateTime);
+    }
+
+    @Override
+    public void bulkUpdateStatus(List<UUID> shopIds, LocalDateTime startDateTime, LocalDateTime endDateTime) {
+        sourceJpaRepository.bulkUpdateStatus(shopIds, startDateTime, endDateTime);
     }
 }

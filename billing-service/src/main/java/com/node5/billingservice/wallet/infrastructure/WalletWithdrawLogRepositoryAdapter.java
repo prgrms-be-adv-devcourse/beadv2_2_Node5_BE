@@ -2,7 +2,6 @@ package com.node5.billingservice.wallet.infrastructure;
 
 import com.node5.billingservice.wallet.domain.WalletWithdrawLog;
 import com.node5.billingservice.wallet.domain.WalletWithdrawLogRepository;
-import com.node5.billingservice.wallet.domain.WalletWithdrawLogState;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

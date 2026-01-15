@@ -11,6 +11,6 @@ import java.util.UUID;
 public interface ShopClient {
 
     @GetMapping("/internal/shops/{shopId}/member-id")
-    ResponseEntity<String> getMemberIdByShopId(@PathVariable UUID shopId);
+    ResponseEntity<UUID> getMemberIdByShopId(@PathVariable UUID shopId);
 
 }

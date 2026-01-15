@@ -7,6 +7,7 @@ CREATE SCHEMA IF NOT EXISTS member;
 CREATE TABLE member."member" (
 	id uuid NOT NULL,
 	name varchar(20) NOT NULL,
+	nickname varchar(20) NOT NULL,
 	email varchar(100) NOT NULL,
 	phone_number varchar(20) NOT NULL,
 	address varchar(100) NOT NULL,
@@ -47,9 +48,19 @@ CREATE TABLE member."inquiry" (
     title varchar(100) NOT NULL,
     message text NOT NULL,
     inquiry_category varchar(100) NOT NULL,
+    status           varchar(20) default 'RECEIVED'::character varying not null,
 	created_at timestamp NOT NULL,
     modified_at timestamp NOT NULL,
 	CONSTRAINT pk_inquiry PRIMARY KEY (id)
 );
 
--- CREATE INDEX idx_member_roles_gin ON member."member" USING gin (roles);
+CREATE TABLE member."inquiry_answer" (
+	id uuid NOT NULL,
+    inquiry_id uuid NOT NULL,
+	answered_admin_id uuid NOT NULL,
+    message text NOT NULL,
+	created_at timestamp NOT NULL,
+    modified_at timestamp NOT NULL,
+	CONSTRAINT pk_inquiry_answer PRIMARY KEY (id),
+    CONSTRAINT uq_inquiry_answer UNIQUE (inquiry_id)
+);

@@ -24,18 +24,18 @@ public class CartItemRepositoryAdapter implements CartItemRepository {
 	}
 
 	@Override
-	public Optional<CartItem> findById(UUID id) {
-		return cartItemJpaRepository.findById(id);
+	public Page<CartItem> findByCartId(UUID cartId, Pageable pageable) {
+		return cartItemJpaRepository.findByCartId(cartId, pageable);
 	}
 
 	@Override
-	public Page<CartItem> findByMemberId(UUID memberId, Pageable pageable) {
-		return cartItemJpaRepository.findByMemberId(memberId, pageable);
+	public Optional<CartItem> findByCartIdAndProductId(UUID cartId, UUID productId) {
+		return cartItemJpaRepository.findByCartIdAndProductId(cartId, productId);
 	}
 
 	@Override
-	public Optional<CartItem> findByMemberIdAndProductId(UUID memberId, UUID productId) {
-		return cartItemJpaRepository.findByMemberIdAndProductId(memberId, productId);
+	public Optional<CartItem> findByIdAndCartId(UUID id, UUID cartId) {
+		return cartItemJpaRepository.findByIdAndCartId(id, cartId);
 	}
 
 	@Override
@@ -44,7 +44,7 @@ public class CartItemRepositoryAdapter implements CartItemRepository {
 	}
 
 	@Override
-	public void deleteByMemberId(UUID memberId) {
-		cartItemJpaRepository.deleteByMemberId(memberId);
+	public void deleteByCartId(UUID cartId) {
+		cartItemJpaRepository.deleteByCartId(cartId);
 	}
 }

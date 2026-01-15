@@ -14,10 +14,9 @@ public record ProductInfo(
 	String name,
 	String description,
 	BigDecimal price,
-	Integer stock,
 	ProductStatus status,
 	ProductCategory category,
-	String thumbnailUrl,
+	String thumbnailKey,
 	LocalDateTime createdAt,
 	LocalDateTime modifiedAt
 ) {
@@ -29,10 +28,9 @@ public record ProductInfo(
 			product.getName(),
 			product.getDescription(),
 			product.getPrice(),
-			product.getStock(),
 			product.getStatus(),
 			product.getCategory(),
-			product.getThumbnailUrl(),
+			product.getThumbnailKey(),
 			product.getCreatedAt(),
 			product.getModifiedAt()
 		);

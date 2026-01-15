@@ -15,6 +15,7 @@ import com.node5.memberservice.mail.application.MailService;
 import com.node5.memberservice.member.domain.Member;
 import com.node5.memberservice.member.domain.MemberRepository;
 import com.node5.memberservice.member.domain.MemberRole;
+import com.node5.memberservice.member.domain.MemberStatus;
 import com.node5.memberservice.redis.application.RedisService;
 import io.jsonwebtoken.Claims;
 import org.springframework.beans.factory.annotation.Value;
@@ -76,9 +77,8 @@ public class AuthService {
 
         if (oAuth.isPresent()) {
             Member member = oAuth.get().getMember();
-            JwtMemberInfo jwtMemberInfo = JwtMemberInfo.from(member);
-            String accessToken = jwtProvider.generateAccessToken(jwtMemberInfo);
-            String refreshToken = jwtProvider.generateRefreshToken(jwtMemberInfo);
+            String accessToken = jwtProvider.generateAccessToken(member.getId());
+            String refreshToken = jwtProvider.generateRefreshToken(member.getId());
             redisService.saveRefreshToken(member.getId(), refreshToken);
             return LoginInfoResponse.success(member, accessToken, refreshToken);
         }
@@ -113,9 +113,8 @@ public class AuthService {
             oAuthRepository.save(oAuth);
         }
 
-        JwtMemberInfo jwtMemberInfo = JwtMemberInfo.from(member);
-        String accessToken = jwtProvider.generateAccessToken(jwtMemberInfo);
-        String refreshToken = jwtProvider.generateRefreshToken(jwtMemberInfo);
+        String accessToken = jwtProvider.generateAccessToken(member.getId());
+        String refreshToken = jwtProvider.generateRefreshToken(member.getId());
         redisService.saveRefreshToken(member.getId(), refreshToken);
 
         redisService.deleteOAuthTempUser(tempId);
@@ -162,9 +161,8 @@ public class AuthService {
             throw new AuthException(AuthErrorCode.REFRESH_TOKEN_NOT_MATCH);
         }
 
-        JwtMemberInfo jwtMemberInfo = JwtMemberInfo.from(member);
-        String accessToken = jwtProvider.generateAccessToken(jwtMemberInfo);
-        String newRefreshToken = jwtProvider.generateRefreshToken(jwtMemberInfo);
+        String accessToken = jwtProvider.generateAccessToken(member.getId());
+        String newRefreshToken = jwtProvider.generateRefreshToken(member.getId());
         redisService.saveRefreshToken(member.getId(), newRefreshToken);
 
         return new TokenResponse(accessToken, newRefreshToken);
@@ -183,6 +181,10 @@ public class AuthService {
     public boolean authorize(AuthorizeCommand command) {
         Member member = memberRepository.findByIdAndDeletedAtIsNull(command.memberId())
                 .orElseThrow(() -> new AuthException(AuthErrorCode.MEMBER_NOT_FOUND));
+
+        if (member.getStatus().equals(MemberStatus.BANNED)) {
+            return false;
+        }
 
         Set<MemberRole> roles = member.getRoles();
 

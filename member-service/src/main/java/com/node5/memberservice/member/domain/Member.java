@@ -3,6 +3,8 @@ package com.node5.memberservice.member.domain;
 import com.node5.common.domain.BaseEntity;
 import com.node5.memberservice.auth.application.dto.OAuthRegisterCommand;
 import com.node5.memberservice.member.application.dto.MemberModifyCommand;
+import com.node5.memberservice.member.exception.MemberErrorCode;
+import com.node5.memberservice.member.exception.MemberException;
 import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -12,7 +14,6 @@ import org.hibernate.annotations.Type;
 
 import java.time.LocalDateTime;
 import java.util.EnumSet;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
@@ -31,6 +32,9 @@ public class Member extends BaseEntity {
     @Column(nullable = false, length = 20)
     private String name;
 
+    @Column(nullable = false, length = 20)
+    private String nickname;
+
     @Column(name = "phone_number", nullable = false, length = 20)
     private String phoneNumber;
 
@@ -47,10 +51,11 @@ public class Member extends BaseEntity {
 
     private LocalDateTime deletedAt;
 
-    private Member(UUID id, String email, String name, String phoneNumber, String address, MemberRole role, MemberStatus status) {
+    private Member(UUID id, String email, String name, String nickname, String phoneNumber, String address, MemberRole role, MemberStatus status) {
         this.id = id;
         this.email = email;
         this.name = name;
+        this.nickname = nickname;
         this.phoneNumber = phoneNumber;
         this.address = address;
         this.roles = EnumSet.of(role);
@@ -63,7 +68,7 @@ public class Member extends BaseEntity {
         MemberRole role = MemberRole.USER;
         MemberStatus status = MemberStatus.ACTIVE;
 
-        return new Member(id, command.email(), command.name(), command.phoneNumber(), command.address(), role, status);
+        return new Member(id, command.email(), command.name(), command.nickname(), command.phoneNumber(), command.address(), role, status);
     }
 
     public void addRole(MemberRole role) {
@@ -74,8 +79,26 @@ public class Member extends BaseEntity {
         this.roles.remove(role);
     }
 
+    public void modifyStatus(MemberStatus status) {
+        if (this.status == status) return;
+        switch (status) {
+            case ACTIVE -> activate();
+            case BANNED -> ban();
+            default -> throw new MemberException(MemberErrorCode.INVALID_STATUS);
+        }
+    }
+
+    private void activate() {
+        status = MemberStatus.ACTIVE;
+    }
+
+    private void ban() {
+        status = MemberStatus.BANNED;
+    }
+
     public void modifyInfo(MemberModifyCommand command) {
         this.name = command.name();
+        this.nickname = command.nickname();
         this.phoneNumber = command.phoneNumber();
         this.address = command.address();
     }

@@ -35,6 +35,11 @@ spring:
     redis:
       host: ${REDIS_HOST}
       port: 6379
+  kafka:
+    bootstrap-servers: ${KAFKA_HOST}:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
 api:
   v1: /api/v1
@@ -67,3 +72,6 @@ naver:
     id: ${NAVER_CLIENT_ID}
     secret: ${NAVER_CLIENT_SECRET}
 
+kafka:
+  topics:
+    member-deleted: member-service.member-deleted.v1

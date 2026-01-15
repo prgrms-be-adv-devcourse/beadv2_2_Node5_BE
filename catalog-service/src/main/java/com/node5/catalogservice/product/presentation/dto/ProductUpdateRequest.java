@@ -9,7 +9,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.PositiveOrZero;
 
 @Schema(description = "상품 수정 요청")
 public record ProductUpdateRequest(
@@ -26,17 +25,12 @@ public record ProductUpdateRequest(
 	@Positive(message = "가격은 0보다 커야 합니다.")
 	BigDecimal price,
 
-	@Schema(description = "재고 수량", example = "50")
-	@NotNull(message = "재고 수량은 필수입니다.")
-	@PositiveOrZero(message = "재고 수량은 0 이상이어야 합니다.")
-	Integer stock,
-
 	@Schema(description = "카테고리", example = "ELECTRONICS_DIGITAL")
 	@NotNull(message = "카테고리는 필수입니다.")
 	ProductCategory category,
 
-	@Schema(description = "대표 이미지 URL", example = "https://cdn.example.com/product/thumbnail.jpg")
-	String thumbnailUrl
+	@Schema(description = "대표 이미지 객체 키", example = "product/550e8400-e29b-41d4-a716-446655440000")
+	String thumbnailKey
 ) {
 
 	public ProductUpdateCommand toCommand() {
@@ -44,9 +38,8 @@ public record ProductUpdateRequest(
 			name,
 			description,
 			price,
-			stock,
 			category,
-			thumbnailUrl
+			thumbnailKey
 		);
 	}
 }

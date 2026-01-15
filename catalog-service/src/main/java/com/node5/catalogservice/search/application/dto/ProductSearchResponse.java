@@ -9,7 +9,7 @@ public record ProductSearchResponse(
 	String shopId,
 	String name,
 	String category,
-	String thumbnailUrl,
+	String thumbnailKey,
 	Long price,
 	String status,
 	LocalDateTime createdAt
@@ -21,7 +21,7 @@ public record ProductSearchResponse(
 			doc.getShopId(),
 			doc.getName(),
 			doc.getCategory(),
-			doc.getThumbnailUrl(),
+			doc.getThumbnailKey(),
 			doc.getPrice(),
 			doc.getStatus(),
 			doc.getCreatedAt()

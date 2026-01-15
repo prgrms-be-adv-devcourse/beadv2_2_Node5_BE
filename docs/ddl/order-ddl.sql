@@ -8,7 +8,7 @@ CREATE TABLE "order"."order" (
 	paid_at timestamp(6) NULL,
 	id uuid NOT NULL,
 	member_id uuid NOT NULL,
-	subscription_id uuid NULL,
+	subscription_key uuid NULL,
 	order_num varchar(20) NOT NULL,
 	order_type varchar(20) NOT NULL,
 	status varchar(30) NOT NULL,
@@ -16,6 +16,8 @@ CREATE TABLE "order"."order" (
 	recipient_address varchar(255) NOT NULL
 );
 
+CREATE UNIQUE INDEX IF NOT EXISTS order_subscription_key_uq
+	ON "order"."order"(subscription_key);
 
 CREATE TABLE "order".order_item (
 	quantity int4 NOT NULL,
