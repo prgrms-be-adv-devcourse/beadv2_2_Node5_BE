@@ -10,7 +10,6 @@ include(
         'member-service',
         'order-service',
         'settlement-service',
-        'shop-service',
         'subscription-service',
         'support-service',
 )

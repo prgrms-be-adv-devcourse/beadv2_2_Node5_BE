@@ -11,6 +11,5 @@ resources:
   - member-service.yaml
   - order-service.yaml
   - settlement-service.yaml
-  - shop-service.yaml
   - subscription-service.yaml
   - support-service.yaml
