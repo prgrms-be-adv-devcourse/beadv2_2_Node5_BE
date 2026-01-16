@@ -15,28 +15,20 @@ import com.node5.catalogservice.inventory.application.dto.StockHoldCommand;
 import com.node5.catalogservice.inventory.application.dto.StockReleaseCommand;
 import com.node5.catalogservice.inventory.application.dto.StockReservationInfo;
 import com.node5.catalogservice.inventory.domain.ReservationStatus;
-import com.node5.catalogservice.inventory.domain.Stock;
 import com.node5.catalogservice.inventory.domain.StockRepository;
 import com.node5.catalogservice.inventory.domain.StockReservation;
 import com.node5.catalogservice.inventory.domain.StockReservationRepository;
 import com.node5.catalogservice.inventory.exception.InventoryErrorCode;
-import com.node5.catalogservice.inventory.presentation.dto.StockResponse;
-import com.node5.catalogservice.product.domain.Product;
-import com.node5.catalogservice.product.domain.ProductRepository;
-import com.node5.catalogservice.shop.client.ShopOwnershipClient;
 import com.node5.common.exception.BaseException;
 
-import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class InventoryService {
+public class InventoryReservationService {
 
 	private final StockRepository stockRepository;
 	private final StockReservationRepository reservationRepository;
-	private final ProductRepository productRepository;
-	private final ShopOwnershipClient shopOwnershipClient;
 
 	@Transactional
 	public StockHoldBatchResult holdBatch(StockHoldBatchCommand command) {
@@ -202,43 +194,5 @@ public class InventoryService {
 		}
 
 		throw new BaseException(InventoryErrorCode.INVALID_REQUEST);
-	}
-
-	@Transactional
-	public StockResponse updateStockQuantity(UUID memberId, UUID productId, int quantity) {
-		validateSeller(memberId, productId);
-
-		Stock stock = stockRepository.findById(productId)
-			.orElseGet(() -> Stock.create(productId, 0));
-
-		stock.updateQuantity(quantity);
-
-		Stock saved = stockRepository.save(stock);
-		return StockResponse.from(saved);
-	}
-
-	@Transactional(readOnly = true)
-	public StockResponse getStock(UUID productId) {
-		Stock stock = stockRepository.findById(productId)
-			.orElseThrow(() -> new BaseException(InventoryErrorCode.INVENTORY_NOT_FOUND));
-
-		return StockResponse.from(stock);
-	}
-
-	private void validateSeller(UUID memberId, UUID productId) {
-		Product product = productRepository.findById(productId)
-			.orElseThrow(() -> new BaseException(InventoryErrorCode.PRODUCT_NOT_FOUND));
-
-		try {
-			UUID ownerMemberId = shopOwnershipClient.getOwnerMemberId(product.getShopId());
-
-			if (!ownerMemberId.equals(memberId)) {
-				throw new BaseException(InventoryErrorCode.SELLER_FORBIDDEN);
-			}
-		} catch (FeignException.NotFound e) {
-			throw new BaseException(InventoryErrorCode.SHOP_NOT_FOUND);
-		} catch (FeignException e) {
-			throw new BaseException(InventoryErrorCode.SHOP_SERVICE_UNAVAILABLE);
-		}
 	}
 }
