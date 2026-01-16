@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.node5.catalogservice.inventory.application.InventoryReservationService;
 import com.node5.catalogservice.inventory.application.dto.StockHoldBatchResult;
-import com.node5.catalogservice.inventory.presentation.dto.StockCommitRequest;
+import com.node5.catalogservice.inventory.presentation.dto.StockCommitBatchRequest;
 import com.node5.catalogservice.inventory.presentation.dto.StockHoldBatchRequest;
 import com.node5.catalogservice.inventory.presentation.dto.StockReleaseRequest;
 
@@ -53,8 +53,8 @@ public class InventoryInternalController {
 		@ApiResponse(responseCode = "400", description = "요청 값이 유효하지 않습니다."),
 		@ApiResponse(responseCode = "404", description = "재고 예약이 존재하지 않습니다.")
 	})
-	public ResponseEntity<Void> commit(@Valid @RequestBody StockCommitRequest request) {
-		inventoryReservationService.commit(request.toCommand());
+	public ResponseEntity<Void> commit(@Valid @RequestBody StockCommitBatchRequest request) {
+		inventoryReservationService.commitBatch(request.toCommand());
 		return ResponseEntity.ok().build();
 	}
 

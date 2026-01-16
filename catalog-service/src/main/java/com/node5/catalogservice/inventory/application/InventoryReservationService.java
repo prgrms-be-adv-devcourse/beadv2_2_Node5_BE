@@ -8,6 +8,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.node5.catalogservice.inventory.application.dto.StockCommitBatchCommand;
 import com.node5.catalogservice.inventory.application.dto.StockCommitCommand;
 import com.node5.catalogservice.inventory.application.dto.StockHoldBatchCommand;
 import com.node5.catalogservice.inventory.application.dto.StockHoldBatchResult;
@@ -69,8 +70,24 @@ public class InventoryReservationService {
 	}
 
 	@Transactional
-	public void commit(StockCommitCommand command) {
-		commitInternal(command);
+	public void commitBatch(StockCommitBatchCommand command) {
+
+		if (command == null || command.orderId() == null || command.items() == null || command.items().isEmpty()) {
+			throw new BaseException(InventoryErrorCode.INVALID_REQUEST);
+		}
+
+		// productId 중복 제거 (입력 순서 유지)
+		Map<UUID, Boolean> dedup = new LinkedHashMap<>();
+		for (var item : command.items()) {
+			if (item == null || item.productId() == null) {
+				throw new BaseException(InventoryErrorCode.INVALID_REQUEST);
+			}
+			dedup.put(item.productId(), Boolean.TRUE);
+		}
+
+		for (var productId : dedup.keySet()) {
+			commitInternal(new StockCommitCommand(command.orderId(), productId));
+		}
 	}
 
 	@Transactional
