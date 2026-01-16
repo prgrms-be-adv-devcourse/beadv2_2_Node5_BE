@@ -24,7 +24,7 @@ public class ProductEmbeddingRepositoryAdapter implements ProductEmbeddingReposi
     private static final String UPSERT_SQL = """
             INSERT INTO support.product_embedding
             (id, product_id, content, status, embedding, created_at, modified_at)
-            VALUES (:id, :productId, :content, :status, CAST(:embedding AS public.vector), now(), now())
+            VALUES (:id, :productId, :content, :status, CAST(:embedding AS vector), now(), now())
             ON CONFLICT (product_id) DO UPDATE
             SET content = EXCLUDED.content,
                 status = EXCLUDED.status,
