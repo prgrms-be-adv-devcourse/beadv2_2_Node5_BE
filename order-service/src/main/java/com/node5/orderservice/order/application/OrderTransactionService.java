@@ -5,8 +5,7 @@ import com.node5.orderservice.order.client.CatalogClient;
 import com.node5.orderservice.order.client.SettlementClient;
 import com.node5.orderservice.order.client.dto.SettlementSourceItem;
 import com.node5.orderservice.order.domain.*;
-import com.node5.orderservice.order.exception.OrderGetShopIdFailed;
-import com.node5.orderservice.order.exception.OrderNotFoundException;
+import com.node5.orderservice.order.exception.OrderException;
 import feign.FeignException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +16,9 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static com.node5.orderservice.order.exception.OrderErrorCode.ORDER_GET_SHOPID_FAILED;
+import static com.node5.orderservice.order.exception.OrderErrorCode.ORDER_NOT_FOUND;
 
 @Service
 @Slf4j
@@ -32,7 +34,7 @@ public class OrderTransactionService {
     @Transactional
     public void updateOrderStatus(UUID orderId, OrderStatus status){
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new OrderNotFoundException(orderId));
+                .orElseThrow(() -> new OrderException(ORDER_NOT_FOUND, "orderId=" + orderId));
 
         order.updateStatus(status);
     }
@@ -110,7 +112,7 @@ public class OrderTransactionService {
             productIdToShopIdMap = Optional.ofNullable(responseEntity.getBody())
                     .orElse(Collections.emptyMap());
         } else {
-            throw new OrderGetShopIdFailed();
+            throw new OrderException(ORDER_GET_SHOPID_FAILED);
         }
 
         // 5. 정산 데이터 가공해서 SettlementSourceItem 생성
