@@ -6,7 +6,6 @@ import java.util.UUID;
 public record ReviewSummaryCommand(
         UUID productId,
         String summary,
-        LocalDate startDate,
         LocalDate endDate
 ) {
 }
