@@ -97,19 +97,25 @@ public class MonthlyReviewSummaryJobConfig {
                 } catch (DateTimeParseException e) {
                     throw new IllegalArgumentException("Invalid batchStartDate: " + batchStartDate, e);
                 }
+
                 LocalDate summaryDate = date.minusMonths(1);
                 int summaryYear = summaryDate.getYear();
                 int summaryMonth = summaryDate.getMonthValue();
 
                 ReviewSummary lastSummary = reviewSummaryRepository.findByProductId(productId).orElse(null);
 
-                String prevSummary = "없음";
-                if (lastSummary != null) {
+                String prevSummary;
+                ReviewSearchSimilarCommand command;
+
+                if (lastSummary == null) {
+                    prevSummary = "없음";
+                    command = new ReviewSearchSimilarCommand(0, 0);
+                } else {
                     prevSummary = lastSummary.getSummary();
+                    command = new ReviewSearchSimilarCommand(summaryYear, summaryMonth);
                 }
 
                 // Todo - productId, summaryYear, summaryMonth로 정제된 리뷰 읽어옴 아직 없음
-                ReviewSearchSimilarCommand command = new ReviewSearchSimilarCommand(summaryYear, summaryMonth);
                 List<String> reviews;
                 try {
                     reviews = reviewService.searchSimilarReviewDetails(productId, command).stream().map(ReviewDetailInfo::body).toList();
@@ -133,10 +139,9 @@ public class MonthlyReviewSummaryJobConfig {
 
                 String summary = chatClient.reviewSummary(prompt);
 
-                LocalDate startDate = LocalDate.of(summaryYear, summaryMonth, 1);
-                LocalDate endDate = startDate.plusMonths(1).minusDays(1);
+                LocalDate endDate = summaryDate.withDayOfMonth(summaryDate.lengthOfMonth());
 
-                return new ReviewSummaryCommand(productId, summary, startDate, endDate);
+                return new ReviewSummaryCommand(productId, summary, endDate);
             } catch (Exception e) {
                 log.warn("LLM 요약 실패, productId: {}", productId, e);
                 return null;
