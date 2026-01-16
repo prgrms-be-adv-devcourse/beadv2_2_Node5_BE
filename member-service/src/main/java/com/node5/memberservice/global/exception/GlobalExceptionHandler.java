@@ -3,8 +3,6 @@ package com.node5.memberservice.global.exception;
 import com.node5.common.exception.BaseErrorCode;
 import com.node5.common.exception.BaseException;
 import com.node5.common.exception.ExceptionResponseDto;
-import com.node5.memberservice.auth.exception.AuthException;
-import com.node5.memberservice.member.exception.MemberException;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
