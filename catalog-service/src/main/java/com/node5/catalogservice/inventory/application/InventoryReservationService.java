@@ -2,6 +2,7 @@ package com.node5.catalogservice.inventory.application;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.UUID;
 
@@ -13,6 +14,7 @@ import com.node5.catalogservice.inventory.application.dto.StockCommitCommand;
 import com.node5.catalogservice.inventory.application.dto.StockHoldBatchCommand;
 import com.node5.catalogservice.inventory.application.dto.StockHoldBatchResult;
 import com.node5.catalogservice.inventory.application.dto.StockHoldCommand;
+import com.node5.catalogservice.inventory.application.dto.StockReleaseBatchCommand;
 import com.node5.catalogservice.inventory.application.dto.StockReleaseCommand;
 import com.node5.catalogservice.inventory.application.dto.StockReservationInfo;
 import com.node5.catalogservice.inventory.domain.ReservationStatus;
@@ -77,22 +79,38 @@ public class InventoryReservationService {
 		}
 
 		// productId 중복 제거 (입력 순서 유지)
-		Map<UUID, Boolean> dedup = new LinkedHashMap<>();
+		var unique = new LinkedHashSet<UUID>();
 		for (var item : command.items()) {
 			if (item == null || item.productId() == null) {
 				throw new BaseException(InventoryErrorCode.INVALID_REQUEST);
 			}
-			dedup.put(item.productId(), Boolean.TRUE);
+			unique.add(item.productId());
 		}
 
-		for (var productId : dedup.keySet()) {
+		for (UUID productId : unique) {
 			commitInternal(new StockCommitCommand(command.orderId(), productId));
 		}
 	}
 
 	@Transactional
-	public void release(StockReleaseCommand command) {
-		releaseInternal(command);
+	public void releaseBatch(StockReleaseBatchCommand command) {
+
+		if (command == null || command.orderId() == null || command.items() == null || command.items().isEmpty()) {
+			throw new BaseException(InventoryErrorCode.INVALID_REQUEST);
+		}
+
+		// productId 중복 제거 (입력 순서 유지)
+		var unique = new LinkedHashSet<UUID>();
+		for (var item : command.items()) {
+			if (item == null || item.productId() == null) {
+				throw new BaseException(InventoryErrorCode.INVALID_REQUEST);
+			}
+			unique.add(item.productId());
+		}
+
+		for (UUID productId : unique) {
+			releaseInternal(new StockReleaseCommand(command.orderId(), productId));
+		}
 	}
 
 	private StockReservationInfo holdInternal(StockHoldCommand command) {
@@ -157,7 +175,18 @@ public class InventoryReservationService {
 		);
 
 		if (updated == 0) {
-			throw new BaseException(InventoryErrorCode.RESERVATION_ALREADY_RELEASED);
+			StockReservation latest = reservationRepository
+				.findByOrderIdAndProductId(command.orderId(), command.productId())
+				.orElseThrow(() -> new BaseException(InventoryErrorCode.RESERVATION_NOT_FOUND));
+
+			if (latest.getStatus() == ReservationStatus.COMMITTED) {
+				return;
+			}
+			if (latest.getStatus() == ReservationStatus.RELEASED) {
+				throw new BaseException(InventoryErrorCode.RESERVATION_ALREADY_RELEASED);
+			}
+
+			throw new BaseException(InventoryErrorCode.INVALID_REQUEST);
 		}
 	}
 

@@ -11,7 +11,7 @@ import com.node5.catalogservice.inventory.application.InventoryReservationServic
 import com.node5.catalogservice.inventory.application.dto.StockHoldBatchResult;
 import com.node5.catalogservice.inventory.presentation.dto.StockCommitBatchRequest;
 import com.node5.catalogservice.inventory.presentation.dto.StockHoldBatchRequest;
-import com.node5.catalogservice.inventory.presentation.dto.StockReleaseRequest;
+import com.node5.catalogservice.inventory.presentation.dto.StockReleaseBatchRequest;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -68,8 +68,8 @@ public class InventoryInternalController {
 		@ApiResponse(responseCode = "400", description = "요청 값이 유효하지 않습니다."),
 		@ApiResponse(responseCode = "404", description = "재고 예약이 존재하지 않습니다.")
 	})
-	public ResponseEntity<Void> release(@Valid @RequestBody StockReleaseRequest request) {
-		inventoryReservationService.release(request.toCommand());
+	public ResponseEntity<Void> release(@Valid @RequestBody StockReleaseBatchRequest request) {
+		inventoryReservationService.releaseBatch(request.toCommand());
 		return ResponseEntity.ok().build();
 	}
 }

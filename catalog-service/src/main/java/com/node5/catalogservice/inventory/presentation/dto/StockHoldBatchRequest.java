@@ -2,7 +2,6 @@ package com.node5.catalogservice.inventory.presentation.dto;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import com.node5.catalogservice.inventory.application.dto.StockHoldBatchCommand;
 
@@ -19,13 +18,10 @@ public record StockHoldBatchRequest(
 	@Size(min = 1)
 	List<StockHoldItemRequest> items
 ) {
-
 	public StockHoldBatchCommand toCommand() {
 		return new StockHoldBatchCommand(
 			orderId,
-			items.stream()
-				.map(StockHoldItemRequest::toCommand)
-				.collect(Collectors.toList())
+			items.stream().map(StockHoldItemRequest::toCommand).toList()
 		);
 	}
 }
