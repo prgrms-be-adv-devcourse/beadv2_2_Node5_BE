@@ -8,9 +8,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.node5.catalogservice.inventory.application.InventoryService;
-import com.node5.catalogservice.inventory.application.dto.StockReservationInfo;
+import com.node5.catalogservice.inventory.application.dto.StockHoldBatchResult;
 import com.node5.catalogservice.inventory.presentation.dto.StockCommitRequest;
-import com.node5.catalogservice.inventory.presentation.dto.StockHoldRequest;
+import com.node5.catalogservice.inventory.presentation.dto.StockHoldBatchRequest;
 import com.node5.catalogservice.inventory.presentation.dto.StockReleaseRequest;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -38,8 +38,8 @@ public class InventoryInternalController {
 		@ApiResponse(responseCode = "400", description = "요청 값이 유효하지 않습니다."),
 		@ApiResponse(responseCode = "404", description = "상품 재고가 존재하지 않습니다.")
 	})
-	public ResponseEntity<StockReservationInfo> hold(@Valid @RequestBody StockHoldRequest request) {
-		StockReservationInfo result = inventoryService.hold(request.toCommand());
+	public ResponseEntity<StockHoldBatchResult> hold(@Valid @RequestBody StockHoldBatchRequest request) {
+		var result = inventoryService.holdBatch(request.toCommand());
 		return ResponseEntity.status(HttpStatus.CREATED).body(result);
 	}
 

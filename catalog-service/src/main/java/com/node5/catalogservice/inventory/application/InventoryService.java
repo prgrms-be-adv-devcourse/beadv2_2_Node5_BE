@@ -1,11 +1,16 @@
 package com.node5.catalogservice.inventory.application;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.node5.catalogservice.inventory.application.dto.StockCommitCommand;
+import com.node5.catalogservice.inventory.application.dto.StockHoldBatchCommand;
+import com.node5.catalogservice.inventory.application.dto.StockHoldBatchResult;
 import com.node5.catalogservice.inventory.application.dto.StockHoldCommand;
 import com.node5.catalogservice.inventory.application.dto.StockReleaseCommand;
 import com.node5.catalogservice.inventory.application.dto.StockReservationInfo;
@@ -34,14 +39,64 @@ public class InventoryService {
 	private final ShopOwnershipClient shopOwnershipClient;
 
 	@Transactional
-	public StockReservationInfo hold(StockHoldCommand command) {
+	public StockHoldBatchResult holdBatch(StockHoldBatchCommand command) {
+
+		if (command == null || command.orderId() == null || command.items() == null || command.items().isEmpty()) {
+			throw new BaseException(InventoryErrorCode.INVALID_REQUEST);
+		}
+
+		// 1) productId 중복 합산 (입력 순서 유지)
+		Map<UUID, Integer> merged = new LinkedHashMap<>();
+		for (var item : command.items()) {
+			if (item == null || item.productId() == null || item.quantity() <= 0) {
+				throw new BaseException(InventoryErrorCode.INVALID_REQUEST);
+			}
+			merged.merge(item.productId(), item.quantity(), Integer::sum);
+		}
+
+		// 2) HOLD 진행 (성공한 것들만 기록)
+		var created = new ArrayList<StockReservationInfo>(merged.size());
+
+		try {
+			for (var entry : merged.entrySet()) {
+				var info = holdInternal(new StockHoldCommand(command.orderId(), entry.getKey(), entry.getValue()));
+				created.add(info);
+			}
+			return StockHoldBatchResult.of(command.orderId(), created);
+
+		} catch (BaseException e) {
+			// 3) 하나라도 실패하면 지금까지 성공한 것들 전부 RELEASE로 보상
+			for (var info : created) {
+				try {
+					releaseInternal(new StockReleaseCommand(command.orderId(), info.productId()));
+				} catch (Exception ignore) {
+				}
+			}
+			throw e;
+		}
+	}
+
+	@Transactional
+	public void commit(StockCommitCommand command) {
+		commitInternal(command);
+	}
+
+	@Transactional
+	public void release(StockReleaseCommand command) {
+		releaseInternal(command);
+	}
+
+	private StockReservationInfo holdInternal(StockHoldCommand command) {
+		if (command == null || command.orderId() == null || command.productId() == null || command.quantity() <= 0) {
+			throw new BaseException(InventoryErrorCode.INVALID_REQUEST);
+		}
 
 		// 1) 멱등: 기존 예약이 있으면 처리
 		var existingOpt = reservationRepository.findByOrderIdAndProductId(command.orderId(), command.productId());
 		if (existingOpt.isPresent()) {
 			StockReservation existing = existingOpt.get();
 
-			if (existing.isHeld()) {
+			if (existing.getStatus() == ReservationStatus.HELD) {
 				return StockReservationInfo.from(existing); // 멱등 성공
 			}
 			throw new BaseException(InventoryErrorCode.RESERVATION_ALREADY_PROCESSED);
@@ -53,7 +108,7 @@ public class InventoryService {
 			if (!stockRepository.existsById(command.productId())) {
 				throw new BaseException(InventoryErrorCode.INVENTORY_NOT_FOUND);
 			}
-			throw new BaseException(InventoryErrorCode.OUT_OF_STOCK);
+			throw new BaseException(InventoryErrorCode.OUT_OF_STOCK); // 409로 매핑
 		}
 
 		// 3) 예약 생성(HELD)
@@ -65,9 +120,10 @@ public class InventoryService {
 		return StockReservationInfo.from(saved);
 	}
 
-
-	@Transactional
-	public void commit(StockCommitCommand command) {
+	private void commitInternal(StockCommitCommand command) {
+		if (command == null || command.orderId() == null || command.productId() == null) {
+			throw new BaseException(InventoryErrorCode.INVALID_REQUEST);
+		}
 
 		StockReservation reservation = reservationRepository
 			.findByOrderIdAndProductId(command.orderId(), command.productId())
@@ -83,7 +139,7 @@ public class InventoryService {
 			throw new BaseException(InventoryErrorCode.RESERVATION_ALREADY_RELEASED);
 		}
 
-		// 3) HELD -> COMMITTED 조건부 전이 (동시 commit/release 경쟁에서도 1번만 성공)
+		// 3) HELD -> COMMITTED 조건부 전이
 		int updated = reservationRepository.updateStatus(
 			command.orderId(),
 			command.productId(),
@@ -91,14 +147,15 @@ public class InventoryService {
 			ReservationStatus.COMMITTED
 		);
 
-		// 4) row=0이면 HELD가 아니라는 뜻(대부분 동시 release로 바뀐 케이스)
 		if (updated == 0) {
 			throw new BaseException(InventoryErrorCode.RESERVATION_ALREADY_RELEASED);
 		}
 	}
 
-	@Transactional
-	public void release(StockReleaseCommand command) {
+	private void releaseInternal(StockReleaseCommand command) {
+		if (command == null || command.orderId() == null || command.productId() == null) {
+			throw new BaseException(InventoryErrorCode.INVALID_REQUEST);
+		}
 
 		// 1) 예약 조회
 		StockReservation reservation = reservationRepository
@@ -115,7 +172,7 @@ public class InventoryService {
 			throw new BaseException(InventoryErrorCode.RESERVATION_ALREADY_COMMITTED);
 		}
 
-		// 4) HELD -> RELEASED 조건부 전이 (동시 commit/release 경쟁에서도 1번만 성공)
+		// 4) HELD -> RELEASED 조건부 전이
 		int updated = reservationRepository.updateStatus(
 			command.orderId(),
 			command.productId(),
@@ -132,22 +189,18 @@ public class InventoryService {
 			return;
 		}
 
-		// 6) row=0이면 이미 다른 트랜잭션에서 상태가 바뀐 상태
+		// 6) row=0이면 이미 다른 트랜잭션에서 상태가 바뀐 상태 → 최신 상태 확인
 		StockReservation latest = reservationRepository
 			.findByOrderIdAndProductId(command.orderId(), command.productId())
 			.orElseThrow(() -> new BaseException(InventoryErrorCode.RESERVATION_NOT_FOUND));
 
-		// 7) 멱등: 이미 RELEASED면 성공
 		if (latest.getStatus() == ReservationStatus.RELEASED) {
 			return;
 		}
-
-		// 8) COMMITTED로 바뀐 경우 해제 불가
 		if (latest.getStatus() == ReservationStatus.COMMITTED) {
 			throw new BaseException(InventoryErrorCode.RESERVATION_ALREADY_COMMITTED);
 		}
 
-		// 9) 그 외는 비정상 케이스로 간주
 		throw new BaseException(InventoryErrorCode.INVALID_REQUEST);
 	}
 
