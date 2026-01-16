@@ -37,7 +37,7 @@ public class ProductInternalController {
 		return ResponseEntity.ok(productService.getShopIdsByProductIds(productIds));
 	}
 
-	@GetMapping("/getProductsByIds")
+	@PostMapping("/getProductsByIds")
 	public ResponseEntity<ProductSummaryListResponse> getProductsByIds(
 		@RequestHeader("Member-Id") UUID memberId,
 		@Valid @RequestBody ProductIdsRequest request
