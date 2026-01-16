@@ -5,7 +5,6 @@ CREATE TABLE support."review_summary" (
 	id uuid NOT NULL,
 	product_id uuid NOT NULL,
     summary text NOT NULL,
-    summary_start_date date NOT NULL,
     summary_end_date date NOT NULL,
 	created_at timestamp NOT NULL,
 	modified_at timestamp NOT NULL,

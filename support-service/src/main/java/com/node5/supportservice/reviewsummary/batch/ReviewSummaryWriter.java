@@ -27,7 +27,7 @@ public class ReviewSummaryWriter implements ItemWriter<ReviewSummaryCommand> {
             if (summary.isPresent()) {
                 summary.get().update(command.summary(), command.endDate());
             } else {
-                ReviewSummary newSummary = ReviewSummary.create(command.productId(), command.summary(), command.startDate(), command.endDate());
+                ReviewSummary newSummary = ReviewSummary.create(command.productId(), command.summary(), command.endDate());
                 reviewSummaryRepository.save(newSummary);
             }
         });

@@ -27,25 +27,20 @@ public class ReviewSummary extends BaseEntity {
     @Column(name = "summary", columnDefinition = "text", nullable = false)
     private String summary;
 
-    @Column(name = "summary_start_date", nullable = false)
-    private LocalDate summaryStartDate;
-
     @Column(name = "summary_end_date", nullable = false)
     private LocalDate summaryEndDate;
 
-    private ReviewSummary(UUID productId, String summary, LocalDate summaryStartDate, LocalDate summaryEndDate) {
+    private ReviewSummary(UUID productId, String summary, LocalDate summaryEndDate) {
         this.id = UUID.randomUUID();
         this.productId = productId;
         this.summary = summary;
-        this.summaryStartDate = summaryStartDate;
         this.summaryEndDate = summaryEndDate;
     }
 
-    public static ReviewSummary create(UUID productId, String summary, LocalDate summaryStartDate, LocalDate summaryEndDate) {
+    public static ReviewSummary create(UUID productId, String summary, LocalDate summaryEndDate) {
         return new ReviewSummary(
                 productId,
                 summary,
-                summaryStartDate,
                 summaryEndDate
         );
     }
