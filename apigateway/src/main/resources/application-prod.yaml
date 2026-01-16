@@ -55,6 +55,12 @@ spring:
                 - Path=/support-service/**
               filters:
                 - RewritePath=/support-service/(?<segment>.*), /$\{segment}
+            - id: batch-service
+              uri: lb://BATCH-SERVICE
+              predicates:
+                - Path=/batch-service/**
+              filters:
+                - RewritePath=/batch-service/(?<segment>.*), /$\{segment}
           default-filters:
             - name: GlobalFilter
               args:
