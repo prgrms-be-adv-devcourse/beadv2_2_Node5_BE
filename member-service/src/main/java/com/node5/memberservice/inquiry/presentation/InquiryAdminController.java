@@ -5,6 +5,7 @@ import com.node5.memberservice.inquiry.application.dto.InquiryInfoResponse;
 import com.node5.memberservice.inquiry.application.dto.InquiryListResponse;
 import com.node5.memberservice.inquiry.domain.InquiryStatus;
 import com.node5.memberservice.inquiry.presentation.dto.InquiryAnswerRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -40,7 +41,7 @@ public class InquiryAdminController {
     public ResponseEntity<Void> createInquiryAnswer(
             @PathVariable UUID inquiryId,
             @RequestHeader("Member-Id") UUID adminId,
-            @RequestBody InquiryAnswerRequest request
+            @Valid @RequestBody InquiryAnswerRequest request
     ){
         inquiryService.createInquiryAnswer(inquiryId, adminId, request.toCommand());
         return ResponseEntity.status(HttpStatus.CREATED).build();
@@ -50,7 +51,7 @@ public class InquiryAdminController {
     public ResponseEntity<Void> modifyInquiryAnswer(
             @PathVariable UUID inquiryId,
             @RequestHeader("Member-Id") UUID adminId,
-            @RequestBody InquiryAnswerRequest request
+            @Valid @RequestBody InquiryAnswerRequest request
     ){
         inquiryService.modifyInquiryAnswer(inquiryId, adminId, request.toCommand());
         return ResponseEntity.ok().build();

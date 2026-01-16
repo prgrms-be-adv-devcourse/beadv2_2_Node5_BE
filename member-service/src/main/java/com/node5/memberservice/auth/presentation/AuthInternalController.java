@@ -2,6 +2,7 @@ package com.node5.memberservice.auth.presentation;
 
 import com.node5.memberservice.auth.application.AuthService;
 import com.node5.memberservice.auth.presentation.dto.AuthorizeRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -16,7 +17,7 @@ public class AuthInternalController {
     private final AuthService authService;
 
     @PostMapping("/authorize")
-    public boolean authorize(@RequestBody AuthorizeRequest request){
+    public boolean authorize(@Valid @RequestBody AuthorizeRequest request){
         return authService.authorize(request.toCommand());
     }
 }

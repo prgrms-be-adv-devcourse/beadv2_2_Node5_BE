@@ -135,7 +135,13 @@ public class MemberService {
     }
 
     public String getMemberEmail(String memberId) {
-        Member member = getNotDeletedMemberOrThrow(UUID.fromString(memberId));
+        UUID uuid;
+        try {
+            uuid = UUID.fromString(memberId);
+        } catch (IllegalArgumentException e) {
+            throw new MemberException(MemberErrorCode.INVALID_MEMBER_ID);
+        }
+        Member member = getNotDeletedMemberOrThrow(uuid);
         return member.getEmail();
     }
 

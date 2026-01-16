@@ -33,6 +33,11 @@ public class AuthService {
 
     private static final AntPathMatcher matcher = new AntPathMatcher();
 
+    // BANNED 회원은 문의하기 가능
+    private static final String[] BANNED_MEMBER_ALLOWED_PATHS = {
+            "/api/v1/inquiries/**"
+    };
+
     private final EndPointService endPointService;
     private final OAuthRepository oAuthRepository;
     private final MemberRepository memberRepository;
@@ -77,9 +82,10 @@ public class AuthService {
 
         if (oAuth.isPresent()) {
             Member member = oAuth.get().getMember();
+            if (member.isStatus(MemberStatus.DELETED)) throw new AuthException(AuthErrorCode.MEMBER_IS_DELETED);
             String accessToken = jwtProvider.generateAccessToken(member.getId());
             String refreshToken = jwtProvider.generateRefreshToken(member.getId());
-            redisService.saveRefreshToken(member.getId(), refreshToken);
+            redisService.saveRefreshToken(member.getId(), refreshToken, jwtProvider.getRefreshTokenExpiration());
             return LoginInfoResponse.success(member, accessToken, refreshToken);
         }
         UUID tempId = UUID.randomUUID();
@@ -115,7 +121,7 @@ public class AuthService {
 
         String accessToken = jwtProvider.generateAccessToken(member.getId());
         String refreshToken = jwtProvider.generateRefreshToken(member.getId());
-        redisService.saveRefreshToken(member.getId(), refreshToken);
+        redisService.saveRefreshToken(member.getId(), refreshToken, jwtProvider.getRefreshTokenExpiration());
 
         redisService.deleteOAuthTempUser(tempId);
         redisService.deleteVerifiedEmail(email);
@@ -163,7 +169,7 @@ public class AuthService {
 
         String accessToken = jwtProvider.generateAccessToken(member.getId());
         String newRefreshToken = jwtProvider.generateRefreshToken(member.getId());
-        redisService.saveRefreshToken(member.getId(), newRefreshToken);
+        redisService.saveRefreshToken(member.getId(), newRefreshToken, jwtProvider.getRefreshTokenExpiration());
 
         return new TokenResponse(accessToken, newRefreshToken);
     }
@@ -183,7 +189,7 @@ public class AuthService {
                 .orElseThrow(() -> new AuthException(AuthErrorCode.MEMBER_NOT_FOUND));
 
         if (member.getStatus().equals(MemberStatus.BANNED)) {
-            return false;
+            return Arrays.stream(BANNED_MEMBER_ALLOWED_PATHS).anyMatch(path -> matcher.match(path, command.path()));
         }
 
         Set<MemberRole> roles = member.getRoles();
