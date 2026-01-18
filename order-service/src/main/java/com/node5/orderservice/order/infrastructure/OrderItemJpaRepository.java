@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.List;
@@ -35,4 +36,14 @@ public interface OrderItemJpaRepository extends JpaRepository<OrderItem, UUID> {
             "WHERE oi.orderId = :orderId " +
             "AND oi.productId = :productId")
     Optional<OrderProgress> findStatusByOrderIdAndProductId(@Param("orderId") UUID orderId, @Param("productId") UUID productId);
+
+    @Query("SELECT (count(oi) > 0) " +
+            "FROM OrderItem oi " +
+            "WHERE oi.orderId in (" +
+                "SELECT o.id " +
+                "FROM Order o " +
+                "WHERE o.memberId = :memberId" +
+            ") " +
+            "AND oi.status NOT IN :doneStatuses")
+    boolean existsInProgressByMemberId(@Param("memberId") UUID memberId, @Param("doneStatuses") Collection<OrderProgress> doneStatuses);
 }

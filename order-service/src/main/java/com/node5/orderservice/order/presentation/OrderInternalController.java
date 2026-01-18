@@ -32,4 +32,13 @@ public class OrderInternalController {
         return ResponseEntity.ok(orderInternalService.getOrderStatus(memberId, request.toCommand()));
     }
 
+    // 진행 중인 주문 조회
+    @GetMapping("/in-progress")
+    public ResponseEntity<Boolean> hasInProgressOrder(
+            @RequestHeader("Member-Id") UUID memberId
+    ) {
+        return ResponseEntity.ok(orderInternalService.hasInProgressOrder(memberId));
+    }
+
+
 }

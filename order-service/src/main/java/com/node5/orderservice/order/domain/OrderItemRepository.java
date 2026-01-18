@@ -3,6 +3,7 @@ package com.node5.orderservice.order.domain;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -20,4 +21,6 @@ public interface OrderItemRepository {
     void updateStatusByCreatedAtBefore(OrderProgress fromStatus, OrderProgress toStatus);
 
     Optional<OrderProgress> findStatusByOrderIdAndProductId(UUID orderId, UUID productId);
+
+    Boolean existsInProgressByMemberId(UUID memberId, Collection<OrderProgress> doneStatus);
 }

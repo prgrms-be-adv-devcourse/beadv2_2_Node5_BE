@@ -48,4 +48,12 @@ public class OrderInternalService {
                 .orElse(null);
         return status == OrderProgress.CONFIRMED;
     }
+
+    // 진행 중인 주문이 있는지 확인
+    public Boolean hasInProgressOrder(UUID memberId) {
+        return orderItemRepository.existsInProgressByMemberId(
+                memberId,
+                List.of(OrderProgress.CONFIRMED, OrderProgress.REFUND_COMPLETED)
+        );
+    }
 }
