@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -39,6 +40,11 @@ public class OrderItemRepositoryAdapter implements OrderItemRepository {
     @Override
     public void updateStatusByCreatedAtBefore(OrderProgress fromStatus, OrderProgress toStatus) {
         orderItemJpaRepository.updateStatusByCreatedAtBefore(fromStatus, toStatus);
+    }
+
+    @Override
+    public Optional<OrderProgress> findStatusByOrderIdAndProductId(UUID orderId, UUID productId) {
+        return orderItemJpaRepository.findStatusByOrderIdAndProductId(orderId, productId);
     }
 
 }

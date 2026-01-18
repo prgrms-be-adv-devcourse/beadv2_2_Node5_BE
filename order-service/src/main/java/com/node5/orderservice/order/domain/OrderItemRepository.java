@@ -4,6 +4,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface OrderItemRepository {
@@ -17,4 +18,6 @@ public interface OrderItemRepository {
     List<UUID> findRecentProductIds(List<UUID> orderIds, Pageable pageable);
 
     void updateStatusByCreatedAtBefore(OrderProgress fromStatus, OrderProgress toStatus);
+
+    Optional<OrderProgress> findStatusByOrderIdAndProductId(UUID orderId, UUID productId);
 }

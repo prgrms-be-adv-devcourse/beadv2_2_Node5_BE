@@ -45,17 +45,12 @@ public class OrderRepositoryAdapter implements OrderRepository {
     }
 
     @Override
-    public List<Order> saveAll(List<Order> orders) {
-        return orderJpaRepository.saveAll(orders);
-    }
-
-    @Override
-    public List<Order> findByStatus(OrderStatus orderStatus) {
-        return orderJpaRepository.findByStatus(orderStatus);
-    }
-
-    @Override
     public List<UUID> findRecentOrderIds(UUID memberId, LocalDateTime threeMonthsAgo) {
         return orderJpaRepository.findRecentOrderIds(memberId, threeMonthsAgo);
+    }
+
+    @Override
+    public boolean existsByIdAndMemberId(UUID orderId, UUID memberId) {
+        return orderJpaRepository.existsByIdAndMemberId(orderId, memberId);
     }
 }

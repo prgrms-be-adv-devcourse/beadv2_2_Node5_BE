@@ -13,6 +13,7 @@ public enum OrderErrorCode implements BaseErrorCode {
     ORDER_REQUEST_NOT_ALLOWED(400, "ORDER_004", "해당 요청을 진행할 수 없습니다"),
     ORDER_PAYMENT_FAILED(400, "ORDER_005", "결제가 실패했습니다."),
     ORDER_GET_SHOPID_FAILED(400, "ORDER_006", "Shop Id 조회에 실패했습니다."),
+    ORDER_ITEM_NOT_FOUND(404, "ORDER_007", "해당하는 주문 상품 내역이 없습니다."),
     ;
 
     private final int status;

@@ -20,9 +20,7 @@ public interface OrderRepository {
 
     Page<Order> findByMemberIdAndCreatedAtAfterOrderByCreatedAtDesc(UUID memberId, LocalDateTime createdAt, Pageable pageable);
 
-    List<Order> saveAll(List<Order> paidOrders);
-
-    List<Order> findByStatus(OrderStatus orderStatus);
-
     List<UUID> findRecentOrderIds(UUID memberId, LocalDateTime threeMonthsAgo);
+
+    boolean existsByIdAndMemberId(UUID orderId, UUID memberId);
 }

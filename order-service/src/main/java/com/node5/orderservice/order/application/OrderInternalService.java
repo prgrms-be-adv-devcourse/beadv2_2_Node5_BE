@@ -1,6 +1,8 @@
 package com.node5.orderservice.order.application;
 
+import com.node5.orderservice.order.application.dto.OrderStatusCommand;
 import com.node5.orderservice.order.domain.OrderItemRepository;
+import com.node5.orderservice.order.domain.OrderProgress;
 import com.node5.orderservice.order.domain.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -10,6 +12,8 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+
+import static com.node5.orderservice.order.exception.OrderErrorCode.*;
 
 @Service
 @RequiredArgsConstructor
@@ -30,5 +34,18 @@ public class OrderInternalService {
         }
 
         return orderItemRepository.findRecentProductIds(orderIds, PageRequest.of(0, RECENT_ORDER_ITEM_CNT));
+    }
+
+    // orderId, productId로 OrderItem의 status 조회
+    public Boolean getOrderStatus(UUID memberId, OrderStatusCommand command) {
+        // Order 확인
+        boolean existsMyOrder = orderRepository.existsByIdAndMemberId(command.orderId(), memberId);
+        if(!existsMyOrder) return false;
+
+        // OrderItem 확인
+        OrderProgress status = orderItemRepository
+                .findStatusByOrderIdAndProductId(command.orderId(), command.productId())
+                .orElse(null);
+        return status == OrderProgress.CONFIRMED;
     }
 }

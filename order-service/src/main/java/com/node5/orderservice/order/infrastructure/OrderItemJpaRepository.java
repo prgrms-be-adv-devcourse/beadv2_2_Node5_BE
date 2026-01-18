@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.List;
 
@@ -29,4 +29,10 @@ public interface OrderItemJpaRepository extends JpaRepository<OrderItem, UUID> {
             "SET oi.status = :toStatus " +
             "WHERE oi.status = :fromStatus")
     void updateStatusByCreatedAtBefore(OrderProgress fromStatus, OrderProgress toStatus);
+
+    @Query("SELECT oi.status " +
+            "FROM OrderItem oi " +
+            "WHERE oi.orderId = :orderId " +
+            "AND oi.productId = :productId")
+    Optional<OrderProgress> findStatusByOrderIdAndProductId(@Param("orderId") UUID orderId, @Param("productId") UUID productId);
 }

@@ -29,4 +29,6 @@ public interface OrderJpaRepository extends JpaRepository<Order, UUID> {
             "AND o.paidAt >= :threeMonthsAgo " +
             "ORDER BY o.paidAt DESC")
     List<UUID> findRecentOrderIds(@Param("memberId") UUID memberId, @Param("threeMonthsAgo") LocalDateTime threeMonthsAgo);
+
+    boolean existsByIdAndMemberId(UUID orderId, UUID memberId);
 }
