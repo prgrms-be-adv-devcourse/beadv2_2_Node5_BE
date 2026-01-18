@@ -19,13 +19,13 @@ public class OrderInternalController {
     @GetMapping("/getRecentOrderList")
     public ResponseEntity<List<UUID>> getRecentOrderList(
             @RequestHeader("Member-Id") UUID memberId
-    ){
+    ) {
         return ResponseEntity.ok(orderInternalService.getRecentOrderList(memberId));
     }
 
     // 상품에 대한 리뷰 작성 가능 여부 확인
     @GetMapping("/review-status")
-    public ResponseEntity<Boolean> getOrderStatus(
+    public ResponseEntity<Boolean> canPostReview(
             @RequestHeader("Member-Id") UUID memberId,
             @RequestBody OrderStatusRequest request
     ) {
@@ -39,6 +39,5 @@ public class OrderInternalController {
     ) {
         return ResponseEntity.ok(orderInternalService.hasInProgressOrder(memberId));
     }
-
 
 }

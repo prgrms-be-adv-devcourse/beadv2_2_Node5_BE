@@ -1,7 +1,6 @@
 package com.node5.orderservice.order.infrastructure;
 
 import com.node5.orderservice.order.domain.Order;
-import com.node5.orderservice.order.domain.OrderStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -21,8 +20,6 @@ public interface OrderJpaRepository extends JpaRepository<Order, UUID> {
     Page<Order> findByMemberIdAndCreatedAtAfterOrderByCreatedAtDesc(UUID memberId, LocalDateTime createdAt, Pageable pageable);
 
     Optional<Order> findBySubscriptionKey(UUID subscriptionKey);
-
-    List<Order> findByStatus(OrderStatus orderStatus);
 
     @Query("SELECT o.id FROM Order o " +
             "WHERE o.memberId = :memberId " +

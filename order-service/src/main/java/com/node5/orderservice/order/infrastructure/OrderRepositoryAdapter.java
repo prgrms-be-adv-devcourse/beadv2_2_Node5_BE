@@ -2,7 +2,6 @@ package com.node5.orderservice.order.infrastructure;
 
 import com.node5.orderservice.order.domain.Order;
 import com.node5.orderservice.order.domain.OrderRepository;
-import com.node5.orderservice.order.domain.OrderStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
