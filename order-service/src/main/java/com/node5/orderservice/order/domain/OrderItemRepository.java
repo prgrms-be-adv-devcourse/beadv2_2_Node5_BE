@@ -2,6 +2,7 @@ package com.node5.orderservice.order.domain;
 
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -14,4 +15,6 @@ public interface OrderItemRepository {
     List<OrderItem> findByOrderIdIn(List<UUID> orderIds);
 
     List<UUID> findRecentProductIds(List<UUID> orderIds, Pageable pageable);
+
+    void updateStatusByCreatedAtBefore(OrderProgress fromStatus, OrderProgress toStatus);
 }

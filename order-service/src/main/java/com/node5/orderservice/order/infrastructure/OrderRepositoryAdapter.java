@@ -45,16 +45,6 @@ public class OrderRepositoryAdapter implements OrderRepository {
     }
 
     @Override
-    public List<Order> findByStatusAndPaidAtBefore(OrderStatus orderStatus, LocalDateTime standard) {
-        return orderJpaRepository.findByStatusAndPaidAtBefore(orderStatus, standard);
-    }
-
-    @Override
-    public List<Order> findByStatusAndModifiedAtBefore(OrderStatus orderStatus, LocalDateTime standard) {
-        return orderJpaRepository.findByStatusAndModifiedAtBefore(orderStatus, standard);
-    }
-
-    @Override
     public List<Order> saveAll(List<Order> orders) {
         return orderJpaRepository.saveAll(orders);
     }

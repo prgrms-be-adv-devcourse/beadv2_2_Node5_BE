@@ -22,12 +22,6 @@ public interface OrderJpaRepository extends JpaRepository<Order, UUID> {
 
     Optional<Order> findBySubscriptionKey(UUID subscriptionKey);
 
-    @Query("SELECT o FROM Order o WHERE o.status = :status AND o.paidAt < :standard")
-    List<Order> findByStatusAndPaidAtBefore(@Param("status") OrderStatus status, @Param("standard") LocalDateTime standard);
-
-    @Query("SELECT o FROM Order o WHERE o.status = :status AND o.modifiedAt < :standard")
-    List<Order> findByStatusAndModifiedAtBefore(@Param("status") OrderStatus status, @Param("standard") LocalDateTime standard);
-
     List<Order> findByStatus(OrderStatus orderStatus);
 
     @Query("SELECT o.id FROM Order o " +
