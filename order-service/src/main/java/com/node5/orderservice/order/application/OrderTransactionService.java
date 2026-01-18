@@ -1,22 +1,17 @@
 package com.node5.orderservice.order.application;
 
-import com.node5.orderservice.order.application.dto.OrderWithItems;
 import com.node5.orderservice.order.client.CatalogClient;
 import com.node5.orderservice.order.client.SettlementClient;
-import com.node5.orderservice.order.client.dto.SettlementSourceItem;
 import com.node5.orderservice.order.domain.*;
-import com.node5.orderservice.order.exception.OrderGetShopIdFailed;
-import com.node5.orderservice.order.exception.OrderNotFoundException;
-import feign.FeignException;
+import com.node5.orderservice.order.exception.OrderException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
+
+import static com.node5.orderservice.order.exception.OrderErrorCode.ORDER_NOT_FOUND;
 
 @Service
 @Slf4j
@@ -32,7 +27,7 @@ public class OrderTransactionService {
     @Transactional
     public void updateOrderStatus(UUID orderId, OrderStatus status){
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new OrderNotFoundException(orderId));
+                .orElseThrow(() -> new OrderException(ORDER_NOT_FOUND, "orderId=" + orderId));
 
         order.updateStatus(status);
     }

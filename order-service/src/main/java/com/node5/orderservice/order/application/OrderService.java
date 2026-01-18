@@ -11,10 +11,7 @@ import com.node5.orderservice.order.domain.Order;
 import com.node5.orderservice.order.domain.OrderItem;
 import com.node5.orderservice.order.domain.OrderItemRepository;
 import com.node5.orderservice.order.domain.OrderRepository;
-import com.node5.orderservice.order.exception.OrderAccessDeniedException;
-import com.node5.orderservice.order.exception.OrderNotFoundException;
-import com.node5.orderservice.order.exception.OrderPaymentFailedException;
-import com.node5.orderservice.order.exception.OrderRequestNotAllowedException;
+import com.node5.orderservice.order.exception.OrderException;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import com.node5.orderservice.order.application.dto.*;
@@ -36,6 +33,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.node5.orderservice.order.domain.OrderStatus.*;
+import static com.node5.orderservice.order.exception.OrderErrorCode.*;
 
 @Service
 @RequiredArgsConstructor
@@ -84,7 +82,7 @@ public class OrderService {
             }
         } catch(FeignException e) {
             orderTransactionService.updateOrderStatus(orderId, PAYMENT_FAILED);
-            throw new OrderPaymentFailedException(orderId, e.getMessage());
+            throw new OrderException(ORDER_PAYMENT_FAILED, "orderId=" + orderId + ", message=" + e.getMessage());
         } catch(Exception e) {
             orderTransactionService.updateOrderStatus(orderId, PAYMENT_FAILED);
         }
@@ -136,10 +134,11 @@ public class OrderService {
 
     public OrderDetailInfo getOrderDetail(UUID orderId, UUID memberId) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new OrderNotFoundException(orderId));
+                .orElseThrow(() -> new OrderException(ORDER_NOT_FOUND, "orderId=" + orderId));
 
         if(!order.getMemberId().equals(memberId)){
-            throw new OrderAccessDeniedException(order.getId(), memberId, "상세 조회");
+            String msg = "[상세 조회] memberId: " + memberId + ", orderId: " + orderId;
+            throw new OrderException(ORDER_ACCESS_DENIED, msg);
         }
 
         List<OrderItem> orderItems = orderItemRepository.findByOrderId(orderId);
@@ -153,10 +152,11 @@ public class OrderService {
     @Transactional
     public OrderStatusInfo cancel(UUID orderId, UUID memberId) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new OrderNotFoundException(orderId));
+                .orElseThrow(() -> new OrderException(ORDER_NOT_FOUND, "orderId=" + orderId));
 
         if(!order.getMemberId().equals(memberId)){
-            throw new OrderAccessDeniedException(order.getId(), memberId, "취소");
+            String msg = "[취소] memberId: " + memberId + ", orderId: " + order.getId();
+            throw new OrderException(ORDER_ACCESS_DENIED, msg);
         }
 
         // 취소가 가능한 주문 상태인지 확인
@@ -169,17 +169,13 @@ public class OrderService {
                 if (response.getStatusCode().is2xxSuccessful()) {
                     orderTransactionService.updateOrderStatus(orderId, CANCELED);
                 }
-            } catch(FeignException e) {
-                throw new OrderPaymentFailedException(orderId, e.getMessage());
             } catch(Exception e) {
-                throw new OrderPaymentFailedException(orderId, e.getMessage());
+                throw new OrderException(ORDER_PAYMENT_FAILED, "orderId=" + orderId + ", message=" + e.getMessage());
             }
         }else{
-            throw new OrderRequestNotAllowedException(
-                    order.getId(),
-                    order.getStatus(),
-                    "취소는 주문의 상태가 결제 완료일 때 가능합니다."
-            );
+            String msg = String.format("취소는 주문의 상태가 결제 완료일 때 가능합니다.(orderId: %s, orderStatus: %s)",
+                    order.getId(), order.getStatus());
+            throw new OrderException(ORDER_REQUEST_NOT_ALLOWED, msg);
         }
 
         return OrderStatusInfo.from(order);
@@ -188,10 +184,11 @@ public class OrderService {
 //    @Transactional
 //    public OrderStatusInfo refund(UUID orderId, UUID memberId) {
 //        Order order = orderRepository.findById(orderId)
-//                .orElseThrow(() -> new OrderNotFoundException(orderId));
+//                .orElseThrow(() -> new OrderException(ORDER_NOT_FOUND, "orderId=" + orderId));
 //
 //        if(!order.getMemberId().equals(memberId)){
-//            throw new OrderAccessDeniedException(order.getId(), memberId, "환불");
+//            String msg = "[환불] memberId: " + memberId + ", orderId: " + order.getId();
+//            throw new OrderException(ORDER_ACCESS_DENIED, msg);
 //        }
 //
 //        // 환불이 가능한 주문 상태인지 확인
@@ -204,17 +201,13 @@ public class OrderService {
 //                if (response.getStatusCode().is2xxSuccessful()) {
 //                    orderTransactionService.updateOrderStatus(orderId, REFUND_COMPLETED);
 //                }
-//            } catch(FeignException e) {
-//                throw new OrderPaymentFailedException(orderId, e.getMessage());
 //            } catch(Exception e) {
-//                throw new OrderPaymentFailedException(orderId, e.getMessage());
+//                throw new OrderException(ORDER_PAYMENT_FAILED, "orderId=" + orderId + ", message=" + e.getMessage());
 //            }
 //        }else{
-//            throw new OrderRequestNotAllowedException(
-//                    order.getId(),
-//                    order.getStatus(),
-//                    "환불은 주문의 상태가 배송 중이거나 배송 완료일 때 가능합니다."
-//            );
+//            String msg = String.format("환불은 주문의 상태가 배송 중이거나 배송 완료일 때 가능합니다.(orderId: %s, orderStatus: %s)",
+//                    order.getId(), order.getStatus());
+//            throw new OrderException(ORDER_REQUEST_NOT_ALLOWED, msg);
 //        }
 //
 //        return OrderStatusInfo.from(order);
