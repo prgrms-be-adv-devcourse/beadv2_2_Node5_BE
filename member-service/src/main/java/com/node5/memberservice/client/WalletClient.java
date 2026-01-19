@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import java.util.UUID;
 
 @FeignClient(name = "wallet-service")
-public interface BillingClient {
+public interface WalletClient {
 
     @GetMapping("/internal/wallets")
     ResponseEntity<WalletInfo> getWallet(@RequestHeader("Member-Id") UUID memberId);

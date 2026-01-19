@@ -1,7 +1,7 @@
 package com.node5.memberservice.shop.application;
 
 import com.node5.common.event.ShopDeletedEvent;
-import com.node5.memberservice.client.BillingClient;
+import com.node5.memberservice.client.WalletClient;
 import com.node5.memberservice.member.application.MemberService;
 import com.node5.memberservice.member.domain.MemberRole;
 import com.node5.memberservice.shop.application.dto.ShopInfoResponse;
@@ -32,7 +32,7 @@ public class ShopService {
 
     private final ShopRepository shopRepository;
     private final MemberService memberService;
-    private final BillingClient billingClient;
+    private final WalletClient walletClient;
     private final ApplicationEventPublisher eventPublisher;
 
     public Page<ShopListResponse> findMyShopList(UUID memberId, Pageable pageable) {
@@ -57,7 +57,7 @@ public class ShopService {
 
     private void checkWalletExists(UUID memberId) {
         try {
-            billingClient.getWallet(memberId);
+            walletClient.getWallet(memberId);
         } catch (FeignException.NotFound e) {
             throw new ShopException(ShopErrorCode.WALLET_REQUIRED);
         } catch (Exception e) {

@@ -2,7 +2,7 @@ package com.node5.memberservice.member.application;
 
 import com.node5.common.event.MemberDeletedEvent;
 import com.node5.memberservice.auth.domain.OAuthRepository;
-import com.node5.memberservice.client.BillingClient;
+import com.node5.memberservice.client.WalletClient;
 import com.node5.memberservice.client.dto.WalletInfo;
 import com.node5.memberservice.member.application.dto.*;
 import com.node5.memberservice.member.domain.*;
@@ -34,7 +34,7 @@ public class MemberService {
     private final RedisService redisService;
     private final ApplicationEventPublisher eventPublisher;
     private final ShopRepository shopRepository;
-    private final BillingClient billingClient;
+    private final WalletClient walletClient;
 
     public MemberInfoResponse findById(UUID memberId) {
         Member member = getNotDeletedMemberOrThrow(memberId);
@@ -67,7 +67,7 @@ public class MemberService {
     private void validateCanDeleteMember(UUID memberId) {
         try {
             // 예치금 잔액 확인
-            WalletInfo wallet = billingClient.getWallet(memberId).getBody();
+            WalletInfo wallet = walletClient.getWallet(memberId).getBody();
             if (wallet != null && wallet.balance() != 0) {
                 throw new MemberException(MemberErrorCode.MEMBER_HAS_BALANCE);
             }
