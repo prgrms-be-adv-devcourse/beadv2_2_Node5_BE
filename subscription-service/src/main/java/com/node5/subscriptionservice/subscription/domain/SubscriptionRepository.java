@@ -29,7 +29,7 @@ public interface SubscriptionRepository {
 
     void bulkUpdateNextRunDateByIds(List<UUID> ids, LocalDate nextRunDate);
 
-    void bulkUpdateNextRunDates(java.util.Map<UUID, LocalDate> nextRunDates);
+    void bulkUpdateNextRunDates(java.util.Map<UUID, LocalDate> nextRunDates, LocalDate processedRunDate);
 
     void bulkMarkFailedByIds(List<UUID> ids);
 

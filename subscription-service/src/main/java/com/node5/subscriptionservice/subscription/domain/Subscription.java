@@ -57,6 +57,9 @@ public class Subscription extends BaseEntity {
     @Column(name = "next_run_date", nullable = false)
     private LocalDate nextRunDate;
 
+    @Column(name = "last_processed_run_date")
+    private LocalDate lastProcessedRunDate;
+
     @Column(length = 100, name = "delivery_address")
     private String deliveryAddress;
 

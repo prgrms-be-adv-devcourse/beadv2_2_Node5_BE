@@ -110,6 +110,10 @@ public class SubscriptionInternalService {
 
         Map<UUID, LocalDate> nextRunDates = new HashMap<>();
         subscriptions.forEach(subscription -> {
+            LocalDate lastProcessed = subscription.getLastProcessedRunDate();
+            if (lastProcessed != null && !runDate.isAfter(lastProcessed)) {
+                return;
+            }
             List<SubscriptionRecurrenceRule> subscriptionRules =
                     ruleMap.getOrDefault(subscription.getId(), List.of());
             if (subscriptionRules.isEmpty()) {
@@ -119,8 +123,13 @@ public class SubscriptionInternalService {
             nextRunDates.put(subscription.getId(), subscription.getNextRunDate());
         });
 
-        subscriptionRepository.bulkUpdateNextRunDates(nextRunDates);
-        log.info("Subscription batch success: {} items updated", subscriptions.size());
+        if (nextRunDates.isEmpty()) {
+            log.info("Subscription batch success: no updates needed");
+            return;
+        }
+
+        subscriptionRepository.bulkUpdateNextRunDates(nextRunDates, runDate);
+        log.info("Subscription batch success: {} items updated", nextRunDates.size());
     }
 
     private SubscriptionBatchTarget toBatchTarget(Subscription subscription) {

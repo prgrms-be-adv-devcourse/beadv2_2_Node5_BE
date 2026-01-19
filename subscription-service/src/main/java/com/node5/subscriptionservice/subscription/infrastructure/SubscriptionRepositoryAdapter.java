@@ -59,7 +59,7 @@ public class SubscriptionRepositoryAdapter implements SubscriptionRepository {
     }
 
     @Override
-    public void bulkUpdateNextRunDates(Map<UUID, LocalDate> nextRunDates) {
+    public void bulkUpdateNextRunDates(Map<UUID, LocalDate> nextRunDates, LocalDate processedRunDate) {
         if (nextRunDates.isEmpty()) {
             return;
         }
@@ -77,12 +77,13 @@ public class SubscriptionRepositoryAdapter implements SubscriptionRepository {
             paramIndex += 2;
         }
 
-        sql.append(" end where id in (");
+        int processedParamIndex = paramIndex;
+        sql.append(" end, last_processed_run_date = cast(?").append(processedParamIndex).append(" as date) where id in (");
         for (int i = 0; i < ids.size(); i++) {
             if (i > 0) {
                 sql.append(", ");
             }
-            sql.append("?").append(paramIndex + i);
+            sql.append("?").append(processedParamIndex + 1 + i);
         }
         sql.append(")");
 
@@ -93,6 +94,8 @@ public class SubscriptionRepositoryAdapter implements SubscriptionRepository {
             query.setParameter(paramIndex + 1, java.sql.Date.valueOf(entry.getValue()));
             paramIndex += 2;
         }
+        query.setParameter(processedParamIndex, java.sql.Date.valueOf(processedRunDate));
+        paramIndex = processedParamIndex + 1;
         for (UUID id : ids) {
             query.setParameter(paramIndex, id);
             paramIndex += 1;

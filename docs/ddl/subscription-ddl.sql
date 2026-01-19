@@ -14,6 +14,7 @@ CREATE TABLE subscription.subscription (
 
                                            subscription_status VARCHAR(20) NOT NULL,
                                            next_run_date DATE NOT NULL,
+                                           last_processed_run_date DATE,
                                            delivery_address VARCHAR(100),
 
                                            created_at TIMESTAMP NOT NULL DEFAULT now(),
@@ -41,6 +42,7 @@ COMMENT ON COLUMN subscription.subscription.quantity IS '수량';
 COMMENT ON COLUMN subscription.subscription.total_price IS '총 금액';
 COMMENT ON COLUMN subscription.subscription.subscription_status IS '구독 상태';
 COMMENT ON COLUMN subscription.subscription.next_run_date IS '다음 결제일';
+COMMENT ON COLUMN subscription.subscription.last_processed_run_date IS '배치 처리 기준일';
 COMMENT ON COLUMN subscription.subscription.delivery_address IS '배송지';
 COMMENT ON COLUMN subscription.subscription.created_at IS '생성일';
 COMMENT ON COLUMN subscription.subscription.modified_at IS '수정일';
