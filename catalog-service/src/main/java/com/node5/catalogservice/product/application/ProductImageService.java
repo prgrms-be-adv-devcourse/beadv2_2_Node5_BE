@@ -1,6 +1,5 @@
 package com.node5.catalogservice.product.application;
 
-import java.util.UUID;
 import java.util.regex.Pattern;
 
 import org.springframework.stereotype.Service;
@@ -36,7 +35,10 @@ public class ProductImageService {
 		S3ObjectMeta meta = s3ObjectMetaPort.head(tempKey);
 		validateUploadedMeta(meta);
 
-		String productKey = props.getProductPrefix() + UUID.randomUUID();
+		String productKey = tempKey.replaceFirst(
+			"^" + Pattern.quote(props.getTempPrefix()),
+			props.getProductPrefix()
+		);
 
 		s3ObjectPromotionPort.copy(tempKey, productKey);
 		s3ObjectPromotionPort.delete(tempKey);
