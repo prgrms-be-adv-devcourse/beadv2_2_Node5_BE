@@ -3,6 +3,7 @@ kind: Kustomization
 
 resources:
   - apigateway.yaml
+  - batch-service.yaml
   - billing-service.yaml
   - catalog-service.yaml
   - config-repo-configmap.yaml

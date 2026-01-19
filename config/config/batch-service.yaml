@@ -1,0 +1,38 @@
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    driver-class-name: org.postgresql.Driver
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    hikari:
+      schema: batch
+  jackson:
+    time-zone: Asia/Seoul
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        default_schema: batch
+        format_sql: true
+        jdbc:
+          time_zone: Asia/Seoul
+  batch:
+    job:
+      enabled: false
+    jdbc:
+      initialize-schema: always
+      table-prefix: batch.BATCH_
+  task:
+    scheduling:
+      cron:
+        subscription-order: ${SUBSCRIPTION_ORDER_CRON}
+  kafka:
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+server:
+  port: 8088
+api:
+  v1: /api/v1

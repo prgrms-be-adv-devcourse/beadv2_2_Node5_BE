@@ -1,7 +1,7 @@
-package com.node5.subscriptionservice.subscription.client;
+package com.node5.batchservice.subscription.client;
 
-import com.node5.subscriptionservice.subscription.client.dto.OrderCreateInfo;
-import com.node5.subscriptionservice.subscription.client.dto.OrderCreateRequest;
+import com.node5.batchservice.subscription.client.dto.OrderCreateInfo;
+import com.node5.batchservice.subscription.client.dto.OrderCreateRequest;
 import jakarta.validation.Valid;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;

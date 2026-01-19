@@ -32,10 +32,6 @@ spring:
       enable-auto-commit: false
       properties:
         spring.json.trusted.packages: "com.node5.common.event"
-  task:
-    scheduling:
-      cron:
-        subscription-order: ${SUBSCRIPTION_ORDER_CRON}
 
 api:
   v1: /api/v1

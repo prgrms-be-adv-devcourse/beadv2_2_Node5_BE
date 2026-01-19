@@ -10,12 +10,14 @@ import com.node5.subscriptionservice.subscription.domain.*;
 import com.node5.subscriptionservice.subscription.exception.SubscriptionException;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +28,7 @@ import java.util.stream.Collectors;
 import static com.node5.subscriptionservice.subscription.exception.SubscriptionErrorCode.*;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class SubscriptionService {
@@ -51,6 +54,7 @@ public class SubscriptionService {
 
     @Transactional
     public SubscriptionInfo create(SubscriptionCreateCommand command, UUID memberId) {
+        log.info("Create subscription request: {}", command);
         ProductInfoResponse productInfo = getProductInfo(command.productId());
         validateProductNotCurrentMembersShop(memberId, productInfo.shopId());
 
@@ -76,7 +80,7 @@ public class SubscriptionService {
             throw new SubscriptionException(SUBSCRIPTION_RULE_NOT_FOUND);
         }
 
-        subscription.calculateNextRunDate(rules);
+        subscription.calculateNextRunDate(rules, LocalDate.now());
 
         Subscription savedSubscription = subscriptionRepository.save(subscription);
         subscriptionRecurrenceRuleRepository.saveAll(rules);
@@ -190,18 +194,18 @@ public class SubscriptionService {
         } catch (FeignException.NotFound ex) {
             throw new SubscriptionException(SUBSCRIPTION_PRODUCT_NOT_FOUND);
         } catch (Exception ex) {
+            log.info("{}", ex.getMessage());
             throw new SubscriptionException(SUBSCRIPTION_PRODUCT_REQUEST_FAILED);
         }
     }
 
     private void validateProductNotCurrentMembersShop(UUID memberId, UUID shopId) {
-        String shopOwnerIdStr;
+        UUID shopOwnerId;
         try {
-            shopOwnerIdStr = shopClient.getMemberIdByShopId(shopId).getBody();
+            shopOwnerId = shopClient.getMemberIdByShopId(shopId).getBody();
         } catch (FeignException e) {
             throw new SubscriptionException(SUBSCRIPTION_SHOP_REQUEST_FAILED);
         }
-        UUID shopOwnerId = UUID.fromString(shopOwnerIdStr);
 
         if(shopOwnerId.equals(memberId)) {
             throw new SubscriptionException(SUBSCRIPTION_SELF_PRODUCT_NOT_ALLOWED);
@@ -288,7 +292,7 @@ public class SubscriptionService {
         );
 
         subscriptionRecurrenceRuleRepository.deleteAllBySubscriptionId(SubscriptionId);
-        subscription.calculateNextRunDate(newRules);
+        subscription.calculateNextRunDate(newRules, LocalDate.now());
         subscriptionRecurrenceRuleRepository.saveAll(newRules);
     }
 }

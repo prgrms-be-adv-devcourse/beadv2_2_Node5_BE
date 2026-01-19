@@ -79,7 +79,7 @@ class SubscriptionTest {
                 : today.plusMonths(1).withDayOfMonth(targetDayOfMonth);
         LocalDate expected = weeklyNext.isBefore(monthlyNext) ? weeklyNext : monthlyNext;
 
-        subscription.calculateNextRunDate(List.of(weeklyRule, monthlyRule));
+        subscription.calculateNextRunDate(List.of(weeklyRule, monthlyRule), LocalDate.now());
 
         assertThat(subscription.getNextRunDate()).isEqualTo(expected);
     }
@@ -88,7 +88,7 @@ class SubscriptionTest {
     void 반복규칙이_없으면_다음_실행일_계산에_실패한다() {
         Subscription subscription = createSubscription();
 
-        assertThatThrownBy(() -> subscription.calculateNextRunDate(List.of()))
+        assertThatThrownBy(() -> subscription.calculateNextRunDate(List.of(), LocalDate.now()))
                 .isInstanceOf(SubscriptionException.class)
                 .extracting("errorCode")
                 .isEqualTo(SubscriptionErrorCode.SUBSCRIPTION_RULE_NOT_FOUND);

@@ -31,4 +31,21 @@ public interface SubscriptionJpaRepository extends JpaRepository<Subscription, U
             and s.subscriptionStatus != 'TERMINATED'
     """)
     void bulkTerminateAllByShop(UUID shopId, LocalDateTime dateTime);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+        update Subscription s
+        set s.nextRunDate = :nextRunDate
+        where s.id in :ids
+    """)
+    void bulkUpdateNextRunDateByIds(List<UUID> ids, LocalDate nextRunDate);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+        update Subscription s
+        set s.subscriptionStatus = 'FAILED'
+        where s.id in :ids
+            and s.subscriptionStatus not in ('CANCELLED', 'UNAVAILABLE', 'TERMINATED')
+    """)
+    void bulkMarkFailedByIds(List<UUID> ids);
 }
