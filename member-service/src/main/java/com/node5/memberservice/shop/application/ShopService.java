@@ -93,6 +93,7 @@ public class ShopService {
         eventPublisher.publishEvent(shopDeletedEvent);
     }
 
+    // Todo - 삭제된 shop 이면?
     public UUID getMemberIdByShopId(UUID shopId) {
         Shop shop = shopRepository.findById(shopId).orElseThrow(
                 () -> new ShopException(ShopErrorCode.SHOP_NOT_FOUND)
