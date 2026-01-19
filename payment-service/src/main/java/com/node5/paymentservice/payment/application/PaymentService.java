@@ -83,7 +83,7 @@ public class PaymentService {
             );
             walletClient.withdrawRequest(withdrawRequest);
         } catch (Exception e) {
-            log.error("[예치금 출금 요청 실패] 결제 취소 실패 처리 - OrderId: {}, Error: {}", payment.getOrderId(), e.getMessage());
+            log.error("[예치금 출금 요청 실패] 결제 취소 실패 처리 - MemberId: {}, OrderId: {}, Error: {}", payment.getMemberId(), payment.getOrderId(), e.getMessage());
             // 결제 취소 실패 처리
             payment.cancel_failure("예치금 출금 요청 실패: " + e.getMessage());
             throw new PaymentException(PAYMENT_WALLET_WITHDRAW_FAILED); //예치금 출금 요청 실패

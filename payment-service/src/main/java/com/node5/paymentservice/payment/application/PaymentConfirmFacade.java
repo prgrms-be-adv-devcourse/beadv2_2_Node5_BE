@@ -96,18 +96,7 @@ public class PaymentConfirmFacade {
             return tossPaymentClient.confirm(command);
             // 예치금 승인 확정 이벤트 발행
         } catch (Exception e) {
-            log.error("[PG 승인 실패] 보상 트랜잭션 시작 - OrderId: {}, Error: {}", paymentTemporaryData.getOrderId(), e.getMessage());
-            try {
-                WalletRequest walletDepositRequest = new WalletRequest(
-                        paymentTemporaryData.getMemberId(),
-                        paymentTemporaryData.getOrderId(),
-                        paymentTemporaryData.getAmount()
-                );
-                walletClient.cancelDeposit(walletDepositRequest);
-                log.info("[예치금 입금 취소 성공] OrderId: {}", paymentTemporaryData.getOrderId());
-            } catch (Exception ex) {
-                log.error("[예치금 입금 취소 실패] OrderId: {}, Error: {}", paymentTemporaryData.getOrderId(), ex.getMessage());
-            }
+            log.error("[PG 승인 실패] - MemberId: {}, OrderId: {}, Error: {}", paymentTemporaryData.getMemberId(), paymentTemporaryData.getOrderId(), e.getMessage());
             paymentConfirmService.markAsFailed(paymentTemporaryData.getOrderId(), e.getMessage());
             throw new PaymentException(PAYMENT_PG_CONFIRMATION_FAILED);
         }
