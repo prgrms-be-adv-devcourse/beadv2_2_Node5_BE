@@ -98,34 +98,20 @@ data:
             format_sql: true
             jdbc:
               time_zone: Asia/Seoul
-      batch:
-        jdbc:
-          initialize-schema: never
       kafka:
         bootstrap-servers: ${KAFKA_HOST}:9092
         producer:
           key-serializer: org.apache.kafka.common.serialization.StringSerializer
           value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-        consumer:
-          group-id: catalog-service-search
-          key-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
-          value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
-          properties:
-            spring.deserializer.key.delegate.class: org.apache.kafka.common.serialization.StringDeserializer
-            spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
-            spring.json.trusted.packages: "com.node5.common.event,com.node5.catalogservice.*"
     api:
       v1: /api/v1
     app:
       kafka:
         topics:
           member-deleted: member-service.member-deleted.v1
-          product-index: product-index
-          product-embedding: ai-service.product-embedding.v1
+          product-index: catalog-service.product-index.v1
+          product-embedding: catalog-service.product-embedding.v1
           product-discontinued: catalog-service.product-discontinued.v1
-      search:
-        index:
-          product: products
       s3:
         bucket: ${S3_BUCKET_NAME}
         region: ${AWS_REGION:ap-northeast-2}
@@ -319,6 +305,10 @@ data:
         shop-deleted: shop-service.shop-deleted.v1
   support-service.yaml: |
     spring:
+      elasticsearch:
+        uris: http://${ES_HOST}:9200
+        connection-timeout: 1s
+        socket-timeout: 3s
       datasource:
         url: ${SPRING_DATASOURCE_URL}
         driver-class-name: org.postgresql.Driver
@@ -395,11 +385,15 @@ data:
       topics:
         review-created: support-service.review-created.v1
         product-discontinued: catalog-service.product-discontinued.v1
-        product-embedding: ai-service.product-embedding.v1
+        product-embedding: catalog-service.product-embedding.v1
+        product-index: catalog-service.product-index.v1
         order-status-changed: order-service.order-status-changed.v1
         subscription-status-changed: subscription-service.subscription-status-changed.v1
     api:
       v1: /api/v1
-    
+    app:
+      search:
+        index:
+          product: products
     server:
       port: 8087
