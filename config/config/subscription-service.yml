@@ -39,4 +39,4 @@ api:
 kafka:
   topics:
     member-deleted: member-service.member-deleted.v1
-    shop-deleted: shop-service.shop-deleted.v1
+    shop-deleted: member-service.shop-deleted.v1

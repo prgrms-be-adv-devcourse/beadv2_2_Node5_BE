@@ -13,7 +13,7 @@ public class ProductEmbeddingEventConsumer {
 
     private final ProductEmbeddingService productEmbeddingService;
 
-    @KafkaListener(topics = "${kafka.topics.product-embedding:ai-service.product-embedding.v1}")
+    @KafkaListener(topics = "${kafka.topics.product-embedding:catalog-service.product-embedding.v1}")
     public void consume(ProductEmbeddingEvent event, Acknowledgment ack) {
         productEmbeddingService.handleProductEmbeddingEvent(event);
         ack.acknowledge();

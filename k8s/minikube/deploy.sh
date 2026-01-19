@@ -8,7 +8,8 @@ KUBECTL="minikube -p $PROFILE kubectl --"
 $KUBECTL apply -k "$ROOT_DIR/k8s"
 $KUBECTL get all
 
-for deploy in apigateway billing-service catalog-service config-service discovery \
-  member-service order-service settlement-service shop-service subscription-service; do
+for deploy in apigateway catalog-service config-service discovery \
+  member-service order-service settlement-service subscription-service \
+  payment-service wallet-service; do
   $KUBECTL rollout status "deploy/${deploy}" || true
 done

@@ -13,7 +13,7 @@ public class ShopDeletedConsumer {
 
     private final SubscriptionService subscriptionService;
 
-    @KafkaListener(topics = "${kafka.topics.shop-deleted:shop-service.shop-deleted.v1}")
+    @KafkaListener(topics = "${kafka.topics.shop-deleted:member-service.shop-deleted.v1}")
     public void consume(ShopDeletedEvent event, Acknowledgment ack) {
         subscriptionService.terminateSellerSubscriptions(event.shopId());
         ack.acknowledge();

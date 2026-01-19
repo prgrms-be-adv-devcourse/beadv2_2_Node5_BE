@@ -79,7 +79,7 @@ public class ReviewService {
             }
         }
 
-        // TODO: 상품 상태 체크 로직을 OpenFeign 등을 활용하여 구현 필요 (boolean)
+        // TODO: 상품 상태 체크 로직을 OpenFeign 등을 활용하여 구현 필요 (boolean) memberId, orderId, productId
         boolean isOrderValid; // 주문 상태 체크
 
         reviewRepository.incrementStatistics(command.productId(), command.rating());

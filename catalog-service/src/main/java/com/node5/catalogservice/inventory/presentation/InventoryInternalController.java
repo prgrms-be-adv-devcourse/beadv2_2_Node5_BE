@@ -7,11 +7,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.node5.catalogservice.inventory.application.InventoryService;
-import com.node5.catalogservice.inventory.application.dto.StockReservationInfo;
-import com.node5.catalogservice.inventory.presentation.dto.StockCommitRequest;
-import com.node5.catalogservice.inventory.presentation.dto.StockHoldRequest;
-import com.node5.catalogservice.inventory.presentation.dto.StockReleaseRequest;
+import com.node5.catalogservice.inventory.application.InventoryReservationService;
+import com.node5.catalogservice.inventory.application.dto.StockHoldBatchResult;
+import com.node5.catalogservice.inventory.presentation.dto.StockCommitBatchRequest;
+import com.node5.catalogservice.inventory.presentation.dto.StockHoldBatchRequest;
+import com.node5.catalogservice.inventory.presentation.dto.StockReleaseBatchRequest;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -26,7 +26,7 @@ import lombok.RequiredArgsConstructor;
 @Tag(name = "Inventory Internal", description = "주문/결제 흐름을 위한 내부 재고 예약 처리 API")
 public class InventoryInternalController {
 
-	private final InventoryService inventoryService;
+	private final InventoryReservationService inventoryReservationService;
 
 	@PostMapping("/hold")
 	@Operation(
@@ -38,8 +38,8 @@ public class InventoryInternalController {
 		@ApiResponse(responseCode = "400", description = "요청 값이 유효하지 않습니다."),
 		@ApiResponse(responseCode = "404", description = "상품 재고가 존재하지 않습니다.")
 	})
-	public ResponseEntity<StockReservationInfo> hold(@Valid @RequestBody StockHoldRequest request) {
-		StockReservationInfo result = inventoryService.hold(request.toCommand());
+	public ResponseEntity<StockHoldBatchResult> hold(@Valid @RequestBody StockHoldBatchRequest request) {
+		var result = inventoryReservationService.holdBatch(request.toCommand());
 		return ResponseEntity.status(HttpStatus.CREATED).body(result);
 	}
 
@@ -53,8 +53,8 @@ public class InventoryInternalController {
 		@ApiResponse(responseCode = "400", description = "요청 값이 유효하지 않습니다."),
 		@ApiResponse(responseCode = "404", description = "재고 예약이 존재하지 않습니다.")
 	})
-	public ResponseEntity<Void> commit(@Valid @RequestBody StockCommitRequest request) {
-		inventoryService.commit(request.toCommand());
+	public ResponseEntity<Void> commit(@Valid @RequestBody StockCommitBatchRequest request) {
+		inventoryReservationService.commitBatch(request.toCommand());
 		return ResponseEntity.ok().build();
 	}
 
@@ -68,8 +68,8 @@ public class InventoryInternalController {
 		@ApiResponse(responseCode = "400", description = "요청 값이 유효하지 않습니다."),
 		@ApiResponse(responseCode = "404", description = "재고 예약이 존재하지 않습니다.")
 	})
-	public ResponseEntity<Void> release(@Valid @RequestBody StockReleaseRequest request) {
-		inventoryService.release(request.toCommand());
+	public ResponseEntity<Void> release(@Valid @RequestBody StockReleaseBatchRequest request) {
+		inventoryReservationService.releaseBatch(request.toCommand());
 		return ResponseEntity.ok().build();
 	}
 }
