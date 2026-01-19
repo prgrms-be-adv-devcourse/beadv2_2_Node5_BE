@@ -4,7 +4,7 @@ import com.node5.subscriptionservice.subscription.application.dto.SubscriptionCr
 import com.node5.subscriptionservice.subscription.application.dto.SubscriptionInfo;
 import com.node5.subscriptionservice.subscription.application.dto.SubscriptionUpdateCommand;
 import com.node5.subscriptionservice.subscription.client.ProductClient;
-import com.node5.subscriptionservice.subscription.client.ShopClient;
+import com.node5.subscriptionservice.subscription.client.MemberClient;
 import com.node5.subscriptionservice.subscription.client.dto.ProductInfoResponse;
 import com.node5.subscriptionservice.subscription.domain.*;
 import com.node5.subscriptionservice.subscription.exception.SubscriptionException;
@@ -36,7 +36,7 @@ public class SubscriptionService {
     private final SubscriptionRepository subscriptionRepository;
     private final SubscriptionRecurrenceRuleRepository subscriptionRecurrenceRuleRepository;
     private final ProductClient productClient;
-    private final ShopClient shopClient;
+    private final MemberClient memberClient;
 
     public SubscriptionInfo findById(UUID id) {
         Subscription subscription = subscriptionRepository.findById(id)
@@ -202,7 +202,7 @@ public class SubscriptionService {
     private void validateProductNotCurrentMembersShop(UUID memberId, UUID shopId) {
         UUID shopOwnerId;
         try {
-            shopOwnerId = shopClient.getMemberIdByShopId(shopId).getBody();
+            shopOwnerId = memberClient.getMemberIdByShopId(shopId).getBody();
         } catch (FeignException e) {
             throw new SubscriptionException(SUBSCRIPTION_SHOP_REQUEST_FAILED);
         }
