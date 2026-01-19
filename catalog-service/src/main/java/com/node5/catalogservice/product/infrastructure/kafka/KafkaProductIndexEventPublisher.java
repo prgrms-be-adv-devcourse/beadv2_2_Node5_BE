@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component;
 
 import com.node5.catalogservice.config.kafka.KafkaTopicsProperties;
 import com.node5.catalogservice.product.application.port.ProductIndexEventPort;
-import com.node5.catalogservice.product.event.ProductIndexEvent;
+import com.node5.common.event.ProductIndexEvent;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

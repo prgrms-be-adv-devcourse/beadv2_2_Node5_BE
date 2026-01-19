@@ -2,7 +2,6 @@ package com.node5.orderservice.global.exception;
 
 import com.node5.common.exception.ExceptionResponseDto;
 import com.node5.orderservice.order.exception.*;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -18,18 +17,18 @@ import java.util.stream.Collectors;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ExceptionResponseDto> handleValidation(MethodArgumentNotValidException e, HttpServletRequest request) {
+    public ResponseEntity<ExceptionResponseDto> handleValidation(MethodArgumentNotValidException e) {
         String message = e.getBindingResult().getFieldErrors().stream()
                 .map(error -> error.getField() + ": " + error.getDefaultMessage())
                 .collect(Collectors.joining(", "));
 
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(new ExceptionResponseDto("VALIDATION_ERROR", message));
+                .body(new ExceptionResponseDto(OrderErrorCode.INVALID_VALUE.getCode(), message));
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<ExceptionResponseDto> handleValidation(ConstraintViolationException e, HttpServletRequest request) {
+    public ResponseEntity<ExceptionResponseDto> handleValidation(ConstraintViolationException e) {
         String message = e.getConstraintViolations().stream()
                 .map(violation -> {
                     String propertyPath = violation.getPropertyPath().toString();
@@ -40,7 +39,7 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(new ExceptionResponseDto("ORDER_001", message));
+                .body(new ExceptionResponseDto(OrderErrorCode.INVALID_VALUE.getCode(), message));
     }
 
     @ExceptionHandler(OrderException.class)

@@ -10,7 +10,7 @@ public record PresignedUrlResponse(
 	)
 	String url,
 
-	@Schema(description = "업로드 후 저장될 객체 키", example = "product/550e8400-e29b-41d4-a716-446655440000")
-	String key
+	@Schema(description = "업로드 후 임시 저장될 객체 키", example = "temp/product/550e8400-e29b-41d4-a716-446655440000")
+	String tempKey
 ) {
 }

@@ -3,14 +3,14 @@ kind: Kustomization
 
 resources:
   - apigateway.yaml
-  - billing-service.yaml
   - catalog-service.yaml
   - config-repo-configmap.yaml
   - config.yaml
   - discovery.yaml
   - member-service.yaml
   - order-service.yaml
+  - payment-service.yaml
   - settlement-service.yaml
-  - shop-service.yaml
   - subscription-service.yaml
   - support-service.yaml
+  - wallet-service.yaml

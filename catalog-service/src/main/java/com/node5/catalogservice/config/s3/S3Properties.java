@@ -12,4 +12,7 @@ public class S3Properties {
 	private String bucket;
 	private String region;
 	private long presignedUrlExpirationSeconds;
+	private String tempPrefix;
+	private String productPrefix;
+	private long maxImageBytes;
 }

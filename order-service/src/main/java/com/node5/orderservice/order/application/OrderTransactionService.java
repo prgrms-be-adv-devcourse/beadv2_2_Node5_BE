@@ -3,7 +3,8 @@ package com.node5.orderservice.order.application;
 import com.node5.orderservice.order.client.CatalogClient;
 import com.node5.orderservice.order.client.SettlementClient;
 import com.node5.orderservice.order.domain.*;
-import com.node5.orderservice.order.exception.OrderException;
+import com.nohttps://github.com/prgrms-be-adv-devcourse/beadv2_2_Node5_BE/pull/424/conflict?name=order-service%252Fsrc%252Fmain%252Fjava%252Fcom%252Fnode5%252Forderservice%252Forder%252Fapplication%252FOrderTransactionService.java&ancestor_oid=6bd57ce176d52d93dc49af58dcd66a942e181257&base_oid=978e343cdab358a499b18b17ac0fe62fcc309406&head_oid=19a85a229047003d4b82bde2b938b48f8870728dde5.orderservice.order.exception.OrderException;
+import feign.FeignException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +12,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 
+import static com.node5.orderservice.order.exception.OrderErrorCode.ORDER_NOT_FOUND;
+
+import static com.node5.orderservice.order.exception.OrderErrorCode.ORDER_GET_SHOPID_FAILED;
 import static com.node5.orderservice.order.exception.OrderErrorCode.ORDER_NOT_FOUND;
 
 @Service

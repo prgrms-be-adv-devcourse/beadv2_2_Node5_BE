@@ -1,7 +1,7 @@
 package com.node5.settlementservice.settlement.batch;
 
 import com.node5.settlementservice.settlement.batch.dto.SettlementAggregateDto;
-import com.node5.settlementservice.settlement.client.BillingClient;
+import com.node5.settlementservice.settlement.client.WalletClient;
 import com.node5.settlementservice.settlement.client.ShopClient;
 import com.node5.settlementservice.settlement.client.dto.WalletSettleInfo;
 import com.node5.settlementservice.settlement.client.dto.WalletSettleRequest;
@@ -215,7 +215,7 @@ public class SettlementBatchConfig {
     @Bean
     @StepScope
     public ItemProcessor<SettlementResult, SettlementResult> settlementPayoutProcessor(
-            BillingClient billingClient,
+            WalletClient walletClient,
             ShopClient shopClient
     ) {
         return result -> {
@@ -230,7 +230,7 @@ public class SettlementBatchConfig {
                 }
 
                 // 예치금 지급 (billing client 연동)
-                ResponseEntity<WalletSettleInfo> walletResponse = billingClient.settle(
+                ResponseEntity<WalletSettleInfo> walletResponse = walletClient.settle(
                         memberId,
                         new WalletSettleRequest(result.getId(), result.getPayoutAmount().longValue())
                 );
