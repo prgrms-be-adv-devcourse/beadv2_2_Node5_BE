@@ -39,14 +39,18 @@ import java.util.stream.Collectors;
 @EnableBatchProcessing
 @RequiredArgsConstructor
 public class MonthlyReviewSummaryJobConfig {
+
+    private static final String MONTHLY_REVIEW_SUMMARY_JOB_NAME = "monthlyReviewSummaryJob";
+
     private static final int CHUNK_SIZE = 1;
     private final ReviewSummaryRepository reviewSummaryRepository;
     private final ReviewService reviewService;
 //    private final ReviewTestData testData;
 
+
     @Bean
     public Job monthlyReviewSummaryJob(JobRepository jobRepository, Step monthlyReviewSummaryStep) {
-        return new JobBuilder("monthlyReviewSummaryJob", jobRepository)
+        return new JobBuilder(MONTHLY_REVIEW_SUMMARY_JOB_NAME, jobRepository)
                 .validator(parameters -> {
                     if (parameters == null) {
                         throw new JobParametersInvalidException("parameters are required.");
