@@ -55,21 +55,21 @@ public class WalletInternalController {
 
     @Operation(summary = "예치금 입금 요청", description = "회원의 예치금 입금을 요청한다.")
     @PostMapping("/depositRequest")
-    public ResponseEntity<Void> depositRequest(@RequestBody WalletPaymentRequest depositRequest) {
+    public ResponseEntity<Void> depositRequest(@Valid @RequestBody WalletPaymentRequest depositRequest) {
         walletService.depositRequest(depositRequest.toCommand());
         return ResponseEntity.ok().build();
     }
 
     @Operation(summary = "예치금 출금 요청", description = "회원의 예치금 출금을 요청한다.")
     @PostMapping("/withdrawRequest")
-    public ResponseEntity<Void> withdrawRequest(@RequestBody WalletPaymentRequest withdrawRequest) {
+    public ResponseEntity<Void> withdrawRequest(@Valid @RequestBody WalletPaymentRequest withdrawRequest) {
         walletService.withdrawRequest(withdrawRequest.toCommand());
         return ResponseEntity.ok().build();
     }
 
     @Operation(summary = "예치금 입금 취소 요청", description = "회원의 예치금 입금 취소를 요청한다.")
     @PostMapping("/cancelDepositRequest")
-    public ResponseEntity<Void> cancelDepositRequest(@RequestBody WalletPaymentRequest cancelRequest) {
+    public ResponseEntity<Void> cancelDepositRequest(@Valid @RequestBody WalletPaymentRequest cancelRequest) {
         walletService.cancelDepositRequest(cancelRequest.toCommand());
         return ResponseEntity.ok().build();
     }
