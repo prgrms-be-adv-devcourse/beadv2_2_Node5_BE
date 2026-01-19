@@ -1,11 +1,14 @@
 package com.node5.catalogservice.product.application;
 
+import java.util.UUID;
+
 import org.springframework.stereotype.Service;
 
 import com.node5.catalogservice.config.s3.S3Properties;
 import com.node5.catalogservice.product.application.dto.PresignedUrlInfo;
 import com.node5.catalogservice.product.application.dto.S3ObjectMeta;
 import com.node5.catalogservice.product.application.port.S3ObjectMetaPort;
+import com.node5.catalogservice.product.application.port.S3ObjectPromotionPort;
 import com.node5.catalogservice.product.application.port.S3PresignedUrlPort;
 import com.node5.catalogservice.product.exception.ImageErrorCode;
 import com.node5.common.exception.BaseException;
@@ -18,6 +21,7 @@ public class ProductImageService {
 
 	private final S3PresignedUrlPort s3PresignedUrlPort;
 	private final S3ObjectMetaPort s3ObjectMetaPort;
+	private final S3ObjectPromotionPort s3ObjectPromotionPort;
 	private final S3Properties props;
 
 	public PresignedUrlInfo createUploadUrl(String contentType) {
@@ -29,10 +33,14 @@ public class ProductImageService {
 		validateTempKey(tempKey);
 
 		S3ObjectMeta meta = s3ObjectMetaPort.head(tempKey);
+		validateUploadedMeta(meta);
 
-		ValidateUploadMeta(meta);
+		String productKey = props.getProductPrefix() + UUID.randomUUID();
 
-		throw new BaseException(ImageErrorCode.INVALID_IMAGE_KEY);
+		s3ObjectPromotionPort.copy(tempKey, productKey);
+		s3ObjectPromotionPort.delete(tempKey);
+
+		return productKey;
 	}
 
 	private void validateContentType(String contentType) {
@@ -53,7 +61,7 @@ public class ProductImageService {
 		}
 	}
 
-	private void ValidateUploadMeta(S3ObjectMeta meta) {
+	private void validateUploadedMeta(S3ObjectMeta meta) {
 		if (meta.contentLength() <= 0) {
 			throw new BaseException(ImageErrorCode.INVALID_IMAGE_KEY);
 		}
