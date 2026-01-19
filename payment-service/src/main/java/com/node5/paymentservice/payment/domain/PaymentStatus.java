@@ -5,6 +5,7 @@ package com.node5.paymentservice.payment.domain;
         PENDING_CONFIRM,
         CONFIRMED,
         PENDING_CANCEL,
+        WITHDRAW_CONFIRMED,
         CANCELED,
         PAYMENT_FAILED,
         CANCEL_FAILED
