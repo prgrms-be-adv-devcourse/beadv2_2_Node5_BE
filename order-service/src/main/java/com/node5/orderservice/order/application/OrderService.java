@@ -17,7 +17,7 @@ import com.node5.orderservice.order.exception.*;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import com.node5.orderservice.order.application.dto.*;
-import com.node5.orderservice.order.client.BillingClient;
+import com.node5.orderservice.order.client.WalletClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -48,7 +48,7 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final OrderTransactionService orderTransactionService;
-    private final BillingClient billingClient;
+    private final WalletClient walletClient;
     private final CatalogClient catalogClient;
     private final ObjectMapper objectMapper;
 
@@ -97,7 +97,7 @@ public class OrderService {
         boolean paid = false;
         try {
             BigDecimal roundedAmount = order.getTotalAmount().setScale(0, RoundingMode.HALF_UP);
-            billingClient.withdraw(memberId, new WalletWithdrawRequest(order.getId(), roundedAmount.longValue()));
+            walletClient.withdraw(memberId, new WalletWithdrawRequest(order.getId(), roundedAmount.longValue()));
 
             // 결제 성공 기록
             saved.markAsPaid(LocalDateTime.now());
@@ -263,7 +263,7 @@ public class OrderService {
             // 예치금 환불 API 호출
             try {
                 BigDecimal roundedAmount = order.getTotalAmount().setScale(0, RoundingMode.HALF_UP);
-                ResponseEntity<WalletInfo> response = billingClient.requestRefund(memberId, new WalletRefundRequest(order.getId(), roundedAmount.longValue()));
+                ResponseEntity<WalletInfo> response = walletClient.requestRefund(memberId, new WalletRefundRequest(order.getId(), roundedAmount.longValue()));
 
                 if (response.getStatusCode().is2xxSuccessful()) {
                     orderTransactionService.updateOrderStatus(orderId, CANCELED);
@@ -295,7 +295,7 @@ public class OrderService {
             // 예치금 환불 API 호출
             try {
                 BigDecimal roundedAmount = order.getTotalAmount().setScale(0, RoundingMode.HALF_UP);
-                ResponseEntity<WalletInfo> response = billingClient.requestRefund(memberId, new WalletRefundRequest(order.getId(), roundedAmount.longValue()));
+                ResponseEntity<WalletInfo> response = walletClient.requestRefund(memberId, new WalletRefundRequest(order.getId(), roundedAmount.longValue()));
 
                 if (response.getStatusCode().is2xxSuccessful()) {
                     orderTransactionService.updateOrderStatus(orderId, REFUND_COMPLETED);
