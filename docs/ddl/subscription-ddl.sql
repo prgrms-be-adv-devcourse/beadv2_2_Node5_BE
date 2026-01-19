@@ -43,6 +43,21 @@ COMMENT ON COLUMN subscription.subscription.total_price IS '총 금액';
 COMMENT ON COLUMN subscription.subscription.subscription_status IS '구독 상태';
 COMMENT ON COLUMN subscription.subscription.next_run_date IS '다음 결제일';
 COMMENT ON COLUMN subscription.subscription.last_processed_run_date IS '배치 처리 기준일';
+
+CREATE TABLE subscription.kafka_consumer_failures (
+    id BIGSERIAL PRIMARY KEY,
+    topic VARCHAR(255) NOT NULL,
+    partition INTEGER NOT NULL,
+    offset BIGINT NOT NULL,
+    record_key TEXT,
+    payload TEXT,
+    exception_class VARCHAR(255),
+    exception_message TEXT,
+    created_at TIMESTAMP NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_kafka_consumer_failures_created_at
+    ON subscription.kafka_consumer_failures(created_at);
 COMMENT ON COLUMN subscription.subscription.delivery_address IS '배송지';
 COMMENT ON COLUMN subscription.subscription.created_at IS '생성일';
 COMMENT ON COLUMN subscription.subscription.modified_at IS '수정일';

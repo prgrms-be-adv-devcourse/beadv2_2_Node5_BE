@@ -1,3 +1,9 @@
 spring:
   application:
     name: subscription-service
+
+kafka:
+  consumer:
+    retry:
+      backoff-ms: 1000
+      max-attempts: 3
