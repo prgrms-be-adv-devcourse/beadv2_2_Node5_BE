@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 
 import java.util.UUID;
 
-@FeignClient(name = "billing-service")
+@FeignClient(name = "wallet-service")
 public interface BillingClient {
 
     @GetMapping("/internal/wallets")
