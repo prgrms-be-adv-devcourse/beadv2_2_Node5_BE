@@ -57,6 +57,9 @@ public class Subscription extends BaseEntity {
     @Column(name = "next_run_date", nullable = false)
     private LocalDate nextRunDate;
 
+    @Column(name = "last_processed_run_date")
+    private LocalDate lastProcessedRunDate;
+
     @Column(length = 100, name = "delivery_address")
     private String deliveryAddress;
 
@@ -127,11 +130,9 @@ public class Subscription extends BaseEntity {
         }
     }
 
-    public void calculateNextRunDate(List<SubscriptionRecurrenceRule> rules) {
-        LocalDate today = LocalDate.now();
-
+    public void calculateNextRunDate(List<SubscriptionRecurrenceRule> rules, LocalDate baseDate) {
         this.nextRunDate = rules.stream()
-                .map(rule -> rule.calculateNextRunDate(today))
+                .map(rule -> rule.calculateNextRunDate(baseDate))
                 .min(LocalDate::compareTo)
                 .orElseThrow(() -> new SubscriptionException(SUBSCRIPTION_RULE_NOT_FOUND));
     }
@@ -168,6 +169,15 @@ public class Subscription extends BaseEntity {
         }
         this.subscriptionStatus = SubscriptionStatus.CANCELLED;
         this.deletedAt = LocalDateTime.now();
+    }
+
+    public void markFailed() {
+        if (this.subscriptionStatus == SubscriptionStatus.CANCELLED
+                || this.subscriptionStatus == SubscriptionStatus.UNAVAILABLE
+                || this.subscriptionStatus == SubscriptionStatus.TERMINATED) {
+            throw new SubscriptionException(SUBSCRIPTION_INVALID_STATE);
+        }
+        this.subscriptionStatus = SubscriptionStatus.FAILED;
     }
 
     public void terminate() {

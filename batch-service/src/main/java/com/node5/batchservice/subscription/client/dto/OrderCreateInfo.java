@@ -1,4 +1,4 @@
-package com.node5.subscriptionservice.subscription.client.dto;
+package com.node5.batchservice.subscription.client.dto;
 
 import java.util.UUID;
 

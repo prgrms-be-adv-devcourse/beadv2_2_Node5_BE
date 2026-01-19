@@ -71,11 +71,15 @@ public class SubscriptionRecurrenceRule extends BaseEntity {
 
     private LocalDate calculateMonthly(LocalDate base) {
         int todayDay = base.getDayOfMonth();
+        int lastDayOfMonth = base.lengthOfMonth();
+        int targetDay = Math.min(dayOfMonth, lastDayOfMonth);
 
-        if (todayDay < dayOfMonth) {
-            return base.withDayOfMonth(dayOfMonth);
+        if (todayDay < targetDay) {
+            return base.withDayOfMonth(targetDay);
         }
 
-        return base.plusMonths(1).withDayOfMonth(dayOfMonth);
+        LocalDate nextMonth = base.plusMonths(1);
+        int nextMonthDay = Math.min(dayOfMonth, nextMonth.lengthOfMonth());
+        return nextMonth.withDayOfMonth(nextMonthDay);
     }
 }

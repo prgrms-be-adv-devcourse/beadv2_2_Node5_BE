@@ -1,9 +1,9 @@
-
 spring:
   application:
     name: subscription-service
-  batch:
-    job:
-      enabled: false
-    jdbc:
-      initialize-schema: always
+
+kafka:
+  consumer:
+    retry:
+      backoff-ms: 1000
+      max-attempts: 3
