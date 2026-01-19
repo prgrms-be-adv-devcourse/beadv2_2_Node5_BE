@@ -1,11 +1,11 @@
-name: Billing Service CI
+name: Wallet Service CI
 
 on:
   pull_request:
     branches:
       - develop
     paths:
-      - "billing-service/**"
+      - "wallet-service/**"
       - "common/**"
       - "config/**"
       - "discovery/**"
@@ -31,4 +31,4 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Gradle Build
-        run: ./gradlew :billing-service:build
+        run: ./gradlew :wallet-service:build
