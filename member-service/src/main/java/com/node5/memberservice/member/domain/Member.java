@@ -32,6 +32,9 @@ public class Member extends BaseEntity {
     @Column(nullable = false, length = 20)
     private String name;
 
+    @Column(nullable = false, length = 20)
+    private String nickname;
+
     @Column(name = "phone_number", nullable = false, length = 20)
     private String phoneNumber;
 
@@ -48,10 +51,11 @@ public class Member extends BaseEntity {
 
     private LocalDateTime deletedAt;
 
-    private Member(UUID id, String email, String name, String phoneNumber, String address, MemberRole role, MemberStatus status) {
+    private Member(UUID id, String email, String name, String nickname, String phoneNumber, String address, MemberRole role, MemberStatus status) {
         this.id = id;
         this.email = email;
         this.name = name;
+        this.nickname = nickname;
         this.phoneNumber = phoneNumber;
         this.address = address;
         this.roles = EnumSet.of(role);
@@ -64,7 +68,7 @@ public class Member extends BaseEntity {
         MemberRole role = MemberRole.USER;
         MemberStatus status = MemberStatus.ACTIVE;
 
-        return new Member(id, command.email(), command.name(), command.phoneNumber(), command.address(), role, status);
+        return new Member(id, command.email(), command.name(), command.nickname(), command.phoneNumber(), command.address(), role, status);
     }
 
     public void addRole(MemberRole role) {
@@ -94,6 +98,7 @@ public class Member extends BaseEntity {
 
     public void modifyInfo(MemberModifyCommand command) {
         this.name = command.name();
+        this.nickname = command.nickname();
         this.phoneNumber = command.phoneNumber();
         this.address = command.address();
     }

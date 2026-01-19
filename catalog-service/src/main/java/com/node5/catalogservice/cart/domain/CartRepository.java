@@ -8,4 +8,6 @@ public interface CartRepository {
 	Cart save(Cart cart);
 
 	Optional<Cart> findByMemberId(UUID memberId);
+
+	void delete(Cart cart);
 }

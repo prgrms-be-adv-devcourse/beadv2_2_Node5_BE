@@ -29,4 +29,10 @@ public interface OrderJpaRepository extends JpaRepository<Order, UUID> {
     List<Order> findByStatusAndModifiedAtBefore(@Param("status") OrderStatus status, @Param("standard") LocalDateTime standard);
 
     List<Order> findByStatus(OrderStatus orderStatus);
+
+    @Query("SELECT o.id FROM Order o " +
+            "WHERE o.memberId = :memberId " +
+            "AND o.paidAt >= :threeMonthsAgo " +
+            "ORDER BY o.paidAt DESC")
+    List<UUID> findRecentOrderIds(@Param("memberId") UUID memberId, @Param("threeMonthsAgo") LocalDateTime threeMonthsAgo);
 }

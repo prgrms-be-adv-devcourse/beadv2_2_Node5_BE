@@ -9,6 +9,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Entity
@@ -23,10 +24,29 @@ public class ReviewSummary extends BaseEntity {
     @Column(name = "product_id", nullable = false)
     private UUID productId;
 
-    @Column(nullable = false)
-    private Integer rating;
-
-    @Column(columnDefinition = "text", nullable = false)
+    @Column(name = "summary", columnDefinition = "text", nullable = false)
     private String summary;
 
+    @Column(name = "summary_end_date", nullable = false)
+    private LocalDate summaryEndDate;
+
+    private ReviewSummary(UUID productId, String summary, LocalDate summaryEndDate) {
+        this.id = UUID.randomUUID();
+        this.productId = productId;
+        this.summary = summary;
+        this.summaryEndDate = summaryEndDate;
+    }
+
+    public static ReviewSummary create(UUID productId, String summary, LocalDate summaryEndDate) {
+        return new ReviewSummary(
+                productId,
+                summary,
+                summaryEndDate
+        );
+    }
+
+    public void update(String summary, LocalDate summaryEndDate) {
+        this.summary = summary;
+        this.summaryEndDate = summaryEndDate;
+    }
 }

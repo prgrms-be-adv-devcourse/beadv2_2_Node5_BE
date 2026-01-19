@@ -30,16 +30,18 @@ jobs:
           INFRA_PATTERN=$(echo "$INFRA" | jq -r '. | join("|")')
           ALL_PATTERN=$(echo "$ALL" | jq -r '. | join("|")')
           
-          # 2. 비교 대상 설정 (수동: main..develop / 자동: before..sha)
+          # 2. 비교 대상 설정 (수동: develop..deploy / 자동: before..sha)
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            git fetch origin main develop
-            BASE="origin/main"; HEAD="origin/develop"
+            git fetch origin deploy develop
+            BASE="origin/deploy"; HEAD="origin/develop"
+            DIFF_SPEC="$BASE..$HEAD" # 수동 배포 시 dev와 deploy 간 변경사항 확인
           else
             BASE="${{ github.event.before }}"; HEAD="${{ github.sha }}"
+            DIFF_SPEC="$BASE $HEAD" # 자동 배포 시 develop의 모든 변경사항 확인
           fi
           
           # 3. 변경 파일 및 서비스 추출
-          CHANGED=$(git diff --name-only $BASE $HEAD || echo "")
+          CHANGED=$(git diff --name-only $DIFF_SPEC || echo "")
           
           # common이 변경되면 전체 서비스, 아니면 해당 디렉토리 서비스만 추출
           if echo "$CHANGED" | grep -qE "^((common|$INFRA_PATTERN)/)"; then
@@ -54,6 +56,10 @@ jobs:
           
           # 4. 결과 출력
           HAS_CHANGES=$([ "$BUILD_LIST" != "[]" ] && echo "true" || echo "false")
+          
+          echo "$CHANGED"
+          echo "Build Target List: $BUILD_LIST"
+          echo "Has Changes: $HAS_CHANGES"
           
           echo "build_matrix={\"service\":$BUILD_LIST}" >> "$GITHUB_OUTPUT"
           echo "domain_matrix={\"service\":$DOMAIN_LIST}" >> "$GITHUB_OUTPUT"
@@ -109,6 +115,15 @@ jobs:
       - name: Deploy Core Infra
         run: |
           kubectl apply -f k8s/config-repo-configmap.yaml
+          
+          ENV_PATH="/home/ubuntu/env"
+          for env_file in $ENV_PATH/.env.*; do
+            [ -e "$env_file" ] || continue
+            svc_name=$(basename "$env_file" | sed 's/^\.env\.//')
+            kubectl create secret generic ${svc_name}-secret \
+            --from-env-file="$env_file" \
+            --dry-run=client -o yaml | kubectl apply -f -
+          done
 
           for svc in config discovery apigateway; do
             kubectl apply -f k8s/$svc.yaml

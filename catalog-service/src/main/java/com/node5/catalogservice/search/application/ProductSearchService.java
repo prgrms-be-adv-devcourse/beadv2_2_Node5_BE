@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import com.node5.catalogservice.search.application.dto.ProductSearchCommand;
 import com.node5.catalogservice.search.application.dto.ProductSearchResponse;
 import com.node5.catalogservice.search.application.port.ProductSearchPort;
+import com.node5.catalogservice.search.application.query.QueryNormalizer;
 import com.node5.catalogservice.search.domain.ProductDocument;
 import com.node5.catalogservice.search.exception.SearchErrorCode;
 import com.node5.common.exception.BaseException;
@@ -18,11 +19,22 @@ import lombok.RequiredArgsConstructor;
 public class ProductSearchService {
 
 	private final ProductSearchPort productSearchPort;
+	private final QueryNormalizer queryNormalizer;
 
 	public Page<ProductSearchResponse> search(ProductSearchCommand command, Pageable pageable) {
 		validatePriceRange(command.minPrice(), command.maxPrice());
 
-		Page<ProductDocument> page = productSearchPort.search(command, pageable);
+		String normalizedKeyword = queryNormalizer.normalize(command.keyword());
+		ProductSearchCommand normalizedCommand = new ProductSearchCommand(
+			normalizedKeyword,
+			command.shopId(),
+			command.category(),
+			command.minPrice(),
+			command.maxPrice(),
+			command.sort()
+		);
+
+		Page<ProductDocument> page = productSearchPort.search(normalizedCommand, pageable);
 		return page.map(ProductSearchResponse::from);
 	}
 

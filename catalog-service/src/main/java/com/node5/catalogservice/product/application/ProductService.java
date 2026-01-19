@@ -1,5 +1,6 @@
 package com.node5.catalogservice.product.application;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -13,6 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.node5.catalogservice.product.application.dto.ProductCommand;
 import com.node5.catalogservice.product.application.dto.ProductInfo;
 import com.node5.catalogservice.product.application.dto.ProductUpdateCommand;
+import com.node5.catalogservice.product.application.port.ProductDiscontinuedEventPort;
+import com.node5.catalogservice.product.application.port.ProductEmbeddingEventPort;
 import com.node5.catalogservice.product.application.port.ProductIndexEventPort;
 import com.node5.catalogservice.product.domain.Product;
 import com.node5.catalogservice.product.domain.ProductRepository;
@@ -20,6 +23,8 @@ import com.node5.catalogservice.product.domain.ProductStatus;
 import com.node5.catalogservice.product.event.ProductIndexEvent;
 import com.node5.catalogservice.product.exception.ProductErrorCode;
 import com.node5.catalogservice.shop.client.ShopOwnershipClient;
+import com.node5.common.event.ProductDiscontinuedEvent;
+import com.node5.common.event.ProductEmbeddingEvent;
 import com.node5.common.exception.BaseException;
 
 import feign.FeignException;
@@ -31,6 +36,8 @@ public class ProductService {
 
 	private final ProductRepository productRepository;
 	private final ProductIndexEventPort productIndexEventPort;
+	private final ProductEmbeddingEventPort productEmbeddingEventPort;
+	private final ProductDiscontinuedEventPort productDiscontinuedEventPort;
 	private final ShopOwnershipClient shopOwnershipClient;
 
 	public Page<ProductInfo> getOnSaleProducts(Pageable pageable) {
@@ -58,6 +65,7 @@ public class ProductService {
 
 		Product saved = productRepository.save(product);
 		productIndexEventPort.publish(ProductIndexEvent.create(saved));
+		productEmbeddingEventPort.publish(toEmbeddingEvent(saved));
 		return ProductInfo.from(saved);
 	}
 
@@ -76,6 +84,7 @@ public class ProductService {
 
 		Product saved = productRepository.save(product);
 		productIndexEventPort.publish(ProductIndexEvent.update(saved));
+		productEmbeddingEventPort.publish(toEmbeddingEvent(saved));
 		return ProductInfo.from(saved);
 	}
 
@@ -88,6 +97,7 @@ public class ProductService {
 
 		Product saved = productRepository.save(product);
 		productIndexEventPort.publish(ProductIndexEvent.update(saved));
+		productEmbeddingEventPort.publish(toEmbeddingEvent(saved));
 		return ProductInfo.from(saved);
 	}
 
@@ -100,6 +110,13 @@ public class ProductService {
 
 		Product saved = productRepository.save(product);
 		productIndexEventPort.publish(ProductIndexEvent.update(saved));
+		productEmbeddingEventPort.publish(toEmbeddingEvent(saved));
+
+		productDiscontinuedEventPort.publish(
+			new ProductDiscontinuedEvent(
+				UUID.randomUUID(), saved.getId(), saved.getModifiedAt(), LocalDateTime.now()
+			)
+		);
 	}
 
 	public Page<ProductInfo> getProductsByShop(UUID memberId, UUID shopId, Pageable pageable) {
@@ -128,9 +145,29 @@ public class ProductService {
 			.collect(Collectors.toMap(Product::getId, Product::getShopId));
 	}
 
+	@Transactional(readOnly = true)
+	public List<Product> getProductsByIds(List<UUID> productIds) {
+		if (productIds == null || productIds.isEmpty()) {
+			return List.of();
+		}
+		return productRepository.findAllByIdInAndStatus(productIds, ProductStatus.ON_SALE);
+	}
+
 	private Product getProductOrThrow(UUID productId) {
 		return productRepository.findById(productId)
 			.orElseThrow(() -> new BaseException(ProductErrorCode.PRODUCT_NOT_FOUND));
+	}
+
+	@Transactional(readOnly = true)
+	public List<UUID> getOnSaleProductIds(Pageable pageable) {
+		return productRepository.findByStatus(ProductStatus.ON_SALE, pageable)
+			.map(Product::getId)
+			.getContent();
+	}
+
+	@Transactional(readOnly = true)
+	public boolean isReviewable(UUID productId) {
+		return productRepository.findByIdAndStatus(productId, ProductStatus.ON_SALE).isPresent();
 	}
 
 	private Product getOnSaleProductOrThrow(UUID productId) {
@@ -150,5 +187,18 @@ public class ProductService {
 		} catch (FeignException e) {
 			throw new BaseException(ProductErrorCode.SHOP_SERVICE_UNAVAILABLE);
 		}
+	}
+
+	private ProductEmbeddingEvent toEmbeddingEvent(Product product) {
+		return new ProductEmbeddingEvent(
+			UUID.randomUUID(),
+			product.getId(),
+			product.getName(),
+			product.getDescription(),
+			product.getCategory().name(),
+			product.getStatus().name(),
+			product.getModifiedAt(),
+			LocalDateTime.now()
+		);
 	}
 }
