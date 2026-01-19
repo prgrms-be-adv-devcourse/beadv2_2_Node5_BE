@@ -42,4 +42,7 @@ app:
     bucket: ${S3_BUCKET_NAME}
     region: ${AWS_REGION:ap-northeast-2}
     presigned-url-expiration-seconds: ${S3_PRESIGNED_EXPIRE:600}
+    temp-prefix: ${TEMP_PREFIX:temp/product/}
+    product-prefix: ${PRODUCT_PREFIX:product/}
+    max-image-bytes: ${MAX_IMAGE_BYTES:5242880}
 
