@@ -98,6 +98,10 @@ public class Payment extends BaseEntity {
         this.status = PaymentStatus.CANCELED;
     }
 
+    public void withdraw_confirmed() {
+        this.status = PaymentStatus.WITHDRAW_CONFIRMED;
+    }
+
     public void validateValue(UUID memberId, PaymentCancelCommand command) {
         if (!this.memberId.equals(memberId)) {
             log.error("[Payment Error] MemberId Mismatch: expected {}, but got {}", this.memberId, memberId);

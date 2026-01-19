@@ -42,8 +42,8 @@ public class PaymentPendingService {
             walletClient.depositRequest(walletDepositRequest);
             return payment.getId();
         } catch (PaymentException e) {
-            log.error("[Wallet Deposit Error] OrderId: {}, Error: {}",
-                    paymentTemporaryData.getOrderId(), e.getMessage()
+            log.error("[Wallet Deposit Error] MemberId: {} OrderId: {}, Error: {}",
+                    paymentTemporaryData.getMemberId(), paymentTemporaryData.getOrderId(), e.getMessage()
             );
             throw new PaymentException(PAYMENT_WALLET_DEPOSIT_FAILED); //예치금 입금 요청 실패
         }

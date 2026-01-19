@@ -2,7 +2,7 @@ package com.node5.settlementservice.settlement.batch;
 
 import com.node5.settlementservice.settlement.batch.dto.SettlementAggregateDto;
 import com.node5.settlementservice.settlement.client.WalletClient;
-import com.node5.settlementservice.settlement.client.ShopClient;
+import com.node5.settlementservice.settlement.client.MemberClient;
 import com.node5.settlementservice.settlement.client.dto.WalletSettleInfo;
 import com.node5.settlementservice.settlement.client.dto.WalletSettleRequest;
 import com.node5.settlementservice.settlement.domain.SettlementPayoutStatus;
@@ -216,7 +216,7 @@ public class SettlementBatchConfig {
     @StepScope
     public ItemProcessor<SettlementResult, SettlementResult> settlementPayoutProcessor(
             WalletClient walletClient,
-            ShopClient shopClient
+            MemberClient shopClient
     ) {
         return result -> {
             try {
