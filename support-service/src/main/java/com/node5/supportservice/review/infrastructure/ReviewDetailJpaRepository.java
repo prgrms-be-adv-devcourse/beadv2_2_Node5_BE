@@ -57,6 +57,7 @@ public interface ReviewDetailJpaRepository extends JpaRepository<ReviewDetail, U
     //특정 상품에서 최근 1달 동안 공감 수가 가장 많은 리뷰 ID 조회 (삭제된 리뷰 제외)
     Optional<ReviewDetail> findTopByProductIdAndCreatedAtBetweenAndDeletedAtIsNullOrderByLikeCountDesc(UUID productId, LocalDateTime startDate, LocalDateTime endDate);
 
+    // 유사한 리뷰 조회 (임베딩 벡터 기반)
     @Query(value = """
     SELECT * FROM support.review_detail 
     WHERE product_id = :productId 

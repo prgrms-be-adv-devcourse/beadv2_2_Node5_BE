@@ -18,12 +18,6 @@ spring:
                 - Path=/member-service/api/v1/**, /member-service/v3/api-docs/**
               filters:
                 - RewritePath=/member-service/(?<segment>.*), /$\{segment}
-            - id: billing-service
-              uri: lb://BILLING-SERVICE
-              predicates:
-                - Path=/billing-service/**
-              filters:
-                - RewritePath=/billing-service/(?<segment>.*), /$\{segment}
             - id: subscription-service
               uri: lb://SUBSCRIPTION-SERVICE
               predicates:
@@ -49,6 +43,18 @@ spring:
                 - Path=/support-service/**
               filters:
                 - RewritePath=/support-service/(?<segment>.*), /$\{segment}
+            - id: payment-service
+              uri: lb://PAYMENT-SERVICE
+              predicates:
+                - Path=/payment-service/**
+              filters:
+                - RewritePath=/payment-service/(?<segment>.*), /$\{segment}
+            - id: wallet-service
+              uri: lb://WALLET-SERVICE
+              predicates:
+                - Path=/wallet-service/**
+              filters:
+                - RewritePath=/wallet-service/(?<segment>.*), /$\{segment}
           default-filters:
             - name: GlobalFilter
               args:
