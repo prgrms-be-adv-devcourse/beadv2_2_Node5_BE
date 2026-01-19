@@ -1,6 +1,5 @@
 spring:
   datasource:
-    # Postgres 서버 타임존을 서울(KST)로 맞추기 위해 옵션 추가
     url: ${SPRING_DATASOURCE_URL}
     driver-class-name: org.postgresql.Driver
     username: ${SPRING_DATASOURCE_USERNAME}
@@ -22,6 +21,9 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
         spring.deserializer.key.delegate.class: org.apache.kafka.common.serialization.StringDeserializer
         spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
@@ -34,6 +36,7 @@ app:
   kafka:
     topics:
       member-deleted: member-service.member-deleted.v1
+      shop-deleted: member-service.shop-deleted.v1
       product-index: catalog-service.product-index.v1
       product-embedding: catalog-service.product-embedding.v1
       product-discontinued: catalog-service.product-discontinued.v1
