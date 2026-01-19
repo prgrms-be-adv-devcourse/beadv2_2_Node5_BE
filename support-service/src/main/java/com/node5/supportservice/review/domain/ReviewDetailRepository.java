@@ -49,6 +49,18 @@ public interface ReviewDetailRepository {
     // 임베딩되지 않은 리뷰 조회
     List<ReviewDetail> findReviewsWithoutEmbedding();
 
+    // 리뷰 존재 여부 확인 (회원, 주문, 상품 기준, 삭제된 리뷰 제외)
+    Boolean existsReview(UUID memberId, UUID orderId, UUID productId);
+
+    // 기존 인덱싱 제거
+    void dropEmbeddingIndex();
+
+    // 인덱싱 생성
+    void createEmbeddingIndex();
+
+    // 테이블 분석
+    void analyzeTable();
+
 //    // 임베딩 업데이트
 //    void updateReviewEmbedding(UUID reviewId, PGvector vector);
 

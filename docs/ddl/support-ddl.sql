@@ -40,9 +40,12 @@ CREATE TABLE support."review_detail" (
     created_at timestamp NOT NULL,
     modified_at timestamp NOT NULL,
     deleted_at timestamp NULL,
-    CONSTRAINT pk_review_detail PRIMARY KEY (id),
-    CONSTRAINT uk_review_detail_product_member UNIQUE (product_id, member_id)
+    CONSTRAINT pk_review_detail PRIMARY KEY (id)
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS uk_review_active_purchase
+    ON support.review_detail (member_id, order_id, product_id)
+    WHERE deleted_at IS NULL;
 
 CREATE INDEX IF NOT EXISTS idx_review_detail_embedding
     ON support.review_detail

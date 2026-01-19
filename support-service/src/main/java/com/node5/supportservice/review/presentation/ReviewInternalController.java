@@ -30,4 +30,11 @@ public class ReviewInternalController {
         reviewService.recreateAllReviewEmbeddings();
         return ResponseEntity.ok().build();
     }
+
+    @Operation(summary = "리뷰 임베딩 정보 재인덱싱", description = "모든 리뷰 임베딩 정보를 검색 인덱스에 재인덱싱합니다.")
+    @PostMapping("/reindex-embeddings")
+    public ResponseEntity<Void> reindexReviewEmbeddings() {
+        reviewService.reindexAllReviewEmbeddings();
+        return ResponseEntity.ok().build();
+    }
 }
