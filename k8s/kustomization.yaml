@@ -11,7 +11,6 @@ resources:
   - order-service.yaml
   - payment-service.yaml
   - settlement-service.yaml
-  - shop-service.yaml
   - subscription-service.yaml
   - support-service.yaml
   - wallet-service.yaml

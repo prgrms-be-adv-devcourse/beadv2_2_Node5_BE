@@ -32,6 +32,7 @@ public class RecommendationController {
         return ResponseEntity.ok(recommendationInfo);
     }
 
+    @Operation(summary = "취향 요약 추천", description = "장바구니 상품 기반으로 취향 요약과 임베딩을 생성한다. 테스트용 메소드.")
     @PostMapping("/taste")
     public ResponseEntity<RecommendationResponse> recommendTaste(
             @RequestHeader("Member-Id") UUID memberId,

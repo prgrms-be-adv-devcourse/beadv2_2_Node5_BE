@@ -20,12 +20,14 @@ import com.node5.catalogservice.product.presentation.dto.ProductIdsRequest;
 import com.node5.catalogservice.product.presentation.dto.ProductSummaryListResponse;
 import com.node5.catalogservice.product.presentation.dto.ProductSummaryResponse;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("internal/products")
+@RequestMapping("/internal/products")
 @RequiredArgsConstructor
+@Hidden
 public class ProductInternalController {
 
 	private final ProductService productService;
@@ -35,7 +37,7 @@ public class ProductInternalController {
 		return ResponseEntity.ok(productService.getShopIdsByProductIds(productIds));
 	}
 
-	@GetMapping("/getProductsByIds")
+	@PostMapping("/getProductsByIds")
 	public ResponseEntity<ProductSummaryListResponse> getProductsByIds(
 		@RequestHeader("Member-Id") UUID memberId,
 		@Valid @RequestBody ProductIdsRequest request

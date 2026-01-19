@@ -20,14 +20,13 @@ public class ReviewSummaryScheduler {
     private final Job monthlyReviewSummaryJob;
 
     @Scheduled(cron = "0 0 3 1 * ?")
-    public void runMonthlyReviewSummaryJob() throws Exception {
+    public void runMonthlyReviewSummaryJob() {
         try {
             LocalDate batchStartDate = LocalDate.now();
 
             JobParameters params = new JobParametersBuilder()
                     .addString("batchStartDate", batchStartDate.toString())
                     .toJobParameters();
-
 
             jobLauncher.run(monthlyReviewSummaryJob, params);
         } catch (Exception e) {
