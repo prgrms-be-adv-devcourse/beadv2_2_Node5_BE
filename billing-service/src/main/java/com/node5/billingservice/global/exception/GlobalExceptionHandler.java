@@ -19,6 +19,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ExceptionResponseDto> walletHandleException(WalletException e) {
         var ex = e.getErrorCode();
         ExceptionResponseDto responseDto = new ExceptionResponseDto( ex.getCode(), ex.getMessage());
+        log.warn("Responding WalletException: status={}, body={}", ex.getStatus(), responseDto);
         return ResponseEntity.status(ex.getStatus()).body(responseDto);
     }
 
