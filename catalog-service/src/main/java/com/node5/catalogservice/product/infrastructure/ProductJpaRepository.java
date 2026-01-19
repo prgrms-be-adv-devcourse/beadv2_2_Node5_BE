@@ -8,9 +8,13 @@ import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 
 import com.node5.catalogservice.product.domain.Product;
 import com.node5.catalogservice.product.domain.ProductStatus;
+
+import jakarta.transaction.Transactional;
 
 public interface ProductJpaRepository extends JpaRepository<Product, UUID> {
 
@@ -23,4 +27,14 @@ public interface ProductJpaRepository extends JpaRepository<Product, UUID> {
 	List<Product> findByIdIn(Collection<UUID> ids);
 
 	List<Product> findByIdInAndStatus(Collection<UUID> ids, ProductStatus status);
+
+	@Modifying(clearAutomatically = true, flushAutomatically = true)
+	@Transactional
+	@Query("""
+		update Product p
+		   set p.status = 'DISCONTINUED'
+		 where p.shopId = :shopId
+		   and p.status <> 'DISCONTINUED'
+	""")
+	int discontinueByShopId(UUID shopId);
 }

@@ -23,4 +23,6 @@ public interface ProductRepository {
 	List<Product> findAllByIdIn(Collection<UUID> ids);
 
 	List<Product> findAllByIdInAndStatus(Collection<UUID> ids, ProductStatus status);
+
+	int discontinueByShopId(UUID shopId);
 }
