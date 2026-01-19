@@ -1,6 +1,7 @@
 package com.node5.catalogservice.product.application;
 
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 import org.springframework.stereotype.Service;
 
@@ -63,12 +64,17 @@ public class ProductImageService {
 
 	private void validateUploadedMeta(S3ObjectMeta meta) {
 		if (meta.contentLength() <= 0) {
-			throw new BaseException(ImageErrorCode.INVALID_IMAGE_KEY);
+			throw new BaseException(ImageErrorCode.INVALID_IMAGE_FILE);
 		}
 		if (meta.contentLength() > props.getMaxImageBytes()) {
 			throw new BaseException(ImageErrorCode.IMAGE_TOO_LARGE);
 		}
-		if (!ImageUploadPolicy.ALLOWED_CONTENT_TYPES.contains(meta.contentType())) {
+
+		String contentType = meta.contentType();
+		if (contentType == null || contentType.isBlank()) {
+			throw new BaseException(ImageErrorCode.INVALID_IMAGE_FILE);
+		}
+		if (!ImageUploadPolicy.ALLOWED_CONTENT_TYPES.contains(contentType)) {
 			throw new BaseException(ImageErrorCode.UNSUPPORTED_IMAGE_CONTENT_TYPE);
 		}
 	}
