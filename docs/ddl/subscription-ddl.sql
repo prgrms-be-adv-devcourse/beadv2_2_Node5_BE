@@ -71,7 +71,7 @@ CREATE TABLE subscription.kafka_consumer_failures (
     id BIGSERIAL PRIMARY KEY,
     topic VARCHAR(255) NOT NULL,
     partition INTEGER NOT NULL,
-    offset BIGINT NOT NULL,
+    record_offset BIGINT NOT NULL,
     record_key TEXT,
     payload TEXT,
     exception_class VARCHAR(255),
