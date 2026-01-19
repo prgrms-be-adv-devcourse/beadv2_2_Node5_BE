@@ -20,12 +20,12 @@ build_image() {
 }
 
 build_image apigateway "$ROOT_DIR/apigateway"
-build_image billing-service "$ROOT_DIR/billing-service"
 build_image catalog-service "$ROOT_DIR/catalog-service"
 build_image config-service "$ROOT_DIR/config"
 build_image discovery "$ROOT_DIR/discovery"
 build_image member-service "$ROOT_DIR/member-service"
 build_image order-service "$ROOT_DIR/order-service"
+build_image payment-service "$ROOT_DIR/payment-service"
 build_image settlement-service "$ROOT_DIR/settlement-service"
-build_image shop-service "$ROOT_DIR/shop-service"
 build_image subscription-service "$ROOT_DIR/subscription-service"
+build_image wallet-service "$ROOT_DIR/wallet-service"

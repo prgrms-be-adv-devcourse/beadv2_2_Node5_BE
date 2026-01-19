@@ -19,7 +19,7 @@ public class Inquiry extends BaseEntity {
     @Id
     private UUID id;
 
-    @JoinColumn(name = "member_id", nullable = false)
+    @Column(name = "member_id", nullable = false)
     private UUID memberId;
 
     @Column(nullable = false, length = 100)
@@ -57,7 +57,7 @@ public class Inquiry extends BaseEntity {
     }
 
     public void modify(InquiryCommand command) {
-        if (this.status != InquiryStatus.RECEIVED) {
+        if (!isStatus(InquiryStatus.RECEIVED)) {
             throw new InquiryException(InquiryErrorCode.INQUIRY_ALREADY_PROCESSED);
         }
         this.title = command.title();
@@ -71,5 +71,9 @@ public class Inquiry extends BaseEntity {
 
     public void markInProgress() {
         this.status = InquiryStatus.IN_PROGRESS;
+    }
+
+    public boolean isStatus(InquiryStatus status) {
+        return this.status == status;
     }
 }
