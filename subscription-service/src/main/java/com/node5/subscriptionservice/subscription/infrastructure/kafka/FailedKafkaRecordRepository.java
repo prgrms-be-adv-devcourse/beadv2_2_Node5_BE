@@ -18,7 +18,7 @@ public class FailedKafkaRecordRepository {
         jdbcTemplate.update(
                 """
                 insert into subscription.kafka_consumer_failures
-                    (topic, partition, offset, record_key, payload, exception_class, exception_message)
+                    (topic, partition, record_offset, record_key, payload, exception_class, exception_message)
                 values (?, ?, ?, ?, ?, ?, ?)
                 """,
                 record.topic(),
