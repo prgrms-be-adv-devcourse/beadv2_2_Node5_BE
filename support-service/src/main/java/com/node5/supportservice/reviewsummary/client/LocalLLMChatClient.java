@@ -1,6 +1,6 @@
 package com.node5.supportservice.reviewsummary.client;
 
-import com.node5.supportservice.global.openfeign.client.dto.LocalLLMResponse;
+import com.node5.supportservice.reviewsummary.client.dto.LocalLLMResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;

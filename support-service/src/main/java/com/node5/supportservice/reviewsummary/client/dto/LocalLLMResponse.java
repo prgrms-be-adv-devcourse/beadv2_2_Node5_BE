@@ -1,4 +1,4 @@
-package com.node5.supportservice.global.openfeign.client.dto;
+package com.node5.supportservice.reviewsummary.client.dto;
 
 public record LocalLLMResponse(
         String response

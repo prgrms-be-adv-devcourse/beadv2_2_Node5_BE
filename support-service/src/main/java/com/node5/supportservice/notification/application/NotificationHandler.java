@@ -1,11 +1,11 @@
 package com.node5.supportservice.notification.application;
 
 import com.node5.common.event.OrderStatusChangedEvent;
-import com.node5.common.event.SubscribeStatusChangedEvent;
+import com.node5.common.event.SubscriptionStatusChangedEvent;
 import com.node5.supportservice.notification.domain.NotificationChannel;
 import com.node5.supportservice.notification.domain.message.NotificationMessage;
 import com.node5.supportservice.notification.domain.status.OrderStatus;
-import com.node5.supportservice.notification.domain.status.SubscribeStatus;
+import com.node5.supportservice.notification.domain.status.SubscriptionStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -31,8 +31,8 @@ public class NotificationHandler {
                 });
     }
 
-    public void subscribeStatusChangedHandle(SubscribeStatusChangedEvent event) {
-        SubscribeStatus.from(event.subscribeStatus())
+    public void subscriptionStatusChangedHandle(SubscriptionStatusChangedEvent event) {
+        SubscriptionStatus.from(event.subscriptionStatus())
                 .ifPresent(status -> {
                     NotificationMessage message = status.message(event);
                     Set<NotificationChannel> channels = status.channels();
