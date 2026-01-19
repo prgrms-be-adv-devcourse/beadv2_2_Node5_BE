@@ -1,13 +1,11 @@
 package com.node5.memberservice.endpoint.infrastructure;
 
 import com.node5.memberservice.endpoint.domain.Endpoint;
-import com.node5.memberservice.member.domain.MemberRole;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 public interface EndPointJpaRepository extends JpaRepository<Endpoint, UUID> {

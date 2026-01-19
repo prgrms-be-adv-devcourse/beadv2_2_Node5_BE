@@ -15,7 +15,9 @@ public enum MemberErrorCode implements BaseErrorCode {
 
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR.value(), "MEMBER_007", "서버 에러"),
     MEMBER_HAS_BALANCE(HttpStatus.BAD_REQUEST.value(), "MEMBER_008", "예치금 잔액이 남아있습니다. 예치금 환불 후 탈퇴해 주세요."),
-    BILLING_SERVICE_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE.value(), "MEMBER_009",  "예치금 정보를 확인할 수 없습니다. 잠시 후 다시 시도해 주세요.");
+    BILLING_SERVICE_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE.value(), "MEMBER_009",  "예치금 정보를 확인할 수 없습니다. 잠시 후 다시 시도해 주세요."),
+
+    INVALID_MEMBER_ID(HttpStatus.BAD_REQUEST.value(), "MEMBER_011", "잘못된 memberId 형식입니다.");
 
     private final int status;
     private final String code;
