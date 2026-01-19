@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.node5.catalogservice.product.application.ProductImageService;
 import com.node5.catalogservice.product.application.dto.PresignedUrlInfo;
+import com.node5.catalogservice.product.presentation.dto.ConfirmImageRequest;
+import com.node5.catalogservice.product.presentation.dto.ConfirmImageResponse;
 import com.node5.catalogservice.product.presentation.dto.PresignedUrlRequest;
 import com.node5.catalogservice.product.presentation.dto.PresignedUrlResponse;
 
@@ -37,5 +39,13 @@ public class ProductImageController {
 	) {
 		PresignedUrlInfo info = productImageService.createUploadUrl(request.contentType());
 		return ResponseEntity.ok(new PresignedUrlResponse(info.url(), info.key()));
+	}
+
+	@PostMapping("/products/images/confirm")
+	public ResponseEntity<ConfirmImageResponse> confirmPresignedUrl(
+		@Valid @RequestBody ConfirmImageRequest request
+	) {
+		String productKey = productImageService.confirm(request.tempKey());
+		return ResponseEntity.ok(new ConfirmImageResponse(productKey));
 	}
 }
