@@ -8,6 +8,7 @@ import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.node5.catalogservice.product.application.ProductService;
 import com.node5.catalogservice.product.domain.Product;
 import com.node5.catalogservice.product.presentation.dto.ProductIdsRequest;
+import com.node5.catalogservice.product.presentation.dto.ProductReviewStatusResponse;
 import com.node5.catalogservice.product.presentation.dto.ProductSummaryListResponse;
 import com.node5.catalogservice.product.presentation.dto.ProductSummaryResponse;
 
@@ -64,5 +66,11 @@ public class ProductInternalController {
 	@GetMapping("/ids")
 	public ResponseEntity<List<UUID>> getProductIds(@ParameterObject Pageable pageable) {
 		return ResponseEntity.ok(productService.getOnSaleProductIds(pageable));
+	}
+
+	@GetMapping("/{productId}/review-status")
+	public ResponseEntity<ProductReviewStatusResponse> canPostReview(@PathVariable UUID productId) {
+		boolean reviewable = productService.isReviewable(productId);
+		return ResponseEntity.ok(new ProductReviewStatusResponse(reviewable));
 	}
 }
