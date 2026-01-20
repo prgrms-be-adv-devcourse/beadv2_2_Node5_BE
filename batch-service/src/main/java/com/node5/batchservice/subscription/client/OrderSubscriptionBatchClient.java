@@ -7,8 +7,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-@FeignClient(name = "subscription-service")
-public interface SubscriptionBatchClient {
+@FeignClient(name = "order-service")
+public interface OrderSubscriptionBatchClient {
 
     @GetMapping("/internal/subscriptions/batch/targets")
     ResponseEntity<PagedResponseDto<SubscriptionBatchTarget>> findTargets(

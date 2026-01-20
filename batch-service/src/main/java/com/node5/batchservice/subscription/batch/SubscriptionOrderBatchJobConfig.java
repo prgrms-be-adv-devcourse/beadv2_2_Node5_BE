@@ -2,7 +2,7 @@ package com.node5.batchservice.subscription.batch;
 
 import com.node5.batchservice.subscription.batch.dto.SubscriptionBatchResult;
 import com.node5.batchservice.subscription.client.OrderClient;
-import com.node5.batchservice.subscription.client.SubscriptionBatchClient;
+import com.node5.batchservice.subscription.client.OrderSubscriptionBatchClient;
 import com.node5.batchservice.subscription.client.dto.SubscriptionBatchTarget;
 import com.node5.batchservice.subscription.infrastructure.kafka.producer.SubscriptionOrderBatchResultProducer;
 import lombok.RequiredArgsConstructor;
@@ -30,7 +30,7 @@ public class SubscriptionOrderBatchJobConfig {
 
     private static final int CHUNK_SIZE = 100;
 
-    private final SubscriptionBatchClient subscriptionBatchClient;
+    private final OrderSubscriptionBatchClient orderSubscriptionBatchClient;
     private final OrderClient orderClient;
     private final SubscriptionOrderBatchResultProducer resultProducer;
 
@@ -59,7 +59,7 @@ public class SubscriptionOrderBatchJobConfig {
     @StepScope
     public ItemReader<SubscriptionBatchTarget> subscriptionBatchTargetReader(
             @Value("#{jobParameters['runDate']}") String runDate) {
-        return new SubscriptionBatchTargetReader(subscriptionBatchClient, runDate, CHUNK_SIZE);
+        return new SubscriptionBatchTargetReader(orderSubscriptionBatchClient, runDate, CHUNK_SIZE);
     }
 
     @Bean
