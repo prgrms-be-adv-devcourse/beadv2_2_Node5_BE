@@ -145,12 +145,16 @@ data:
         producer:
           key-serializer: org.apache.kafka.common.serialization.StringSerializer
           value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+        consumer:
+          key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+          value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
     api:
       v1: /api/v1
     app:
       kafka:
         topics:
           member-deleted: member-service.member-deleted.v1
+          shop-deleted: member-service.shop-deleted.v1
           product-index: catalog-service.product-index.v1
           product-embedding: catalog-service.product-embedding.v1
           product-discontinued: catalog-service.product-discontinued.v1
@@ -252,12 +256,28 @@ data:
         show-sql: true
         properties:
           hibernate:
+            default_schema: order
             format_sql: true
             jdbc:
               time_zone: Asia/Seoul
       sql:
         init:
           mode: always
+      kafka:
+        bootstrap-servers: ${KAFKA_HOST}:9092
+        listener:
+          ack-mode: manual
+        producer:
+          key-serializer: org.apache.kafka.common.serialization.StringSerializer
+          value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+        consumer:
+          group-id: order-service
+          key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+          value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+          auto-offset-reset: latest
+          enable-auto-commit: false
+          properties:
+            spring.json.trusted.packages: "com.node5.common.event"
     api:
       v1: /api/v1
     management:
@@ -265,6 +285,10 @@ data:
         web:
           exposure:
             include: health
+    kafka:
+      topics:
+        member-deleted: member-service.member-deleted.v1
+        shop-deleted: member-service.shop-deleted.v1
   settlement-service.yaml: |
     spring:
       datasource:
@@ -301,46 +325,6 @@ data:
             include: health
     api:
       v1: /api/v1
-  subscription-service.yml: |
-    spring:
-      datasource:
-        url: ${SPRING_DATASOURCE_URL}
-        driver-class-name: org.postgresql.Driver
-        username: ${SPRING_DATASOURCE_USERNAME}
-        password: ${SPRING_DATASOURCE_PASSWORD}
-      jackson:
-        time-zone: Asia/Seoul
-      jpa:
-        hibernate:
-          ddl-auto: validate
-        show-sql: true
-        properties:
-          hibernate:
-            default_schema: subscription
-            format_sql: true
-            jdbc:
-              time_zone: Asia/Seoul
-      kafka:
-        bootstrap-servers: ${KAFKA_HOST}:9092
-        listener:
-          ack-mode: manual
-        producer:
-          key-serializer: org.apache.kafka.common.serialization.StringSerializer
-          value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-        consumer:
-          group-id: subscription-service
-          key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-          value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-          auto-offset-reset: latest
-          enable-auto-commit: false
-          properties:
-            spring.json.trusted.packages: "com.node5.common.event"
-    api:
-      v1: /api/v1
-    kafka:
-      topics:
-        member-deleted: member-service.member-deleted.v1
-        shop-deleted: member-service.shop-deleted.v1
   support-service.yaml: |
     spring:
       elasticsearch:
@@ -426,7 +410,7 @@ data:
         product-embedding: catalog-service.product-embedding.v1
         product-index: catalog-service.product-index.v1
         order-status-changed: order-service.order-status-changed.v1
-        subscription-status-changed: subscription-service.subscription-status-changed.v1
+        subscription-status-changed: order-service.subscription-status-changed.v1
     api:
       v1: /api/v1
     app:
@@ -442,21 +426,37 @@ data:
         driver-class-name: org.postgresql.Driver
         username: ${SPRING_DATASOURCE_USERNAME}
         password: ${SPRING_DATASOURCE_PASSWORD}
+        hikari:
+          schema: batch
+      jackson:
+        time-zone: Asia/Seoul
+      jpa:
+        hibernate:
+          ddl-auto: validate
+        show-sql: true
+        properties:
+          hibernate:
+            default_schema: batch
+            format_sql: true
+            jdbc:
+              time_zone: Asia/Seoul
       batch:
-        jdbc:
-          initialize-schema: always
-          schema: public
         job:
           enabled: false
-      kafka:
-        bootstrap-servers: ${KAFKA_HOST}:9092
-        producer:
-          key-serializer: org.apache.kafka.common.serialization.StringSerializer
-          value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+        jdbc:
+          initialize-schema: always
+          table-prefix: batch.BATCH_
       task:
         scheduling:
           cron:
             subscription-order: ${SUBSCRIPTION_ORDER_CRON}
+      kafka:
+        bootstrap-servers: ${KAFKA_HOST}:9092
+        listener:
+          ack-mode: manual
+        producer:
+          key-serializer: org.apache.kafka.common.serialization.StringSerializer
+          value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
     api:
       v1: /api/v1
     management:

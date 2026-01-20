@@ -15,7 +15,7 @@ $KUBECTL apply -k k8s
 $KUBECTL get all
 
 for deploy in apigateway catalog-service config-service discovery \
-  member-service order-service settlement-service subscription-service \
+  member-service order-service settlement-service \
   payment-service wallet-service; do
   $KUBECTL rollout status "deploy/${deploy}" || true
 done
