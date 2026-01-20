@@ -45,11 +45,11 @@ public class ProductDocument {
 	@Field(type = FieldType.Boolean)
 	private Boolean isSponsored;
 
-	@Field(type = FieldType.Date, format = {}, pattern = "uuuu-MM-dd'T'HH:mm:ss")
-	private LocalDateTime createdAt;
+	@Field(type = FieldType.Date)
+	private String createdAt;
 
-	@Field(type = FieldType.Date, format = {}, pattern = "uuuu-MM-dd'T'HH:mm:ss")
-	private LocalDateTime modifiedAt;
+	@Field(type = FieldType.Date)
+	private String modifiedAt;
 
 	protected ProductDocument() {
 	}
@@ -64,8 +64,8 @@ public class ProductDocument {
 		Long price,
 		String status,
 		Boolean isSponsored,
-		LocalDateTime createdAt,
-		LocalDateTime modifiedAt
+		String createdAt,
+		String modifiedAt
 	) {
 		this.productId = id;
 		this.shopId = shopId;

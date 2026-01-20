@@ -24,7 +24,7 @@ public record ProductSearchResponse(
 			doc.getThumbnailKey(),
 			doc.getPrice(),
 			doc.getStatus(),
-			doc.getCreatedAt()
+			LocalDateTime.parse(doc.getCreatedAt())
 		);
 	}
 }
