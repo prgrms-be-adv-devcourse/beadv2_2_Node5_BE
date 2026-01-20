@@ -21,7 +21,6 @@ build_image() {
 
 build_image apigateway "$ROOT_DIR/apigateway"
 build_image catalog-service "$ROOT_DIR/catalog-service"
-build_image config-service "$ROOT_DIR/config"
 build_image discovery "$ROOT_DIR/discovery"
 build_image member-service "$ROOT_DIR/member-service"
 build_image order-service "$ROOT_DIR/order-service"
