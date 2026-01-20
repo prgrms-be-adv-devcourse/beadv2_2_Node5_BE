@@ -18,7 +18,7 @@ import static com.node5.orderservice.subscription.exception.SubscriptionErrorCod
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-@Table(name = "\"subscription_recurrence_rule\"", schema = "subscription")
+@Table(name = "\"subscription_recurrence_rule\"", schema = "order")
 public class SubscriptionRecurrenceRule extends BaseEntity {
 
     @Id

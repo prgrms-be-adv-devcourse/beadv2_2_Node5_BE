@@ -19,7 +19,7 @@ import static com.node5.orderservice.subscription.exception.SubscriptionErrorCod
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "\"subscription\"", schema = "subscription")
+@Table(name = "\"subscription\"", schema = "order")
 public class Subscription extends BaseEntity {
 
     @Id
