@@ -1,11 +1,10 @@
-package com.node5.orderservice.order.client;
+package com.node5.orderservice.global.exception.openfeign.client;
 
-import com.node5.orderservice.order.client.dto.StockCommitBatchRequest;
-import com.node5.orderservice.order.client.dto.StockHoldBatchRequest;
-import com.node5.orderservice.order.client.dto.StockHoldBatchResult;
-import com.node5.orderservice.order.client.dto.StockReleaseBatchRequest;
+import com.node5.orderservice.global.exception.openfeign.client.dto.*;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -32,4 +31,6 @@ public interface CatalogClient {
     @PostMapping("/internal/stocks/reservations/release")
     ResponseEntity<Void> release(@RequestBody StockReleaseBatchRequest request);
 
+    @GetMapping("${api.v1}/products/{productId}")
+    ResponseEntity<ProductInfoResponse> findById(@PathVariable UUID productId);
 }

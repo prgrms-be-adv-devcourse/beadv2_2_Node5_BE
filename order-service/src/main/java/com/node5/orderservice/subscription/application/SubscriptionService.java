@@ -1,13 +1,12 @@
 package com.node5.orderservice.subscription.application;
 
+import com.node5.orderservice.global.exception.openfeign.client.CatalogClient;
 import com.node5.orderservice.subscription.application.dto.SubscriptionCreateCommand;
 import com.node5.orderservice.subscription.application.dto.SubscriptionInfo;
 import com.node5.orderservice.subscription.application.dto.SubscriptionUpdateCommand;
-import com.node5.orderservice.subscription.client.ProductClient;
-import com.node5.orderservice.subscription.client.MemberClient;
-import com.node5.orderservice.subscription.client.dto.ProductInfoResponse;
+import com.node5.orderservice.global.exception.openfeign.client.MemberClient;
+import com.node5.orderservice.global.exception.openfeign.client.dto.ProductInfoResponse;
 import com.node5.orderservice.subscription.domain.*;
-import com.node5.subscriptionservice.subscription.domain.*;
 import com.node5.orderservice.subscription.exception.SubscriptionException;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +35,7 @@ public class SubscriptionService {
 
     private final SubscriptionRepository subscriptionRepository;
     private final SubscriptionRecurrenceRuleRepository subscriptionRecurrenceRuleRepository;
-    private final ProductClient productClient;
+    private final CatalogClient catalogClient;
     private final MemberClient memberClient;
 
     public SubscriptionInfo findById(UUID id) {
@@ -182,7 +181,7 @@ public class SubscriptionService {
 
     private ProductInfoResponse getProductInfo(UUID productId) {
         try {
-            ProductInfoResponse response = productClient.findById(productId).getBody();
+            ProductInfoResponse response = catalogClient.findById(productId).getBody();
             if (response == null) {
                 throw new SubscriptionException(SUBSCRIPTION_PRODUCT_NOT_FOUND);
             }

@@ -1,4 +1,4 @@
-package com.node5.orderservice.order.client.dto;
+package com.node5.orderservice.global.exception.openfeign.client.dto;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;

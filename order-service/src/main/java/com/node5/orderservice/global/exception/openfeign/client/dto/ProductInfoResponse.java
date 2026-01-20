@@ -1,4 +1,4 @@
-package com.node5.orderservice.subscription.client.dto;
+package com.node5.orderservice.global.exception.openfeign.client.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

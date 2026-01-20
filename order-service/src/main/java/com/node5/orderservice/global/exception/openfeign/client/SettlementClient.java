@@ -1,6 +1,6 @@
-package com.node5.orderservice.order.client;
+package com.node5.orderservice.global.exception.openfeign.client;
 
-import com.node5.orderservice.order.client.dto.SettlementSourceItem;
+import com.node5.orderservice.global.exception.openfeign.client.dto.SettlementSourceItem;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
