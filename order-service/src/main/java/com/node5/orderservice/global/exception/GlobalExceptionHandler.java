@@ -2,6 +2,7 @@ package com.node5.orderservice.global.exception;
 
 import com.node5.common.exception.ExceptionResponseDto;
 import com.node5.orderservice.order.exception.*;
+import com.node5.orderservice.subscription.exception.SubscriptionException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -57,6 +58,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(ex.getStatus())
                 .body(responseDto);
+    }
+
+    @ExceptionHandler(SubscriptionException.class)
+    public ResponseEntity<ExceptionResponseDto> subscriptionHandleException(SubscriptionException e) {
+        var ex = e.getErrorCode();
+        ExceptionResponseDto responseDto = new ExceptionResponseDto(ex.getCode(), ex.getMessage());
+        return ResponseEntity.status(ex.getStatus()).body(responseDto);
     }
 
     @ExceptionHandler(Exception.class)
