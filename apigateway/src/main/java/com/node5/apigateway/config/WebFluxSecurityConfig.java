@@ -34,7 +34,8 @@ public class WebFluxSecurityConfig {
     private final static String[] GUEST_PERMITALL_ANTPATTERNS = {
             "/catalog-service/api/v1/products",
             "/catalog-service/api/v1/products/*",
-            "/catalog-service/api/v1/search",
+            "/support-service/api/v1/products/search",
+            "/support-service/api/v1/products/autocomplete",
             "/support-service/api/v1/reviews/*",
             "/support-service/api/v1/reviews/detail/*",
             "/support-service/api/v1/review-summaries"
