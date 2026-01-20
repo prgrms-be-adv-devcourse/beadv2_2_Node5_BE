@@ -1,7 +1,6 @@
 package com.node5.supportservice.search.infrastructure.elasticsearch;
 
 import java.util.List;
-import java.util.Objects;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,11 +18,10 @@ import com.node5.supportservice.search.application.dto.ProductSearchCommand;
 import com.node5.supportservice.search.application.port.ProductSearchPort;
 import com.node5.supportservice.search.domain.ProductDocument;
 import com.node5.supportservice.search.domain.ProductSearchSort;
+import com.node5.supportservice.search.infrastructure.elasticsearch.query.ProductAutocompleteQueryBuilder;
+import com.node5.supportservice.search.infrastructure.elasticsearch.query.ProductSearchQueryBuilder;
+import com.node5.supportservice.search.infrastructure.elasticsearch.sort.ProductSortOptionsBuilder;
 
-import co.elastic.clients.elasticsearch._types.FieldValue;
-import co.elastic.clients.elasticsearch._types.SortOptions;
-import co.elastic.clients.elasticsearch._types.SortOrder;
-import co.elastic.clients.elasticsearch._types.query_dsl.Operator;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import lombok.RequiredArgsConstructor;
 
@@ -35,28 +33,14 @@ public class ElasticsearchProductSearchAdapter implements ProductSearchPort {
 
 	private final ElasticsearchOperations elasticsearchOperations;
 
+	private final ProductAutocompleteQueryBuilder autocompleteQueryBuilder;
+	private final ProductSearchQueryBuilder searchQueryBuilder;
+	private final ProductSortOptionsBuilder sortOptionsBuilder;
+
 	@Override
 	public List<String> autocomplete(ProductAutocompleteCommand command) {
 
-		Query query = Query.of(q -> q.bool(b -> {
-
-			// filter:
-			// - 판매 중인 상품만 자동완성 대상
-			b.filter(f -> f.term(t -> t.field("status")
-				.value(FieldValue.of("ON_SALE"))));
-
-			// must:
-			// - 자동완성 필드(name_autocomplete)로 검색어 매칭
-			if (StringUtils.hasText(command.keyword())) {
-				b.must(m -> m.match(mm -> mm
-					.field("name_autocomplete")
-					.query(command.keyword())
-					.operator(Operator.And)
-				));
-			}
-
-			return b;
-		}));
+		Query query = autocompleteQueryBuilder.build(command);
 
 		NativeQuery nativeQuery = new NativeQueryBuilder()
 			.withQuery(query)
@@ -73,14 +57,15 @@ public class ElasticsearchProductSearchAdapter implements ProductSearchPort {
 
 	@Override
 	public Page<ProductDocument> search(ProductSearchCommand command, Pageable pageable) {
-		Query query = buildBoolQuery(command);
+
+		Query query = searchQueryBuilder.build(command);
 
 		ProductSearchSort sort = command.sort() != null ? command.sort() : ProductSearchSort.LATEST;
 
 		NativeQuery nativeQuery = new NativeQueryBuilder()
 			.withQuery(query)
 			.withPageable(pageable)
-			.withSort(buildSortOptions(sort))
+			.withSort(sortOptionsBuilder.build(sort))
 			.build();
 
 		SearchHits<ProductDocument> hits = elasticsearchOperations.search(nativeQuery, ProductDocument.class);
@@ -88,69 +73,5 @@ public class ElasticsearchProductSearchAdapter implements ProductSearchPort {
 		SearchPage<ProductDocument> page = SearchHitSupport.searchPageFor(hits, pageable);
 
 		return page.map(hit -> hit.getContent());
-	}
-
-	private Query buildBoolQuery(ProductSearchCommand command) {
-		return Query.of(q -> q.bool(b -> {
-
-			// filter:
-			// - 판매 중인 상품만 검색 대상
-			// - 결과를 걸러내는 조건 (점수에는 영향 없음)
-			b.filter(f -> f.term(t -> t.field("status")
-				.value(FieldValue.of("ON_SALE"))));
-
-			// filter:
-			// - 판매자 기준으로 결과 제한
-			if (command.shopId() != null) {
-				b.filter(f -> f.term(t -> t.field("shopId")
-					.value(FieldValue.of(command.shopId().toString()))));
-			}
-
-			// filter:
-			// - 카테고리 기준으로 결과 제한
-			if (command.category() != null) {
-				b.filter(f -> f.term(t -> t.field("category")
-					.value(FieldValue.of(command.category().name()))));
-			}
-
-			// must:
-			// - 검색어 매칭
-			// - 여기서 점수 계산됨 (결과 순서에 영향)
-			if (StringUtils.hasText(command.keyword())) {
-				b.must(m -> m.match(mm -> mm
-					.field("name")
-					.query(command.keyword())
-					.operator(Operator.And)
-				));
-			}
-
-			// filter:
-			// - 가격 범위로 결과 제한
-			// - 점수에는 영향 없음
-			if (command.minPrice() != null && command.maxPrice() != null) {
-				double min = command.minPrice().doubleValue();
-				double max = command.maxPrice().doubleValue();
-
-				b.filter(f -> f.range(r -> r
-					.number(n -> n
-						.field("price")
-						.gte(min)
-						.lte(max)
-					)
-				));
-			}
-
-			return b;
-		}));
-	}
-
-	private List<SortOptions> buildSortOptions(ProductSearchSort sort) {
-		Objects.requireNonNull(sort);
-
-		return switch (sort) {
-			case LATEST -> List.of(SortOptions.of(s -> s.field(f -> f.field("createdAt").order(SortOrder.Desc))));
-			case LOW_PRICE -> List.of(SortOptions.of(s -> s.field(f -> f.field("price").order(SortOrder.Asc))));
-			case HIGH_PRICE -> List.of(SortOptions.of(s -> s.field(f -> f.field("price").order(SortOrder.Desc))));
-		};
 	}
 }
