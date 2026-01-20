@@ -1,4 +1,4 @@
-package com.node5.supportservice.reviewsummary.utils;
+package com.node5.batchservice.reviewsummary.utils;
 
 import org.springframework.stereotype.Component;
 

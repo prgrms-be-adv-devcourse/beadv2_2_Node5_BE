@@ -1,10 +1,11 @@
-package com.node5.supportservice.reviewsummary.application;
+package com.node5.batchservice.reviewsummary.application;
 
-import com.node5.supportservice.reviewsummary.application.dto.JobExecutionResponse;
-import com.node5.supportservice.reviewsummary.application.dto.ReviewSummaryExecutionInfoResponse;
-import com.node5.supportservice.reviewsummary.application.dto.ReviewSummaryExecutionListResponse;
-import com.node5.supportservice.reviewsummary.exception.ReviewSummaryErrorCode;
-import com.node5.supportservice.reviewsummary.exception.ReviewSummaryException;
+
+import com.node5.batchservice.reviewsummary.application.dto.JobExecutionResponse;
+import com.node5.batchservice.reviewsummary.application.dto.ReviewSummaryExecutionInfoResponse;
+import com.node5.batchservice.reviewsummary.application.dto.ReviewSummaryExecutionListResponse;
+import com.node5.batchservice.reviewsummary.exception.ReviewSummaryBatchErrorCode;
+import com.node5.batchservice.reviewsummary.exception.ReviewSummaryBatchException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.explore.JobExplorer;
@@ -33,7 +34,7 @@ public class ReviewSummaryBatchService {
 
     public JobExecutionResponse runReviewSummary() {
         if (isJobRunning(monthlyReviewSummaryJob.getName())) {
-            throw new ReviewSummaryException(ReviewSummaryErrorCode.JOB_IS_RUNNING);
+            throw new ReviewSummaryBatchException(ReviewSummaryBatchErrorCode.JOB_IS_RUNNING);
         }
 
         LocalDate batchStartDate = LocalDate.now();
@@ -47,11 +48,11 @@ public class ReviewSummaryBatchService {
             JobExecution execution = jobLauncher.run(monthlyReviewSummaryJob, params);
             return new JobExecutionResponse(execution.getId());
         } catch (JobExecutionAlreadyRunningException e) {
-            throw new ReviewSummaryException(ReviewSummaryErrorCode.JOB_IS_RUNNING);
+            throw new ReviewSummaryBatchException(ReviewSummaryBatchErrorCode.JOB_IS_RUNNING);
         } catch (JobInstanceAlreadyCompleteException e) {
-            throw new ReviewSummaryException(ReviewSummaryErrorCode.JOB_ALREADY_COMPLETED);
+            throw new ReviewSummaryBatchException(ReviewSummaryBatchErrorCode.JOB_ALREADY_COMPLETED);
         } catch (JobParametersInvalidException | JobRestartException e) {
-            throw new ReviewSummaryException(ReviewSummaryErrorCode.JOB_LAUNCH_FAILED);
+            throw new ReviewSummaryBatchException(ReviewSummaryBatchErrorCode.JOB_LAUNCH_FAILED);
         }
     }
 
@@ -84,7 +85,7 @@ public class ReviewSummaryBatchService {
     public ReviewSummaryExecutionInfoResponse getExecutionInfo(Long executionId) {
         JobExecution execution = jobExplorer.getJobExecution(executionId);
         if(execution == null) {
-            throw new ReviewSummaryException(ReviewSummaryErrorCode.JOB_EXECUTION_NOT_FOUND);
+            throw new ReviewSummaryBatchException(ReviewSummaryBatchErrorCode.JOB_EXECUTION_NOT_FOUND);
         }
 
         return ReviewSummaryExecutionInfoResponse.from(execution);
@@ -92,22 +93,22 @@ public class ReviewSummaryBatchService {
 
     public JobExecutionResponse restartExecution(Long executionId) {
         if (isJobRunning(monthlyReviewSummaryJob.getName())) {
-            throw new ReviewSummaryException(ReviewSummaryErrorCode.JOB_IS_RUNNING);
+            throw new ReviewSummaryBatchException(ReviewSummaryBatchErrorCode.JOB_IS_RUNNING);
         }
         JobExecution execution = jobExplorer.getJobExecution(executionId);
         if (execution == null) {
-            throw new ReviewSummaryException(ReviewSummaryErrorCode.JOB_EXECUTION_NOT_FOUND);
+            throw new ReviewSummaryBatchException(ReviewSummaryBatchErrorCode.JOB_EXECUTION_NOT_FOUND);
         }
 
         if (!execution.getStatus().isUnsuccessful()) {
-            throw new ReviewSummaryException(ReviewSummaryErrorCode.JOB_NOT_RESTARTABLE);
+            throw new ReviewSummaryBatchException(ReviewSummaryBatchErrorCode.JOB_NOT_RESTARTABLE);
         }
 
         try {
             Long newExecutionId = jobOperator.restart(executionId);
             return new JobExecutionResponse(newExecutionId);
         } catch (Exception e) {
-            throw new ReviewSummaryException(ReviewSummaryErrorCode.JOB_RESTART_FAILED);
+            throw new ReviewSummaryBatchException(ReviewSummaryBatchErrorCode.JOB_RESTART_FAILED);
         }
     }
 }

@@ -1,9 +1,9 @@
-package com.node5.supportservice.reviewsummary.batch.dto;
+package com.node5.batchservice.reviewsummary.client.dto;
 
 import java.time.LocalDate;
 import java.util.UUID;
 
-public record ReviewSummaryCommand(
+public record ReviewSummaryUpsertRequest(
         UUID productId,
         String summary,
         LocalDate endDate
