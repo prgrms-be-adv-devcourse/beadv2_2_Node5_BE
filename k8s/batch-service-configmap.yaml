@@ -30,6 +30,10 @@ data:
         jdbc:
           initialize-schema: always
           table-prefix: batch.BATCH_
+      ai:
+        openai:
+          api-key: ${OPEN_AI_API_KEY}
+          base-url: https://api.openai.com
       task:
         scheduling:
           cron:
@@ -41,13 +45,8 @@ data:
         producer:
           key-serializer: org.apache.kafka.common.serialization.StringSerializer
           value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-    
-    server:
-      port: 8087
-    
     api:
       v1: /api/v1
-    
     kafka:
       topics:
         subscription-order-batch-result: batch-service.subscription-order-batch-result.v1
