@@ -11,7 +11,6 @@ include(
         'order-service',
         'payment-service',
         'settlement-service',
-        'subscription-service',
         'support-service',
         'wallet-service'
 )
