@@ -1,5 +1,6 @@
 package com.node5.orderservice.order.infrastructure;
 
+import com.node5.orderservice.order.domain.OrderItemSettlementStatus;
 import com.node5.orderservice.order.domain.OrderItem;
 import com.node5.orderservice.order.domain.OrderItemRepository;
 import com.node5.orderservice.order.domain.OrderProgress;
@@ -50,6 +51,16 @@ public class OrderItemRepositoryAdapter implements OrderItemRepository {
     @Override
     public Boolean existsInProgressByMemberId(UUID memberId, Collection<OrderProgress> doneStatus) {
         return orderItemJpaRepository.existsInProgressByMemberId(memberId, doneStatus);
+    }
+
+    @Override
+    public List<OrderItem> findByStatus(OrderProgress status) {
+        return orderItemJpaRepository.findByStatus(status);
+    }
+
+    @Override
+    public void updateSettlementStatus(List<UUID> orderItemIds, OrderItemSettlementStatus settlementStatus) {
+        orderItemJpaRepository.updateSettlementStatus(orderItemIds, settlementStatus);
     }
 
 }

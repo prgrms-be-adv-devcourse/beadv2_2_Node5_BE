@@ -42,6 +42,10 @@ public class OrderItem extends BaseEntity {
     @Column(nullable = false)
     private BigDecimal totalPrice; // 상품별 주문 금액
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 30)
+    private OrderItemSettlementStatus settlementStatus;
+
     protected OrderItem() { }
 
     @Builder
@@ -54,7 +58,8 @@ public class OrderItem extends BaseEntity {
             String imgUrl,
             BigDecimal unitPrice,
             int quantity,
-            BigDecimal totalPrice
+            BigDecimal totalPrice,
+            OrderItemSettlementStatus settlementStatus
     ) {
         this.id = id;
         this.orderId = orderId;
@@ -65,6 +70,7 @@ public class OrderItem extends BaseEntity {
         this.unitPrice = unitPrice;
         this.quantity = quantity;
         this.totalPrice = totalPrice;
+        this.settlementStatus = settlementStatus;
     }
 
     public static OrderItem create(
@@ -81,6 +87,7 @@ public class OrderItem extends BaseEntity {
                 .unitPrice(command.unitPrice())
                 .quantity(command.quantity())
                 .totalPrice(command.totalPrice())
+                .settlementStatus(OrderItemSettlementStatus.PENDING)
                 .build();
     }
 }
