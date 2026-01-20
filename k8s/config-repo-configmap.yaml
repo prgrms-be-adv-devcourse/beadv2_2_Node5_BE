@@ -256,6 +256,7 @@ data:
         show-sql: true
         properties:
           hibernate:
+            default_schema: order
             format_sql: true
             jdbc:
               time_zone: Asia/Seoul
