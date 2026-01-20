@@ -42,8 +42,14 @@ public class ProductDocument {
 	@Field(type = FieldType.Keyword)
 	private String status;
 
+	@Field(type = FieldType.Boolean)
+	private Boolean isSponsored;
+
 	@Field(type = FieldType.Date, format = {}, pattern = "uuuu-MM-dd'T'HH:mm:ss")
 	private LocalDateTime createdAt;
+
+	@Field(type = FieldType.Date, format = {}, pattern = "uuuu-MM-dd'T'HH:mm:ss")
+	private LocalDateTime modifiedAt;
 
 	protected ProductDocument() {
 	}
@@ -57,7 +63,9 @@ public class ProductDocument {
 		String thumbnailKey,
 		Long price,
 		String status,
-		LocalDateTime createdAt
+		Boolean isSponsored,
+		LocalDateTime createdAt,
+		LocalDateTime modifiedAt
 	) {
 		this.productId = id;
 		this.shopId = shopId;
@@ -67,6 +75,8 @@ public class ProductDocument {
 		this.thumbnailKey = thumbnailKey;
 		this.price = price;
 		this.status = status;
+		this.isSponsored = isSponsored;
 		this.createdAt = createdAt;
+		this.modifiedAt = modifiedAt;
 	}
 }

@@ -34,7 +34,9 @@ public class KafkaProductIndexEventConsumer {
 				event.thumbnailKey(),
 				event.price(),
 				event.status(),
-				event.createdAt()
+				null,
+				event.createdAt(),
+				event.modifiedAt()
 			);
 
 			productSearchRepository.save(document);
