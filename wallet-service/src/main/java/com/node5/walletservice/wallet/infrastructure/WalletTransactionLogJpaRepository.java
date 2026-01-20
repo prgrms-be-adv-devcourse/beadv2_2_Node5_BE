@@ -21,4 +21,6 @@ public interface WalletTransactionLogJpaRepository extends JpaRepository<WalletT
     @Modifying
     @Query("UPDATE WalletTransactionLog w SET w.status = :newStatus WHERE w.memberId = :memberId AND w.referenceId = :referenceId AND w.type = :type AND w.status = :oldStatus")
     int updateStatus(@Param("memberId") UUID memberId, @Param("referenceId") String referenceId, @Param("type") WalletTransactionLogType type, @Param("oldStatus") WalletTransactionLogStatus oldStatus, @Param("newStatus") WalletTransactionLogStatus newStatus);
+
+    boolean existsByMemberIdAndReferenceIdAndStatus(UUID memberId, String referenceId, WalletTransactionLogStatus status);
 }

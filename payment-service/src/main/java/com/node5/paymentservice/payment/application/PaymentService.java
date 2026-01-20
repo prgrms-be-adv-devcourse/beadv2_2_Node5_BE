@@ -94,6 +94,7 @@ public class PaymentService {
             payment.cancel();
         } catch (Exception e) {
             payment.cancel_failure("PG사 결제 취소 실패: " + e.getMessage());
+            //TODO: MessageQueue로 알림 전송
         }
 
         return PaymentCancelInfo.from(payment.getStatus());

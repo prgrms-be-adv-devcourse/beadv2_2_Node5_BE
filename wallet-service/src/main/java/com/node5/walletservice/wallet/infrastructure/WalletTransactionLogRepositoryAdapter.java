@@ -43,4 +43,9 @@ public class WalletTransactionLogRepositoryAdapter implements WalletTransactionL
     public WalletTransactionLog save(WalletTransactionLog walletTransactionLog) {
         return walletTransactionLogJpaRepository.saveAndFlush(walletTransactionLog);
     }
+
+    @Override
+    public boolean existsLog(UUID memberId, String referenceId, WalletTransactionLogStatus status) {
+        return walletTransactionLogJpaRepository.existsByMemberIdAndReferenceIdAndStatus(memberId, referenceId, status);
+    }
 }
