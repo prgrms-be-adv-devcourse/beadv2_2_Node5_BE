@@ -17,6 +17,9 @@ spec:
       app: apigateway
   template:
     metadata:
+      annotations:
+        reloader.stakater.com/auto: "true"
+        configmap.reloader.stakater.com/reload: "common-config,apigateway-config"
       labels:
         app: apigateway
     spec:
@@ -32,6 +35,9 @@ spec:
               value: prod
             - name: JAVA_TOOL_OPTIONS
               value: "-Xms128m -Xmx256m"
+          volumeMounts:
+            - name: config
+              mountPath: /config
           resources:
             requests:
               memory: "256Mi"
@@ -63,6 +69,15 @@ spec:
             periodSeconds: 20
             timeoutSeconds: 5
             failureThreshold: 6
+      volumes:
+        - name: config
+          projected:
+            sources:
+              - configMap:
+                  name: common-config
+              - configMap:
+                  name: apigateway-config
+
 ---
 apiVersion: v1
 kind: Service

@@ -1,0 +1,61 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: payment-service-config
+data:
+  payment-service.yaml: |
+    spring:
+      datasource:
+        url: ${SPRING_DATASOURCE_URL}
+        driver-class-name: org.postgresql.Driver
+        username: ${SPRING_DATASOURCE_USERNAME}
+        password: ${SPRING_DATASOURCE_PASSWORD}
+      jackson:
+        time-zone: Asia/Seoul
+      jpa:
+        hibernate:
+          ddl-auto: validate
+        show-sql: true
+        properties:
+          hibernate:
+            default_schema: payment
+            format_sql: true
+            jdbc:
+              time_zone: Asia/Seoul
+      kafka:
+        # 1. 공통 설정: 카프카 클러스터 주소
+        bootstrap-servers: ${KAFKA_HOST}:9092
+        listener:
+          ack-mode: manual
+    
+        # 2. Producer 설정 (메시지를 보내는 서비스: 예 - Order, Payment)
+        producer:
+          key-serializer: org.apache.kafka.common.serialization.StringSerializer
+          value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    
+        # 3. Consumer 설정 (메시지를 받는 서비스: 예 - Notification, Settlement)
+        consumer:
+          group-id: payment-service # 서비스별 그룹 아이디
+          key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+          value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+          auto-offset-reset: latest # 처음부터 읽을지(earliest) 마지막부터 읽을지(latest)
+          enable-auto-commit: false # 오프셋 자동 커밋 여부
+          properties:
+            spring.json.trusted.packages: "com.node5.common.event"
+      data:
+        redis:
+          host: ${REDIS_HOST}
+          port: 6379
+    api:
+      v1: /api/v1
+    kafka:
+      topics:
+        deposit-event: payment-service.deposit-event.v1
+    payment:
+      toss:
+        secret-key: ${TOSS_SECRET_KEY}
+        success-url: ${TOSS_SUCCESS_URL}
+        fail-url: ${TOSS_FAIL_URL}
+    
+    server:
+      port: 8088

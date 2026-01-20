@@ -114,7 +114,8 @@ jobs:
 
       - name: Deploy Core Infra
         run: |
-          kubectl apply -f k8s/config-repo-configmap.yaml
+          kubectl apply -f k8s/common-configmap.yaml
+          kubectl apply -f k8s/apigateway-configmap.yaml
           
           ENV_PATH="/home/ubuntu/env"
           for env_file in $ENV_PATH/.env.*; do
@@ -125,7 +126,7 @@ jobs:
             --dry-run=client -o yaml | kubectl apply -f -
           done
 
-          for svc in config discovery apigateway; do
+          for svc in discovery apigateway; do
             kubectl apply -f k8s/$svc.yaml
             kubectl rollout restart deployment/$svc
             kubectl rollout status deployment/$svc --timeout=300s
@@ -147,6 +148,10 @@ jobs:
       - uses: actions/checkout@v4
       - name: Deploy & Rollout
         run: |
+          kubectl apply -f k8s/common-configmap.yaml
+          if [ -f k8s/${{ matrix.service }}-configmap.yaml ]; then
+            kubectl apply -f k8s/${{ matrix.service }}-configmap.yaml
+          fi
           kubectl apply -f k8s/${{ matrix.service }}.yaml
           kubectl rollout restart deployment/${{ matrix.service }}
           kubectl rollout status deployment/${{ matrix.service }} --timeout=300s
