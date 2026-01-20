@@ -1,9 +1,9 @@
-package com.node5.supportservice.reviewsummary.presentation;
+package com.node5.batchservice.reviewsummary.presentation;
 
-import com.node5.supportservice.reviewsummary.application.ReviewSummaryBatchService;
-import com.node5.supportservice.reviewsummary.application.dto.JobExecutionResponse;
-import com.node5.supportservice.reviewsummary.application.dto.ReviewSummaryExecutionInfoResponse;
-import com.node5.supportservice.reviewsummary.application.dto.ReviewSummaryExecutionListResponse;
+import com.node5.batchservice.reviewsummary.application.ReviewSummaryBatchService;
+import com.node5.batchservice.reviewsummary.application.dto.JobExecutionResponse;
+import com.node5.batchservice.reviewsummary.application.dto.ReviewSummaryExecutionInfoResponse;
+import com.node5.batchservice.reviewsummary.application.dto.ReviewSummaryExecutionListResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;

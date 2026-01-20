@@ -1,7 +1,7 @@
-package com.node5.supportservice.reviewsummary.client;
+package com.node5.batchservice.reviewsummary.client;
 
-import com.node5.supportservice.reviewsummary.exception.ReviewSummaryErrorCode;
-import com.node5.supportservice.reviewsummary.exception.ReviewSummaryException;
+import com.node5.batchservice.reviewsummary.exception.ReviewSummaryBatchErrorCode;
+import com.node5.batchservice.reviewsummary.exception.ReviewSummaryBatchException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.messages.Message;
@@ -32,6 +32,7 @@ public class LLMChatClient {
             messages.add(new UserMessage("요약을 생성하라."));
 
             OpenAiChatOptions options = OpenAiChatOptions.builder()
+                    .model("gpt-4.1-nano")
                     .maxCompletionTokens(200)
                     .temperature(0.2)
                     .build();
@@ -39,20 +40,20 @@ public class LLMChatClient {
             ChatResponse response = chatModel.call(new Prompt(messages, options));
             if (response == null || response.getResults() == null || response.getResults().isEmpty()) {
                 log.warn("OpenAI chat response empty. response={}", response);
-                throw new ReviewSummaryException(ReviewSummaryErrorCode.OPENAI_RESPONSE_EMPTY);
+                throw new ReviewSummaryBatchException(ReviewSummaryBatchErrorCode.OPENAI_RESPONSE_EMPTY);
             }
             String content = response.getResults().get(0).getOutput().getText();
             if (!StringUtils.hasText(content)) {
                 log.warn("OpenAI chat response empty content. response={}", response);
-                throw new ReviewSummaryException(ReviewSummaryErrorCode.OPENAI_RESPONSE_EMPTY);
+                throw new ReviewSummaryBatchException(ReviewSummaryBatchErrorCode.OPENAI_RESPONSE_EMPTY);
             }
             return content.trim();
-        } catch (ReviewSummaryException ex) {
+        } catch (ReviewSummaryBatchException ex) {
             throw ex;
         }
         catch (Exception ex) {
             log.warn("OpenAI chat request failed. message={}", ex.getMessage());
-            throw new ReviewSummaryException(ReviewSummaryErrorCode.OPENAI_REQUEST_FAILED);
+            throw new ReviewSummaryBatchException(ReviewSummaryBatchErrorCode.OPENAI_REQUEST_FAILED);
         }
     }
 }

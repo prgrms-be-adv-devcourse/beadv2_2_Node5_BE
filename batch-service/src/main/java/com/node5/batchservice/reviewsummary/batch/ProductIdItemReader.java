@@ -1,6 +1,6 @@
-package com.node5.supportservice.reviewsummary.batch;
+package com.node5.batchservice.reviewsummary.batch;
 
-import com.node5.supportservice.global.openfeign.client.CatalogClient;
+import com.node5.batchservice.reviewsummary.client.CatalogClient;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
 import org.springframework.batch.item.ExecutionContext;

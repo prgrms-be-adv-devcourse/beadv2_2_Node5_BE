@@ -1,4 +1,4 @@
-package com.node5.supportservice.reviewsummary.application.dto;
+package com.node5.batchservice.reviewsummary.application.dto;
 
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.ExitStatus;
