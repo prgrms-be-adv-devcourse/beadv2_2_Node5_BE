@@ -20,7 +20,7 @@ spec:
       annotations:
         reloader.stakater.com/auto: "true"
         configmap.reloader.stakater.com/reload: "common-config,payment-service-config"
-        secret.reloader.stakater.com/reload: "payment-secret"
+        secret.reloader.stakater.com/reload: "common-secret,payment-secret"
       labels:
         app: payment-service
     spec:
@@ -37,6 +37,8 @@ spec:
             - name: JAVA_TOOL_OPTIONS
               value: "-Xms128m -Xmx256m"
           envFrom:
+            - secretRef:
+                name: common-secret
             - secretRef:
                 name: payment-secret
           volumeMounts:

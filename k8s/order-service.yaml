@@ -20,7 +20,7 @@ spec:
       annotations:
         reloader.stakater.com/auto: "true"
         configmap.reloader.stakater.com/reload: "common-config,order-service-config"
-        secret.reloader.stakater.com/reload: "order-secret"
+        secret.reloader.stakater.com/reload: "common-secret,order-secret"
       labels:
         app: order-service
     spec:
@@ -37,6 +37,8 @@ spec:
             - name: JAVA_TOOL_OPTIONS
               value: "-Xms128m -Xmx256m"
           envFrom:
+            - secretRef:
+                name: common-secret
             - secretRef:
                 name: order-secret
           volumeMounts:

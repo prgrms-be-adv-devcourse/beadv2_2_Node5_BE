@@ -115,7 +115,6 @@ jobs:
       - name: Deploy Core Infra
         run: |
           kubectl apply -f k8s/common-configmap.yaml
-          kubectl apply -f k8s/apigateway-configmap.yaml
           
           ENV_PATH="/home/ubuntu/env"
           for env_file in $ENV_PATH/.env.*; do

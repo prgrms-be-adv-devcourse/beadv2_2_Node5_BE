@@ -5,7 +5,7 @@ metadata:
 data:
   application.yml: |
     token:
-      secret: bqE8cz8S6bV4GzD2A1g7o1I2N7q9p+vTWlM3lBaEo+3gF5h4qXvBRvUj2bS7wQ0RzF1YkPb3pH8xq9kJz4ySXQ==
+      secret: ${TOKEN_SECRET}
     
     eureka:
       instance:

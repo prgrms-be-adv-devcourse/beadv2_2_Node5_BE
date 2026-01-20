@@ -20,7 +20,7 @@ spec:
       annotations:
         reloader.stakater.com/auto: "true"
         configmap.reloader.stakater.com/reload: "common-config,batch-service-config"
-        secret.reloader.stakater.com/reload: "batch-secret"
+        secret.reloader.stakater.com/reload: "common-secret,batch-secret"
       labels:
         app: batch-service
     spec:
@@ -37,6 +37,8 @@ spec:
             - name: JAVA_TOOL_OPTIONS
               value: "-Xms128m -Xmx256m"
           envFrom:
+            - secretRef:
+                name: common-secret
             - secretRef:
                 name: batch-secret
           volumeMounts:

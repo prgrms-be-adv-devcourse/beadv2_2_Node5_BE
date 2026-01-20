@@ -1,6 +1,6 @@
 spring:
   config:
-    import: optional:file:/config/application.yml,optional:file:/config/apigateway.yaml
+    import: optional:file:/config/application.yml
   cloud:
     gateway:
       server:

@@ -20,7 +20,7 @@ spec:
       annotations:
         reloader.stakater.com/auto: "true"
         configmap.reloader.stakater.com/reload: "common-config,catalog-service-config"
-        secret.reloader.stakater.com/reload: "catalog-secret"
+        secret.reloader.stakater.com/reload: "common-secret,catalog-secret"
       labels:
         app: catalog-service
     spec:
@@ -39,6 +39,8 @@ spec:
             - name: JAVA_TOOL_OPTIONS
               value: "-Xms128m -Xmx256m"
           envFrom:
+            - secretRef:
+                name: common-secret
             - secretRef:
                 name: catalog-secret
           volumeMounts:

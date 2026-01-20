@@ -5,7 +5,6 @@ resources:
   - apigateway.yaml
   - batch-service.yaml
   - catalog-service.yaml
-  - apigateway-configmap.yaml
   - batch-service-configmap.yaml
   - catalog-service-configmap.yaml
   - common-configmap.yaml

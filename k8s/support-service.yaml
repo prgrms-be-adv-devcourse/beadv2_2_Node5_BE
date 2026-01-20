@@ -20,7 +20,7 @@ spec:
       annotations:
         reloader.stakater.com/auto: "true"
         configmap.reloader.stakater.com/reload: "common-config,support-service-config"
-        secret.reloader.stakater.com/reload: "support-secret"
+        secret.reloader.stakater.com/reload: "common-secret,support-secret"
       labels:
         app: support-service
     spec:
@@ -37,6 +37,8 @@ spec:
             - name: JAVA_TOOL_OPTIONS
               value: "-Xms128m -Xmx256m"
           envFrom:
+            - secretRef:
+                name: common-secret
             - secretRef:
                 name: support-secret
           volumeMounts:
