@@ -2,6 +2,7 @@ package com.node5.batchservice.reviewsummary.batch;
 
 
 import com.node5.batchservice.reviewsummary.application.ReviewSummaryBatchProcessService;
+import com.node5.batchservice.reviewsummary.client.SupportClient;
 import com.node5.batchservice.reviewsummary.client.dto.ReviewSummaryUpsertRequest;
 import com.node5.batchservice.reviewsummary.exception.NoReviewException;
 import com.node5.batchservice.reviewsummary.utils.PromptLoader;
@@ -15,10 +16,12 @@ import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
+import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.support.ListItemReader;
+import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -41,7 +44,11 @@ public class MonthlyReviewSummaryJobConfig {
 
 
     @Bean
-    public Job monthlyReviewSummaryJob(JobRepository jobRepository, Step monthlyReviewSummaryStep) {
+    public Job monthlyReviewSummaryJob(
+            JobRepository jobRepository,
+            Step reviewReindexStep,
+            Step monthlyReviewSummaryStep
+    ) {
         return new JobBuilder(MONTHLY_REVIEW_SUMMARY_JOB_NAME, jobRepository)
                 .validator(parameters -> {
                     if (parameters == null) {
@@ -57,7 +64,39 @@ public class MonthlyReviewSummaryJobConfig {
                         throw new JobParametersInvalidException("Invalid batchStartDate");
                     }
                 })
-                .start(monthlyReviewSummaryStep)
+                .start(reviewReindexStep)
+                .next(monthlyReviewSummaryStep)
+                .build();
+    }
+
+    @Bean
+    public Step reviewReindexStep(
+            JobRepository jobRepository,
+            PlatformTransactionManager transactionManager,
+            SupportClient supportClient
+    ) {
+        return new StepBuilder("reviewReindexStep", jobRepository)
+                .tasklet((contribution, chunkContext) -> {
+                    ExecutionContext executionContext = chunkContext.getStepContext()
+                            .getStepExecution()
+                            .getExecutionContext();
+
+                    Boolean reindexed = executionContext.get("reindexed", Boolean.class);
+
+                    if (Boolean.TRUE.equals(reindexed)) {
+                        log.info("리뷰 재인덱싱 이미 완료됨 - skip");
+                        return RepeatStatus.FINISHED;
+                    }
+
+                    try {
+                        supportClient.reindexReviewEmbeddings();
+                        executionContext.put("reindexed", true);
+                        return RepeatStatus.FINISHED;
+                    } catch (Exception e) {
+                        log.error("리뷰 재인덱싱 실패", e);
+                        throw e;
+                    }
+                }, transactionManager)
                 .build();
     }
 
