@@ -6,6 +6,6 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@EnableFeignClients(clients = {OrderClient.class, SubscriptionBatchClient.class, PaymentClient.class})
+@EnableFeignClients(clients = {OrderClient.class, PaymentClient.class})
 public class OpenFeignConfig {
 }
