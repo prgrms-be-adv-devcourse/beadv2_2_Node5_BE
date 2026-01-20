@@ -1,6 +1,6 @@
 package com.node5.batchservice.subscription.batch;
 
-import com.node5.batchservice.subscription.client.OrderSubscriptionBatchClient;
+import com.node5.batchservice.subscription.client.OrderClient;
 import com.node5.batchservice.subscription.client.dto.SubscriptionBatchTarget;
 import com.node5.common.domain.PagedResponseDto;
 import lombok.extern.slf4j.Slf4j;
@@ -13,7 +13,7 @@ import java.util.List;
 @Slf4j
 public class SubscriptionBatchTargetReader implements ItemReader<SubscriptionBatchTarget> {
 
-    private final OrderSubscriptionBatchClient orderSubscriptionBatchClient;
+    private final OrderClient orderClient;
     private final String runDate;
     private final int pageSize;
 
@@ -22,10 +22,10 @@ public class SubscriptionBatchTargetReader implements ItemReader<SubscriptionBat
     private int totalPages = Integer.MAX_VALUE;
     private List<SubscriptionBatchTarget> current = Collections.emptyList();
 
-    public SubscriptionBatchTargetReader(OrderSubscriptionBatchClient subscriptionBatchClient,
+    public SubscriptionBatchTargetReader(OrderClient orderClient,
                                          String runDate,
                                          int pageSize) {
-        this.orderSubscriptionBatchClient = subscriptionBatchClient;
+        this.orderClient = orderClient;
         this.runDate = runDate;
         this.pageSize = pageSize;
     }
@@ -38,7 +38,7 @@ public class SubscriptionBatchTargetReader implements ItemReader<SubscriptionBat
             }
 
             ResponseEntity<PagedResponseDto<SubscriptionBatchTarget>> response =
-                    orderSubscriptionBatchClient.findTargets(runDate, page, pageSize);
+                    orderClient.findTargets(runDate, page, pageSize);
             PagedResponseDto<SubscriptionBatchTarget> payload = response.getBody();
 
             if (payload == null || payload.content().isEmpty()) {
