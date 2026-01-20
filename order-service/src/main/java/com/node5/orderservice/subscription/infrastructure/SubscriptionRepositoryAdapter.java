@@ -65,7 +65,7 @@ public class SubscriptionRepositoryAdapter implements SubscriptionRepository {
         }
 
         StringBuilder sql = new StringBuilder(
-                "update subscription.\"subscription\" set next_run_date = case id"
+                "update \"order\".\"subscription\" set next_run_date = case id"
         );
         int paramIndex = 1;
         List<UUID> ids = new ArrayList<>(nextRunDates.size());
