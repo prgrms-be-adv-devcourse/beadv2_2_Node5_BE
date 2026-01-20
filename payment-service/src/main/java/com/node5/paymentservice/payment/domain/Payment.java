@@ -68,10 +68,6 @@ public class Payment extends BaseEntity {
         this.status = PaymentStatus.PENDING;
     }
 
-    public void pending_confirm() {
-        this.status = PaymentStatus.PENDING_CONFIRM;
-    }
-
     public void confirm(TossPaymentResponse tossPayment) {
         this.paymentKey = tossPayment.paymentKey();
         this.method = tossPayment.method();

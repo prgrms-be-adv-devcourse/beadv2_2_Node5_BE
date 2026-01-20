@@ -17,15 +17,12 @@ public class PaymentDepositEventProducer {
     @Value("${kafka.topics.deposit-event:payment-service.deposit-event.v1}")
     private String topic;
 
-    public void send(PaymentDepositEvent event) {
+    public void send(PaymentDepositEvent event) throws Exception {
         String key = event.orderId();
         // Kafka로 메시지 전송 로직 구현 (예: KafkaTemplate 사용)
-        kafkaTemplate.send(topic, key, event).whenComplete((result, ex) -> {
-            if (ex != null) {
-                log.error("입금 이벤트 토픽 발행 실패, key: {}, event: {}", key, event, ex);
-            } else {
-                log.info("입금 이벤트 토픽 발행 성공, key: {}, event: {}", key, event);
-            }
-        });
+        kafkaTemplate.send(topic, key, event)
+                .get(5, java.util.concurrent.TimeUnit.SECONDS);
+
+        log.info("입금 이벤트 토픽 발행 성공, key: {}", key);
     }
 }
