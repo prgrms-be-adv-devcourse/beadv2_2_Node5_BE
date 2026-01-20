@@ -42,12 +42,6 @@ server:
 api:
   v1: /api/v1
 
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health
-
 kafka:
   topics:
     subscription-order-batch-result: batch-service.subscription-order-batch-result.v1
