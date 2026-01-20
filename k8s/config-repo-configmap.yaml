@@ -145,12 +145,16 @@ data:
         producer:
           key-serializer: org.apache.kafka.common.serialization.StringSerializer
           value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+        consumer:
+          key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+          value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
     api:
       v1: /api/v1
     app:
       kafka:
         topics:
           member-deleted: member-service.member-deleted.v1
+          shop-deleted: member-service.shop-deleted.v1
           product-index: catalog-service.product-index.v1
           product-embedding: catalog-service.product-embedding.v1
           product-discontinued: catalog-service.product-discontinued.v1
