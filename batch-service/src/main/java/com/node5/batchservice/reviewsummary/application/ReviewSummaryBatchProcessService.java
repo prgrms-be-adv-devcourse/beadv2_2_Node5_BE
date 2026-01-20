@@ -1,7 +1,6 @@
 package com.node5.batchservice.reviewsummary.application;
 
 import com.node5.batchservice.reviewsummary.application.dto.ReviewContext;
-import com.node5.batchservice.reviewsummary.batch.ReviewTestData;
 import com.node5.batchservice.reviewsummary.client.LLMChatClient;
 import com.node5.batchservice.reviewsummary.client.SupportClient;
 import com.node5.batchservice.reviewsummary.client.dto.ReviewDetailInfo;
