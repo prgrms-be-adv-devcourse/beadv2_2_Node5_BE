@@ -72,7 +72,7 @@ jobs:
     needs: detect
     if: needs.detect.outputs.has_changes == 'true'
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix: ${{ fromJson(needs.detect.outputs.build_matrix) }}
     steps:
       - uses: actions/checkout@v4

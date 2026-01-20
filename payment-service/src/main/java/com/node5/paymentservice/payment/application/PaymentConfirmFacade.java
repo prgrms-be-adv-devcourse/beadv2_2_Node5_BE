@@ -6,8 +6,6 @@ import com.node5.paymentservice.payment.application.dto.PaymentConfirmCommand;
 import com.node5.paymentservice.payment.application.dto.PaymentConfirmInfo;
 import com.node5.paymentservice.payment.client.tossPayments.TossPaymentClient;
 import com.node5.paymentservice.payment.client.tossPayments.dto.TossPaymentResponse;
-import com.node5.paymentservice.payment.client.openfeign.WalletClient;
-import com.node5.paymentservice.payment.client.openfeign.dto.WalletRequest;
 import com.node5.paymentservice.payment.domain.Payment;
 import com.node5.paymentservice.payment.domain.PaymentTemporaryData;
 import com.node5.paymentservice.payment.exception.PaymentException;
@@ -26,23 +24,18 @@ import static com.node5.paymentservice.payment.exception.PaymentErrorCode.PAYMEN
 @Slf4j
 public class PaymentConfirmFacade {
     private final PaymentPendingService paymentPendingService;
-    private final PaymentPendingConfirmService paymentPendingConfirmService;
     private final PaymentConfirmService paymentConfirmService;
 
     private final StringRedisTemplate stringRedisTemplate;
     private final ObjectMapper objectMapper;
     private final TossPaymentClient tossPaymentClient;
-    private final WalletClient walletClient;
 
     public PaymentConfirmInfo confirm(UUID memberId, PaymentConfirmCommand command) {
         // Redis에서 결제 임시 데이터 조회
         PaymentTemporaryData paymentTemporaryData = loadToRedis(memberId, command.orderId(), command.amount());
 
-        // 결제 정보 저장 및 예치금 입금 요청 저장
+        // 결제 정보 저장
         UUID paymentId = paymentPendingService.pendingPaymentProcessing(paymentTemporaryData);
-
-        // 결제 상태 수정(pending_confirm)
-        paymentPendingConfirmService.pendingConfirmPaymentProcessing(paymentId);
 
         // 토스페이먼츠 결제 승인 요청
         TossPaymentResponse tossPayment = confirmTossPayments(command, paymentTemporaryData);
