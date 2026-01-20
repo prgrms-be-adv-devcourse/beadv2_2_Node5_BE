@@ -20,7 +20,6 @@ import static com.node5.paymentservice.payment.exception.PaymentErrorCode.PAYMEN
 @Slf4j
 public class PaymentPendingService {
     private final PaymentRepository paymentRepository;
-    private final WalletClient walletClient;
 
     @Transactional
     public UUID pendingPaymentProcessing(PaymentTemporaryData paymentTemporaryData) {
@@ -31,21 +30,7 @@ public class PaymentPendingService {
                 .amount(paymentTemporaryData.getAmount())
                 .build();
         paymentRepository.save(payment);
-
-        // 예치금 입금 기록하는 openfeign 동기 통신
-        try {
-            WalletRequest walletDepositRequest = new WalletRequest(
-                    paymentTemporaryData.getMemberId(),
-                    paymentTemporaryData.getOrderId(),
-                    paymentTemporaryData.getAmount()
-            );
-            walletClient.depositRequest(walletDepositRequest);
-            return payment.getId();
-        } catch (PaymentException e) {
-            log.error("[Wallet Deposit Error] MemberId: {} OrderId: {}, Error: {}",
-                    paymentTemporaryData.getMemberId(), paymentTemporaryData.getOrderId(), e.getMessage()
-            );
-            throw new PaymentException(PAYMENT_WALLET_DEPOSIT_FAILED); //예치금 입금 요청 실패
-        }
+        log.info("Payment record created with ID: {}", payment.getId());
+        return payment.getId();
     }
 }

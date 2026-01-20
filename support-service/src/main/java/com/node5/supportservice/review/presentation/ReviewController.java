@@ -78,8 +78,8 @@ public class ReviewController {
     }
 
     @Operation(summary = "상품 리뷰 작성 상태 조회", description = "회원이 해당 상품에 대해 리뷰를 작성했는지 조회한다.")
-    @GetMapping("/{productId}/reviewed")
-    public ResponseEntity<ReviewStatusInfo> hasMemberReviewedProduct(@RequestHeader("Member-Id") UUID memberId, @RequestBody ReviewStatusRequest request) {
-        return ResponseEntity.ok(reviewService.hasMemberReviewedProduct(memberId, request.toCommand()));
+    @GetMapping("/{orderId}/{productId}/reviewed")
+    public ResponseEntity<ReviewStatusInfo> hasMemberReviewedProduct(@RequestHeader("Member-Id") UUID memberId, @PathVariable UUID orderId, @PathVariable UUID productId) {
+        return ResponseEntity.ok(reviewService.hasMemberReviewedProduct(memberId, orderId, productId));
     }
 }
