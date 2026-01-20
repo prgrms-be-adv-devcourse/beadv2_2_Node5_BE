@@ -20,7 +20,7 @@ public record OAuthRegisterRequest(
         @NotBlank(message = "nickname은 필수 입니다.")
         String nickname,
         @Pattern(
-                regexp = "^01[0-9]{8,9}$",
+                regexp = "^(01[0-9]{8,9}|0[2-6][0-9]{7,8})$",
                 message = "phoneNumber 형식이 올바르지 않습니다."
         )
         @NotBlank(message = "phoneNumber은 필수 입니다.")
