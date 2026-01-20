@@ -17,7 +17,7 @@ import java.util.UUID;
 public interface CatalogClient {
 
     // productId <-> shopId 매핑
-    @PostMapping("/api/v1/products/shop-ids")
+    @PostMapping("/internal/products/shop-ids")
     ResponseEntity<Map<UUID, UUID>> getShopIdsByProductIds(@RequestBody List<UUID> productIds);
 
     // 재고 선점

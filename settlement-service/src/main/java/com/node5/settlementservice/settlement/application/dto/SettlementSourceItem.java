@@ -9,6 +9,6 @@ public record SettlementSourceItem(
         UUID shopId,
         UUID orderId,
         BigDecimal itemAmount,
-        LocalDateTime paidAt
+        LocalDateTime createdAt
 ) {
 }

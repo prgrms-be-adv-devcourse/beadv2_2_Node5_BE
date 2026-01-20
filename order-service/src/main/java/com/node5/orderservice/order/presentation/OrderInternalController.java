@@ -40,4 +40,12 @@ public class OrderInternalController {
         return ResponseEntity.ok(orderInternalService.hasInProgressOrder(memberId));
     }
 
+    // 정산 대기 중인 주문 조회
+    @PostMapping("/settlement-pending")
+    public ResponseEntity<Boolean> hasInProgressSettlementPending(
+            @RequestBody List<UUID> productIds
+    ) {
+        return ResponseEntity.ok(orderInternalService.hasInProgressSettlementPending(productIds));
+    }
+
 }

@@ -1,5 +1,6 @@
 package com.node5.settlementservice.settlement.infrastructure;
 
+import com.node5.settlementservice.settlement.domain.SettlementProcessStatus;
 import com.node5.settlementservice.settlement.domain.SettlementSource;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -27,4 +28,6 @@ public interface SettlementSourceJpaRepository extends JpaRepository<SettlementS
             @Param("start") LocalDateTime startDateTime,
             @Param("end") LocalDateTime endDateTime
     );
+
+    boolean existsByShopIdInAndStatus(List<UUID> shopIdList, SettlementProcessStatus processStatus);
 }

@@ -56,4 +56,5 @@ public interface OrderItemJpaRepository extends JpaRepository<OrderItem, UUID> {
             "WHERE oi.id IN :orderItemIds")
     void updateSettlementStatus(@Param("orderItemIds") List<UUID> orderItemIds, @Param("settlementStatus") OrderItemSettlementStatus settlementStatus);
 
+    Boolean existsByProductIdInAndSettlementStatus(List<UUID> productIds, OrderItemSettlementStatus settlementStatus);
 }
