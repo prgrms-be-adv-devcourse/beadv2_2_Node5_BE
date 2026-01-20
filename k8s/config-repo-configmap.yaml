@@ -421,21 +421,37 @@ data:
         driver-class-name: org.postgresql.Driver
         username: ${SPRING_DATASOURCE_USERNAME}
         password: ${SPRING_DATASOURCE_PASSWORD}
+        hikari:
+          schema: batch
+      jackson:
+        time-zone: Asia/Seoul
+      jpa:
+        hibernate:
+          ddl-auto: validate
+        show-sql: true
+        properties:
+          hibernate:
+            default_schema: batch
+            format_sql: true
+            jdbc:
+              time_zone: Asia/Seoul
       batch:
-        jdbc:
-          initialize-schema: always
-          schema: public
         job:
           enabled: false
-      kafka:
-        bootstrap-servers: ${KAFKA_HOST}:9092
-        producer:
-          key-serializer: org.apache.kafka.common.serialization.StringSerializer
-          value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+        jdbc:
+          initialize-schema: always
+          table-prefix: batch.BATCH_
       task:
         scheduling:
           cron:
             subscription-order: ${SUBSCRIPTION_ORDER_CRON}
+      kafka:
+        bootstrap-servers: ${KAFKA_HOST}:9092
+        listener:
+          ack-mode: manual
+        producer:
+          key-serializer: org.apache.kafka.common.serialization.StringSerializer
+          value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
     api:
       v1: /api/v1
     management:
