@@ -1,4 +1,4 @@
-package com.node5.supportservice.reviewsummary.batch;
+package com.node5.batchservice.reviewsummary.batch;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
