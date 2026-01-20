@@ -1,4 +1,4 @@
-package com.node5.orderservice.global.exception.openfeign.client;
+package com.node5.orderservice.global.openfeign.client;
 
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;

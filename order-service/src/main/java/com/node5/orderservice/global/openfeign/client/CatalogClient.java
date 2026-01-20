@@ -1,6 +1,6 @@
-package com.node5.orderservice.global.exception.openfeign.client;
+package com.node5.orderservice.global.openfeign.client;
 
-import com.node5.orderservice.global.exception.openfeign.client.dto.*;
+import com.node5.orderservice.global.openfeign.client.dto.*;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

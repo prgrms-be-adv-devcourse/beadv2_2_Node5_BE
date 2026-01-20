@@ -1,8 +1,8 @@
-package com.node5.orderservice.global.exception.openfeign.client;
+package com.node5.orderservice.global.openfeign.client;
 
-import com.node5.orderservice.global.exception.openfeign.client.dto.WalletInfo;
-import com.node5.orderservice.global.exception.openfeign.client.dto.WalletRefundRequest;
-import com.node5.orderservice.global.exception.openfeign.client.dto.WalletWithdrawRequest;
+import com.node5.orderservice.global.openfeign.client.dto.WalletInfo;
+import com.node5.orderservice.global.openfeign.client.dto.WalletRefundRequest;
+import com.node5.orderservice.global.openfeign.client.dto.WalletWithdrawRequest;
 import jakarta.validation.Valid;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;

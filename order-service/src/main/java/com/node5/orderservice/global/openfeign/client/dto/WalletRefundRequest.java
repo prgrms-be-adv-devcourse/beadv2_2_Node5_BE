@@ -1,4 +1,4 @@
-package com.node5.orderservice.global.exception.openfeign.client.dto;
+package com.node5.orderservice.global.openfeign.client.dto;
 
 import java.util.UUID;
 

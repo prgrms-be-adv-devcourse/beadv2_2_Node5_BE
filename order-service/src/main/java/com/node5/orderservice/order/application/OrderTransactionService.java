@@ -1,7 +1,7 @@
 package com.node5.orderservice.order.application;
 
-import com.node5.orderservice.global.exception.openfeign.client.CatalogClient;
-import com.node5.orderservice.global.exception.openfeign.client.SettlementClient;
+import com.node5.orderservice.global.openfeign.client.CatalogClient;
+import com.node5.orderservice.global.openfeign.client.SettlementClient;
 import com.node5.orderservice.order.domain.*;
 import com.node5.orderservice.order.exception.OrderException;
 import jakarta.transaction.Transactional;

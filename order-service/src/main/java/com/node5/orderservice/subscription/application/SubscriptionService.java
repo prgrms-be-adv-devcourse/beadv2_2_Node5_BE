@@ -1,11 +1,11 @@
 package com.node5.orderservice.subscription.application;
 
-import com.node5.orderservice.global.exception.openfeign.client.CatalogClient;
+import com.node5.orderservice.global.openfeign.client.CatalogClient;
 import com.node5.orderservice.subscription.application.dto.SubscriptionCreateCommand;
 import com.node5.orderservice.subscription.application.dto.SubscriptionInfo;
 import com.node5.orderservice.subscription.application.dto.SubscriptionUpdateCommand;
-import com.node5.orderservice.global.exception.openfeign.client.MemberClient;
-import com.node5.orderservice.global.exception.openfeign.client.dto.ProductInfoResponse;
+import com.node5.orderservice.global.openfeign.client.MemberClient;
+import com.node5.orderservice.global.openfeign.client.dto.ProductInfoResponse;
 import com.node5.orderservice.subscription.domain.*;
 import com.node5.orderservice.subscription.exception.SubscriptionException;
 import feign.FeignException;
