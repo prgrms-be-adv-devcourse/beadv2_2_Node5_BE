@@ -2,7 +2,6 @@ package com.node5.memberservice.auth.application.dto;
 
 import com.node5.memberservice.member.domain.Member;
 
-import java.util.List;
 import java.util.UUID;
 
 public record LoginInfoResponse(
@@ -33,11 +32,10 @@ public record LoginInfoResponse(
     public record MemberInfo(
             UUID id,
             String name,
-            String status,
-            List<String> roles
+            String nickname
     ) {
         public MemberInfo(Member member) {
-            this(member.getId(), member.getName(), member.getStatus().name(), member.getRoles().stream().map(Enum::name).toList());
+            this(member.getId(), member.getName(), member.getNickname());
         }
     }
 }

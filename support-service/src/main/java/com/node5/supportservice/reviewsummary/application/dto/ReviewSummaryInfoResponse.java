@@ -8,12 +8,8 @@ public record ReviewSummaryInfoResponse(
         LocalDateTime summarizedAt,
         String summary
 ) {
-    public static ReviewSummaryInfoResponse empty() {
-        return new ReviewSummaryInfoResponse(null, null);
-    }
 
     public static ReviewSummaryInfoResponse from(ReviewSummary reviewSummary) {
         return new ReviewSummaryInfoResponse(reviewSummary.getModifiedAt(), reviewSummary.getSummary());
     }
-
 }

@@ -1,0 +1,101 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wallet-service
+  labels:
+    app: wallet-service
+spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  replicas: 1
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      app: wallet-service
+  template:
+    metadata:
+      annotations:
+        reloader.stakater.com/auto: "true"
+        configmap.reloader.stakater.com/reload: "common-config,wallet-service-config"
+        secret.reloader.stakater.com/reload: "common-secret,wallet-secret"
+      labels:
+        app: wallet-service
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: wallet-service
+          image: node5dev/wallet-service:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: prod
+            - name: JAVA_TOOL_OPTIONS
+              value: "-Xms128m -Xmx256m"
+          envFrom:
+            - secretRef:
+                name: common-secret
+            - secretRef:
+                name: wallet-secret
+          volumeMounts:
+            - name: config
+              mountPath: /config
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          startupProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 60
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 6
+      volumes:
+        - name: config
+          projected:
+            sources:
+              - configMap:
+                  name: common-config
+              - configMap:
+                  name: wallet-service-config
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wallet-service
+  labels:
+    app: wallet-service
+spec:
+  type: ClusterIP
+  selector:
+    app: wallet-service
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080

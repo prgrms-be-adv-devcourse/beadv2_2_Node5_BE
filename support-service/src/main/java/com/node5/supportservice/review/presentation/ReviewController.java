@@ -4,7 +4,9 @@ import com.node5.supportservice.review.application.ReviewService;
 import com.node5.supportservice.review.application.dto.ReviewDetailInfo;
 import com.node5.supportservice.review.application.dto.ReviewIdInfo;
 import com.node5.supportservice.review.application.dto.ReviewInfo;
+import com.node5.supportservice.review.application.dto.ReviewStatusInfo;
 import com.node5.supportservice.review.presentation.dto.ReviewCreateRequest;
+import com.node5.supportservice.review.presentation.dto.ReviewStatusRequest;
 import com.node5.supportservice.review.presentation.dto.ReviewUpdateRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
@@ -73,5 +75,11 @@ public class ReviewController {
     public ResponseEntity<ReviewIdInfo> likeReview(@RequestHeader("Member-Id") UUID memberId,
                                                    @PathVariable UUID reviewId) {
         return ResponseEntity.ok(reviewService.likeReview(memberId, reviewId));
+    }
+
+    @Operation(summary = "상품 리뷰 작성 상태 조회", description = "회원이 해당 상품에 대해 리뷰를 작성했는지 조회한다.")
+    @GetMapping("/{orderId}/{productId}/reviewed")
+    public ResponseEntity<ReviewStatusInfo> hasMemberReviewedProduct(@RequestHeader("Member-Id") UUID memberId, @PathVariable UUID orderId, @PathVariable UUID productId) {
+        return ResponseEntity.ok(reviewService.hasMemberReviewedProduct(memberId, orderId, productId));
     }
 }

@@ -6,7 +6,6 @@
 
 - `.env` (공통/기본 값)
 - `member-service/.env`
-- `subscription-service/.env`
 - `shop-service/.env`
 - `env/.env.billing` (현재 비어 있음)
 
@@ -23,7 +22,7 @@
 Minikube와 k3s 모두 동일한 리소스를 만든다. 실행 커맨드만 다르다.
 
 - 공통 Secret 예시: `.env`
-- 서비스 전용 Secret 예시: `member-service/.env`, `subscription-service/.env`, `shop-service/.env`
+- 서비스 전용 Secret 예시: `member-service/.env`, `shop-service/.env`
 
 ### 2) Deployment에 envFrom 추가
 
@@ -61,10 +60,6 @@ $KUBECTL create secret generic member-service-env \
   --from-env-file=member-service/.env \
   -o yaml --dry-run=client | $KUBECTL apply -f -
 
-$KUBECTL create secret generic subscription-service-env \
-  --from-env-file=subscription-service/.env \
-  -o yaml --dry-run=client | $KUBECTL apply -f -
-
 $KUBECTL create secret generic shop-service-env \
   --from-env-file=shop-service/.env \
   -o yaml --dry-run=client | $KUBECTL apply -f -
@@ -90,10 +85,6 @@ $KUBECTL create secret generic common-env \
 
 $KUBECTL create secret generic member-service-env \
   --from-env-file=member-service/.env \
-  -o yaml --dry-run=client | $KUBECTL apply -f -
-
-$KUBECTL create secret generic subscription-service-env \
-  --from-env-file=subscription-service/.env \
   -o yaml --dry-run=client | $KUBECTL apply -f -
 
 $KUBECTL create secret generic shop-service-env \

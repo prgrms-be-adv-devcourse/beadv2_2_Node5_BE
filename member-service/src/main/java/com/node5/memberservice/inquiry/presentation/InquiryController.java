@@ -4,6 +4,7 @@ import com.node5.memberservice.inquiry.application.InquiryService;
 import com.node5.memberservice.inquiry.application.dto.InquiryInfoResponse;
 import com.node5.memberservice.inquiry.application.dto.InquiryListResponse;
 import com.node5.memberservice.inquiry.presentation.dto.InquiryRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -41,7 +42,7 @@ public class InquiryController {
     @PostMapping
     public ResponseEntity<Void> createInquiry(
             @RequestHeader("Member-Id") UUID memberId,
-            @RequestBody InquiryRequest request
+            @Valid @RequestBody InquiryRequest request
     ) {
         inquiryService.createInquiry(memberId, request.toCommand());
         return ResponseEntity.status(HttpStatus.CREATED).build();
@@ -51,7 +52,7 @@ public class InquiryController {
     public ResponseEntity<Void> modifyInquiry(
             @RequestHeader("Member-Id") UUID memberId,
             @PathVariable UUID inquiryId,
-            @RequestBody InquiryRequest request
+            @Valid @RequestBody InquiryRequest request
     ) {
         inquiryService.modifyInquiry(memberId, inquiryId, request.toCommand());
         return ResponseEntity.ok().build();

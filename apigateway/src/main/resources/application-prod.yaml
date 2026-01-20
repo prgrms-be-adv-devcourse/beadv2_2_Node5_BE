@@ -1,7 +1,9 @@
 spring:
   config:
-    import: optional:configserver:http://config-service:8888
+    import: optional:file:/config/application.yml
   cloud:
+    config:
+      enabled: false
     gateway:
       server:
         webflux:
@@ -12,37 +14,18 @@ spring:
                 - Path=/catalog-service/**
               filters:
                 - RewritePath=/catalog-service/(?<segment>.*), /$\{segment}
-            - id: shop-service
-              uri: lb://SHOP-SERVICE
-              predicates:
-                - Path=/shop-service/api/v1/**, /shop-service/v3/api-docs/**
-              filters:
-                - RewritePath=/shop-service/(?<segment>.*), /$\{segment}
             - id: member-service
               uri: lb://MEMBER-SERVICE
               predicates:
                 - Path=/member-service/api/v1/**, /member-service/v3/api-docs/**
               filters:
                 - RewritePath=/member-service/(?<segment>.*), /$\{segment}
-            - id: billing-service
-              uri: lb://BILLING-SERVICE
-              predicates:
-                - Path=/billing-service/**
-              filters:
-                - RewritePath=/billing-service/(?<segment>.*), /$\{segment}
-            - id: subscription-service
-              uri: lb://SUBSCRIPTION-SERVICE
-              predicates:
-                - Path=/subscription-service/**
-              filters:
-                - RewritePath=/subscription-service/(?<segment>.*), /$\{segment}
             - id: settlement-service
               uri: lb://SETTLEMENT-SERVICE
               predicates:
                 - Path=/settlement-service/**
               filters:
                 - RewritePath=/settlement-service/(?<segment>.*), /$\{segment}
-                - RewritePath=/subscription-service/(?<segment>.*), /$\{segment}
             - id: order-service
               uri: lb://ORDER-SERVICE
               predicates:
@@ -55,6 +38,24 @@ spring:
                 - Path=/support-service/**
               filters:
                 - RewritePath=/support-service/(?<segment>.*), /$\{segment}
+            - id: payment-service
+              uri: lb://PAYMENT-SERVICE
+              predicates:
+                - Path=/payment-service/**
+              filters:
+                - RewritePath=/payment-service/(?<segment>.*), /$\{segment}
+            - id: wallet-service
+              uri: lb://WALLET-SERVICE
+              predicates:
+                - Path=/wallet-service/**
+              filters:
+                - RewritePath=/wallet-service/(?<segment>.*), /$\{segment}
+            - id: batch-service
+              uri: lb://BATCH-SERVICE
+              predicates:
+                - Path=/batch-service/**
+              filters:
+                - RewritePath=/batch-service/(?<segment>.*), /$\{segment}
           default-filters:
             - name: GlobalFilter
               args:

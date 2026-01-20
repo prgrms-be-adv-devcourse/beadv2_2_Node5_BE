@@ -54,7 +54,7 @@ public class InquiryService {
         Inquiry inquiry = inquiryRepository.findByIdAndMemberId(inquiryId, memberId).orElseThrow(
                 () -> new InquiryException(InquiryErrorCode.INQUIRY_NOT_FOUND)
         );
-        if (inquiry.getStatus() == InquiryStatus.ANSWERED) {
+        if (inquiry.isStatus(InquiryStatus.ANSWERED)) {
             throw new InquiryException(InquiryErrorCode.INQUIRY_ALREADY_ANSWERED);
         }
 
@@ -89,7 +89,7 @@ public class InquiryService {
                 () -> new InquiryException(InquiryErrorCode.INQUIRY_NOT_FOUND)
         );
 
-        if(inquiry.getStatus() == InquiryStatus.ANSWERED) {
+        if(inquiry.isStatus(InquiryStatus.ANSWERED)) {
             throw new InquiryException(InquiryErrorCode.INQUIRY_ALREADY_ANSWERED);
         }
 

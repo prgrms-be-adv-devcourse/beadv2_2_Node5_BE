@@ -24,6 +24,6 @@ public interface CatalogClient {
     @GetMapping("/internal/products/ids")
     ResponseEntity<List<UUID>> getProductIds(Pageable pageable);
 
-    @GetMapping("${api.v1}/products/{productId}/review-status")
+    @GetMapping("/internal/products/{productId}/review-status")
     ProductStatusResponse canPostReview(@PathVariable UUID productId);
 }

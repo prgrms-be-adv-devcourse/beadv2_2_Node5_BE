@@ -14,17 +14,17 @@ import org.springframework.transaction.annotation.Transactional;
 import com.node5.catalogservice.product.application.dto.ProductCommand;
 import com.node5.catalogservice.product.application.dto.ProductInfo;
 import com.node5.catalogservice.product.application.dto.ProductUpdateCommand;
+import com.node5.catalogservice.product.application.mapper.ProductEmbeddingEventMapper;
+import com.node5.catalogservice.product.application.mapper.ProductIndexEventMapper;
 import com.node5.catalogservice.product.application.port.ProductDiscontinuedEventPort;
 import com.node5.catalogservice.product.application.port.ProductEmbeddingEventPort;
 import com.node5.catalogservice.product.application.port.ProductIndexEventPort;
 import com.node5.catalogservice.product.domain.Product;
 import com.node5.catalogservice.product.domain.ProductRepository;
 import com.node5.catalogservice.product.domain.ProductStatus;
-import com.node5.catalogservice.product.event.ProductIndexEvent;
 import com.node5.catalogservice.product.exception.ProductErrorCode;
 import com.node5.catalogservice.shop.client.ShopOwnershipClient;
 import com.node5.common.event.ProductDiscontinuedEvent;
-import com.node5.common.event.ProductEmbeddingEvent;
 import com.node5.common.exception.BaseException;
 
 import feign.FeignException;
@@ -64,8 +64,8 @@ public class ProductService {
 		);
 
 		Product saved = productRepository.save(product);
-		productIndexEventPort.publish(ProductIndexEvent.create(saved));
-		productEmbeddingEventPort.publish(toEmbeddingEvent(saved));
+		productIndexEventPort.publish(ProductIndexEventMapper.forCreate(saved));
+		productEmbeddingEventPort.publish(ProductEmbeddingEventMapper.from(saved));
 		return ProductInfo.from(saved);
 	}
 
@@ -83,8 +83,8 @@ public class ProductService {
 		);
 
 		Product saved = productRepository.save(product);
-		productIndexEventPort.publish(ProductIndexEvent.update(saved));
-		productEmbeddingEventPort.publish(toEmbeddingEvent(saved));
+		productIndexEventPort.publish(ProductIndexEventMapper.forUpdate(saved));
+		productEmbeddingEventPort.publish(ProductEmbeddingEventMapper.from(saved));
 		return ProductInfo.from(saved);
 	}
 
@@ -96,8 +96,8 @@ public class ProductService {
 		product.changeStatus(status);
 
 		Product saved = productRepository.save(product);
-		productIndexEventPort.publish(ProductIndexEvent.update(saved));
-		productEmbeddingEventPort.publish(toEmbeddingEvent(saved));
+		productIndexEventPort.publish(ProductIndexEventMapper.forUpdate(saved));
+		productEmbeddingEventPort.publish(ProductEmbeddingEventMapper.from(saved));
 		return ProductInfo.from(saved);
 	}
 
@@ -109,8 +109,8 @@ public class ProductService {
 		product.discontinue();
 
 		Product saved = productRepository.save(product);
-		productIndexEventPort.publish(ProductIndexEvent.update(saved));
-		productEmbeddingEventPort.publish(toEmbeddingEvent(saved));
+		productIndexEventPort.publish(ProductIndexEventMapper.forUpdate(saved));
+		productEmbeddingEventPort.publish(ProductEmbeddingEventMapper.from(saved));
 
 		productDiscontinuedEventPort.publish(
 			new ProductDiscontinuedEvent(
@@ -187,18 +187,5 @@ public class ProductService {
 		} catch (FeignException e) {
 			throw new BaseException(ProductErrorCode.SHOP_SERVICE_UNAVAILABLE);
 		}
-	}
-
-	private ProductEmbeddingEvent toEmbeddingEvent(Product product) {
-		return new ProductEmbeddingEvent(
-			UUID.randomUUID(),
-			product.getId(),
-			product.getName(),
-			product.getDescription(),
-			product.getCategory().name(),
-			product.getStatus().name(),
-			product.getModifiedAt(),
-			LocalDateTime.now()
-		);
 	}
 }

@@ -1,0 +1,101 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: batch-service
+  labels:
+    app: batch-service
+spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  replicas: 1
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      app: batch-service
+  template:
+    metadata:
+      annotations:
+        reloader.stakater.com/auto: "true"
+        configmap.reloader.stakater.com/reload: "common-config,batch-service-config"
+        secret.reloader.stakater.com/reload: "common-secret,batch-secret"
+      labels:
+        app: batch-service
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: batch-service
+          image: node5dev/batch-service:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: prod
+            - name: JAVA_TOOL_OPTIONS
+              value: "-Xms128m -Xmx256m"
+          envFrom:
+            - secretRef:
+                name: common-secret
+            - secretRef:
+                name: batch-secret
+          volumeMounts:
+            - name: config
+              mountPath: /config
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          startupProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 60
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 6
+      volumes:
+        - name: config
+          projected:
+            sources:
+              - configMap:
+                  name: common-config
+              - configMap:
+                  name: batch-service-config
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: batch-service
+  labels:
+    app: batch-service
+spec:
+  type: ClusterIP
+  selector:
+    app: batch-service
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080

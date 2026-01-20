@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.node5.memberservice.auth.exception.AuthErrorCode;
 import com.node5.memberservice.auth.exception.AuthException;
 import com.node5.memberservice.auth.oauth.dto.OAuthUserInfo;
-import com.node5.memberservice.auth.util.JwtProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -19,7 +18,6 @@ import java.util.concurrent.TimeUnit;
 public class RedisService {
 
     private final StringRedisTemplate stringRedisTemplate;
-    private final JwtProvider jwtProvider;
     private final ObjectMapper objectMapper;
 
     private static final String REFRESH_TOKEN_KEY_PREFIX = "refresh:";
@@ -27,9 +25,9 @@ public class RedisService {
     private static final String EMAIL_VERIFY_CODE_KEY_PREFIX = "email:verify:";
     private static final String OAUTH_TEMP_KEY_PREFIX = "oauth:temp:";
 
-    public void saveRefreshToken(UUID memberId, String refreshToken) {
+    public void saveRefreshToken(UUID memberId, String refreshToken, long expirationTime) {
         String key = REFRESH_TOKEN_KEY_PREFIX + memberId;
-        stringRedisTemplate.opsForValue().set(key, refreshToken, jwtProvider.getRefreshTokenExpiration(), TimeUnit.MILLISECONDS);
+        stringRedisTemplate.opsForValue().set(key, refreshToken, expirationTime, TimeUnit.MILLISECONDS);
     }
 
     public String getRefreshToken(UUID memberId) {
