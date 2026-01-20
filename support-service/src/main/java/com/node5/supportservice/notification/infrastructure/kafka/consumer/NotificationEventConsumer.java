@@ -20,7 +20,7 @@ public class NotificationEventConsumer {
         ack.acknowledge();
     }
 
-    @KafkaListener(topics = "${kafka.topics.subscription-status-changed:subscription-service.subscription-status-changed.v1}")
+    @KafkaListener(topics = "${kafka.topics.subscription-status-changed:order-service.subscription-status-changed.v1}")
     public void subscriptionStatusChangedConsume(SubscriptionStatusChangedEvent event, Acknowledgment ack) {
         notificationHandler.subscriptionStatusChangedHandle(event);
         ack.acknowledge();
