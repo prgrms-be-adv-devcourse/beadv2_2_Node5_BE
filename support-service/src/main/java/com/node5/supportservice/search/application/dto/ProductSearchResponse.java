@@ -12,7 +12,8 @@ public record ProductSearchResponse(
 	String thumbnailKey,
 	Long price,
 	String status,
-	LocalDateTime createdAt
+	LocalDateTime createdAt,
+	Boolean isSponsored
 ) {
 
 	public static ProductSearchResponse from(ProductDocument doc) {
@@ -24,7 +25,8 @@ public record ProductSearchResponse(
 			doc.getThumbnailKey(),
 			doc.getPrice(),
 			doc.getStatus(),
-			LocalDateTime.parse(doc.getCreatedAt())
+			LocalDateTime.parse(doc.getCreatedAt()),
+			Boolean.TRUE.equals(doc.getIsSponsored())
 		);
 	}
 }
