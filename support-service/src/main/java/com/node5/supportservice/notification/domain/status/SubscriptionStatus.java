@@ -49,8 +49,8 @@ public enum SubscriptionStatus {
         public NotificationMessage message(SubscriptionStatusChangedEvent event) {
             return new SubscriptionStatusNotificationMessage(
                     event.memberId(),
-                    "구독 실패",
-                    "상품 구독에 실패했습니다."
+                    "구독 결제 실패",
+                    "상품 구독 결제 실패했습니다."
             );
         }
     },
@@ -70,6 +70,21 @@ public enum SubscriptionStatus {
         }
     },
     UNAVAILABLE {
+        @Override
+        public Set<NotificationChannel> channels() {
+            return Set.of(NotificationChannel.EMAIL);
+        }
+
+        @Override
+        public NotificationMessage message(SubscriptionStatusChangedEvent event) {
+            return new SubscriptionStatusNotificationMessage(
+                    event.memberId(),
+                    "구독 불가능",
+                    "상품 구독이 일시적으로 불가능하게 되었습니다."
+            );
+        }
+    },
+    TERMINATED {
         @Override
         public Set<NotificationChannel> channels() {
             return Set.of(NotificationChannel.EMAIL);
