@@ -24,6 +24,8 @@ spec:
       labels:
         app: apigateway
     spec:
+      nodeSelector:
+        type: node5-master
       terminationGracePeriodSeconds: 30
       containers:
         - name: apigateway

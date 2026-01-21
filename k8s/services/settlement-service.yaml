@@ -21,6 +21,8 @@ spec:
       labels:
         app: settlement-service
     spec:
+      nodeSelector:
+        type: node5-worker
       containers:
         - name: settlement-service
           image: node5dev/settlement-service:latest
