@@ -143,7 +143,7 @@ public class SubscriptionInternalService {
                 subscription.getDeliveryAddress(),
                 subscription.getProductId(),
                 subscription.getProductName(),
-                subscription.getThumbnailUrl(),
+                subscription.getThumbnailKey(),
                 subscription.getPricePerItem(),
                 subscription.getQuantity(),
                 subscription.getTotalPrice()
