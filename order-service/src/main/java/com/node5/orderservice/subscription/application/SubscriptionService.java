@@ -66,7 +66,7 @@ public class SubscriptionService {
                 productInfo.id(),
                 productInfo.shopId(),
                 productInfo.name(),
-                productInfo.thumbnailUrl(),
+                productInfo.thumbnailKey(),
                 productInfo.price(),
                 command.quantity(),
                 command.deliveryAddress()

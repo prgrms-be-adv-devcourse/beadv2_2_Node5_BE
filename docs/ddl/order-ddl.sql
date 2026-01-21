@@ -42,7 +42,7 @@ CREATE TABLE "order".subscription (
 
 	product_id UUID NOT NULL,
 	product_name VARCHAR(100),
-	thumbnail_url VARCHAR,
+	thumbnail_key VARCHAR,
 	price_per_item NUMERIC(38, 2) NOT NULL,
 	quantity INTEGER NOT NULL DEFAULT 1,
 	total_price NUMERIC(38, 2),
@@ -70,7 +70,7 @@ COMMENT ON COLUMN "order".subscription.member_id IS '회원 ID';
 COMMENT ON COLUMN "order".subscription.shop_id IS '상점 ID';
 COMMENT ON COLUMN "order".subscription.product_id IS '상품 ID';
 COMMENT ON COLUMN "order".subscription.product_name IS '상품명';
-COMMENT ON COLUMN "order".subscription.thumbnail_url IS '상품 이미지 url';
+COMMENT ON COLUMN "order".subscription.thumbnail_key IS '상품 이미지 url';
 COMMENT ON COLUMN "order".subscription.price_per_item IS '단가';
 COMMENT ON COLUMN "order".subscription.quantity IS '수량';
 COMMENT ON COLUMN "order".subscription.total_price IS '총 금액';

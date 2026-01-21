@@ -38,8 +38,8 @@ public class Subscription extends BaseEntity {
     @Column(nullable = false, length = 100)
     private String productName;
 
-    @Column(name = "thumbnail_url")
-    private String thumbnailUrl;
+    @Column(name = "thumbnail_key")
+    private String thumbnailKey;
 
     @Column(name = "price_per_item", nullable = false)
     private BigDecimal pricePerItem;
@@ -71,7 +71,7 @@ public class Subscription extends BaseEntity {
                         UUID productId,
                         UUID shopId,
                         String productName,
-                        String thumbnailUrl,
+                        String thumbnailKey,
                         BigDecimal pricePerItem,
                         Integer quantity,
                         BigDecimal totalPrice,
@@ -83,7 +83,7 @@ public class Subscription extends BaseEntity {
         this.productId = productId;
         this.shopId = shopId;
         this.productName = productName;
-        this.thumbnailUrl = thumbnailUrl;
+        this.thumbnailKey = thumbnailKey;
         this.pricePerItem = pricePerItem;
         this.quantity = quantity;
         this.totalPrice = totalPrice;
@@ -97,7 +97,7 @@ public class Subscription extends BaseEntity {
                                 UUID productId,
                                 UUID shopId,
                                 String productName,
-                                String thumbnailUrl,
+                                String thumbnailKey,
                                 BigDecimal pricePerItem,
                                 Integer quantity,
                                 String deliveryAddress){
@@ -108,7 +108,7 @@ public class Subscription extends BaseEntity {
                 productId,
                 shopId,
                 productName,
-                thumbnailUrl,
+                thumbnailKey,
                 pricePerItem,
                 quantity,
                 totalPrice,

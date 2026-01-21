@@ -13,7 +13,7 @@ public record ProductInfoResponse(
         Integer stock,
         String status,
         String category,
-        String thumbnailUrl,
+        String thumbnailKey,
         LocalDateTime createdAt,
         LocalDateTime modifiedAt
 ) {
