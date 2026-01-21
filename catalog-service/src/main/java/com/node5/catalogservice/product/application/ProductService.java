@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.node5.catalogservice.client.ShopOwnershipPort;
 import com.node5.catalogservice.product.application.dto.ProductCommand;
 import com.node5.catalogservice.product.application.dto.ProductInfo;
 import com.node5.catalogservice.product.application.dto.ProductUpdateCommand;
@@ -20,11 +21,9 @@ import com.node5.catalogservice.product.domain.Product;
 import com.node5.catalogservice.product.domain.ProductRepository;
 import com.node5.catalogservice.product.domain.ProductStatus;
 import com.node5.catalogservice.product.exception.ProductErrorCode;
-import com.node5.catalogservice.shop.client.ShopOwnershipClient;
 import com.node5.common.event.ProductDiscontinuedEvent;
 import com.node5.common.exception.BaseException;
 
-import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -35,7 +34,7 @@ public class ProductService {
 	private final ProductIndexEventPort productIndexEventPort;
 	private final ProductEmbeddingEventPort productEmbeddingEventPort;
 	private final ProductDiscontinuedEventPort productDiscontinuedEventPort;
-	private final ShopOwnershipClient shopOwnershipClient;
+	private final ShopOwnershipPort shopOwnershipPort;
 
 	public Page<ProductInfo> getOnSaleProducts(Pageable pageable) {
 		return productRepository.findByStatus(ProductStatus.ON_SALE, pageable)
@@ -134,16 +133,9 @@ public class ProductService {
 	}
 
 	private void validateShopOwnership(UUID memberId, UUID shopId) {
-		try {
-			UUID ownerMemberId = shopOwnershipClient.getOwnerMemberId(shopId);
-
-			if (!ownerMemberId.equals(memberId)) {
-				throw new BaseException(ProductErrorCode.SHOP_FORBIDDEN);
-			}
-		} catch (FeignException.NotFound e) {
-			throw new BaseException(ProductErrorCode.SHOP_NOT_FOUND);
-		} catch (FeignException e) {
-			throw new BaseException(ProductErrorCode.SHOP_SERVICE_UNAVAILABLE);
+		UUID ownerMemberId = shopOwnershipPort.getOwnerMemberId(shopId);
+		if (!ownerMemberId.equals(memberId)) {
+			throw new BaseException(ProductErrorCode.SHOP_FORBIDDEN);
 		}
 	}
 }

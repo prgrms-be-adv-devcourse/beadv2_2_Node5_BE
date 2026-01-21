@@ -20,9 +20,7 @@ public enum InventoryErrorCode implements BaseErrorCode {
 	RESERVATION_ALREADY_RELEASED(409, "RESERVATION_ALREADY_RELEASED", "이미 해제된 예약입니다."),
 
 	PRODUCT_NOT_FOUND(404, "PRODUCT_NOT_FOUND", "상품이 존재하지 않습니다."),
-	SELLER_FORBIDDEN(403, "SELLER_FORBIDDEN", "해당 상품에 대한 권한이 없습니다."),
-	SHOP_NOT_FOUND(404, "SHOP_NOT_FOUND", "상점 정보를 찾을 수 없습니다."),
-	SHOP_SERVICE_UNAVAILABLE(503, "SHOP_SERVICE_UNAVAILABLE", "상점 서비스를 사용할 수 없습니다.");
+	SELLER_FORBIDDEN(403, "SELLER_FORBIDDEN", "해당 상품에 대한 권한이 없습니다.");
 
 	private final int status;
 	private final String code;
