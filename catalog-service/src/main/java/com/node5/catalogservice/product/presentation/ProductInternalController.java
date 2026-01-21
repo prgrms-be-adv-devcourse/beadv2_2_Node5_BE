@@ -68,6 +68,11 @@ public class ProductInternalController {
 		return ResponseEntity.ok(productInternalService.getOnSaleProductIds(pageable));
 	}
 
+	@GetMapping("/getProductIds")
+	public ResponseEntity<List<UUID>> getProductIdsByShopIds(@RequestBody List<UUID> shopIds) {
+		return ResponseEntity.ok(productInternalService.getProductIdsByShopIds(shopIds));
+	}
+
 	@GetMapping("/{productId}/review-status")
 	public ResponseEntity<ProductReviewStatusResponse> canPostReview(@PathVariable UUID productId) {
 		boolean reviewable = productInternalService.isReviewable(productId);

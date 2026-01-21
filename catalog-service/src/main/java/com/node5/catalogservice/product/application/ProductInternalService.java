@@ -56,6 +56,15 @@ public class ProductInternalService {
 	}
 
 	@Transactional(readOnly = true)
+	public List<UUID> getProductIdsByShopIds(List<UUID> shopIds) {
+		if (shopIds == null || shopIds.isEmpty()) {
+			return List.of();
+		}
+		List<UUID> distinctShopIds = shopIds.stream().distinct().toList();
+		return productRepository.findIdsByShopIdIn(distinctShopIds);
+	}
+
+	@Transactional(readOnly = true)
 	public boolean isReviewable(UUID productId) {
 		return productRepository.findByIdAndStatus(productId, ProductStatus.ON_SALE).isPresent();
 	}
