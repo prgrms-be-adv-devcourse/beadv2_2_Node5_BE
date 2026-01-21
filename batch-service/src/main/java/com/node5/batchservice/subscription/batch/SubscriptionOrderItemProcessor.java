@@ -38,7 +38,7 @@ public class SubscriptionOrderItemProcessor implements ItemProcessor<Subscriptio
                         new OrderCreateRequest.OrderItemRequest(
                                 target.productId(),
                                 target.productName(),
-                                target.thumbnailUrl(),
+                                target.thumbnailKey(),
                                 target.pricePerItem(),
                                 target.quantity(),
                                 target.totalPrice()
