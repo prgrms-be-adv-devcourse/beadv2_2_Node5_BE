@@ -23,6 +23,8 @@ public interface SubscriptionRepository {
 
     List<Subscription> findAllByMemberId(UUID memberId);
 
+    List<Subscription> findAllByShopId(UUID shopId);
+
     Page<Subscription> findAllByNextRunDateAndSubscriptionStatus(LocalDate nextRunDate, SubscriptionStatus subscriptionStatus, Pageable pageable);
 
     Page<Subscription> findAllByProductId(UUID productId, Pageable pageable);

@@ -2,6 +2,7 @@ package com.node5.orderservice.subscription.application;
 
 import com.node5.common.domain.PageInfoDto;
 import com.node5.common.domain.PagedResponseDto;
+import com.node5.common.event.SubscriptionStatusChangedEvent;
 import com.node5.common.event.SubscriptionOrderBatchChunkResultEvent;
 import com.node5.orderservice.subscription.application.dto.SubscriptionBatchTarget;
 import com.node5.orderservice.subscription.domain.Subscription;
@@ -12,6 +13,7 @@ import com.node5.orderservice.subscription.domain.SubscriptionStatus;
 import com.node5.orderservice.subscription.exception.SubscriptionException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -34,6 +36,7 @@ public class SubscriptionInternalService {
 
     private final SubscriptionRepository subscriptionRepository;
     private final SubscriptionRecurrenceRuleRepository subscriptionRecurrenceRuleRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     public PagedResponseDto<SubscriptionBatchTarget> findBatchTargets(LocalDate runDate, Pageable pageable) {
         Page<Subscription> page = subscriptionRepository
@@ -88,6 +91,7 @@ public class SubscriptionInternalService {
         }
 
         if (!failedIds.isEmpty()) {
+            publishFailedStatusChanges(failedIds);
             subscriptionRepository.bulkMarkFailedByIds(failedIds);
             log.info("Subscription batch marked failed: {} items", failedIds.size());
         }
@@ -144,5 +148,18 @@ public class SubscriptionInternalService {
                 subscription.getQuantity(),
                 subscription.getTotalPrice()
         );
+    }
+
+    private void publishFailedStatusChanges(List<UUID> failedIds) {
+        List<Subscription> subscriptions = subscriptionRepository.findAllById(failedIds);
+        if (subscriptions.isEmpty()) {
+            return;
+        }
+
+        subscriptions.forEach(subscription -> eventPublisher.publishEvent(new SubscriptionStatusChangedEvent(
+                        subscription.getId().toString(),
+                        subscription.getMemberId().toString(),
+                        SubscriptionStatus.FAILED.name()
+                )));
     }
 }

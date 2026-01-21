@@ -48,3 +48,4 @@ kafka:
   topics:
     member-deleted: member-service.member-deleted.v1
     shop-deleted: member-service.shop-deleted.v1
+    subscription-status-changed: order-service.subscription-status-changed.v1
