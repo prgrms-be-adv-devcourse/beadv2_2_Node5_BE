@@ -20,9 +20,6 @@ spec:
         - name: postgres
           image: pgvector/pgvector:pg17
           imagePullPolicy: IfNotPresent
-          envFrom:
-            - secretRef:
-                name: database-secret
           env:
             - name: POSTGRES_USER
               value: "node5"
