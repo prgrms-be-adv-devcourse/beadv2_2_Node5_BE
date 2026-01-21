@@ -45,7 +45,7 @@ public class KafkaProductIndexEventConsumer {
 			doc.put("createdAt", event.createdAt().format(ES_DATE_TIME));
 			doc.put("modifiedAt", event.modifiedAt().format(ES_DATE_TIME));
 
-			UpdateQuery updateQuery = UpdateQuery.builder(productId)
+			UpdateQuery updateQuery = UpdateQuery.builder(productId.toString())
 				.withDocument(Document.from(doc))
 				.withDocAsUpsert(true)
 				.build();
