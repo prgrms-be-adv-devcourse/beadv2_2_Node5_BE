@@ -1,16 +1,14 @@
 package com.node5.catalogservice.product.application;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.node5.catalogservice.client.ShopOwnershipPort;
 import com.node5.catalogservice.product.application.dto.ProductCommand;
 import com.node5.catalogservice.product.application.dto.ProductInfo;
 import com.node5.catalogservice.product.application.dto.ProductUpdateCommand;
@@ -23,11 +21,9 @@ import com.node5.catalogservice.product.domain.Product;
 import com.node5.catalogservice.product.domain.ProductRepository;
 import com.node5.catalogservice.product.domain.ProductStatus;
 import com.node5.catalogservice.product.exception.ProductErrorCode;
-import com.node5.catalogservice.shop.client.ShopOwnershipClient;
 import com.node5.common.event.ProductDiscontinuedEvent;
 import com.node5.common.exception.BaseException;
 
-import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -38,7 +34,7 @@ public class ProductService {
 	private final ProductIndexEventPort productIndexEventPort;
 	private final ProductEmbeddingEventPort productEmbeddingEventPort;
 	private final ProductDiscontinuedEventPort productDiscontinuedEventPort;
-	private final ShopOwnershipClient shopOwnershipClient;
+	private final ShopOwnershipPort shopOwnershipPort;
 
 	public Page<ProductInfo> getOnSaleProducts(Pageable pageable) {
 		return productRepository.findByStatus(ProductStatus.ON_SALE, pageable)
@@ -126,48 +122,9 @@ public class ProductService {
 			.map(ProductInfo::from);
 	}
 
-	@Transactional(readOnly = true)
-	public Map<UUID, UUID> getShopIdsByProductIds(List<UUID> productIds) {
-
-		if (productIds == null || productIds.isEmpty()) {
-			return Map.of();
-		}
-
-		List<UUID> distinctIds = productIds.stream().distinct().toList();
-
-		List<Product> products = productRepository.findAllByIdIn(distinctIds);
-
-		if (products.size() != distinctIds.size()) {
-			throw new BaseException(ProductErrorCode.PRODUCT_NOT_FOUND);
-		}
-
-		return products.stream()
-			.collect(Collectors.toMap(Product::getId, Product::getShopId));
-	}
-
-	@Transactional(readOnly = true)
-	public List<Product> getProductsByIds(List<UUID> productIds) {
-		if (productIds == null || productIds.isEmpty()) {
-			return List.of();
-		}
-		return productRepository.findAllByIdInAndStatus(productIds, ProductStatus.ON_SALE);
-	}
-
 	private Product getProductOrThrow(UUID productId) {
 		return productRepository.findById(productId)
 			.orElseThrow(() -> new BaseException(ProductErrorCode.PRODUCT_NOT_FOUND));
-	}
-
-	@Transactional(readOnly = true)
-	public List<UUID> getOnSaleProductIds(Pageable pageable) {
-		return productRepository.findByStatus(ProductStatus.ON_SALE, pageable)
-			.map(Product::getId)
-			.getContent();
-	}
-
-	@Transactional(readOnly = true)
-	public boolean isReviewable(UUID productId) {
-		return productRepository.findByIdAndStatus(productId, ProductStatus.ON_SALE).isPresent();
 	}
 
 	private Product getOnSaleProductOrThrow(UUID productId) {
@@ -176,16 +133,9 @@ public class ProductService {
 	}
 
 	private void validateShopOwnership(UUID memberId, UUID shopId) {
-		try {
-			UUID ownerMemberId = shopOwnershipClient.getOwnerMemberId(shopId);
-
-			if (!ownerMemberId.equals(memberId)) {
-				throw new BaseException(ProductErrorCode.SHOP_FORBIDDEN);
-			}
-		} catch (FeignException.NotFound e) {
-			throw new BaseException(ProductErrorCode.SHOP_NOT_FOUND);
-		} catch (FeignException e) {
-			throw new BaseException(ProductErrorCode.SHOP_SERVICE_UNAVAILABLE);
+		UUID ownerMemberId = shopOwnershipPort.getOwnerMemberId(shopId);
+		if (!ownerMemberId.equals(memberId)) {
+			throw new BaseException(ProductErrorCode.SHOP_FORBIDDEN);
 		}
 	}
 }

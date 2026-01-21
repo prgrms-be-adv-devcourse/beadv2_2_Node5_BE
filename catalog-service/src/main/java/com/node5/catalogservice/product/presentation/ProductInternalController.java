@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.node5.catalogservice.product.application.ProductService;
+import com.node5.catalogservice.product.application.ProductInternalService;
 import com.node5.catalogservice.product.domain.Product;
 import com.node5.catalogservice.product.presentation.dto.ProductIdsRequest;
 import com.node5.catalogservice.product.presentation.dto.ProductReviewStatusResponse;
@@ -32,11 +32,11 @@ import lombok.RequiredArgsConstructor;
 @Hidden
 public class ProductInternalController {
 
-	private final ProductService productService;
+	private final ProductInternalService productInternalService;
 
 	@PostMapping("/shop-ids")
 	public ResponseEntity<Map<UUID, UUID>> getShopIdsByProductIds(@RequestBody List<UUID> productIds) {
-		return ResponseEntity.ok(productService.getShopIdsByProductIds(productIds));
+		return ResponseEntity.ok(productInternalService.getShopIdsByProductIds(productIds));
 	}
 
 	@PostMapping("/getProductsByIds")
@@ -45,7 +45,7 @@ public class ProductInternalController {
 		@Valid @RequestBody ProductIdsRequest request
 	) {
 		List<UUID> ids = request.productIds();
-		List<Product> products = productService.getProductsByIds(ids);
+		List<Product> products = productInternalService.getProductsByIds(ids);
 
 		Map<UUID, Integer> order = new java.util.HashMap<>();
 		for (int i = 0; i < ids.size(); i++) order.put(ids.get(i), i);
@@ -65,12 +65,17 @@ public class ProductInternalController {
 
 	@GetMapping("/ids")
 	public ResponseEntity<List<UUID>> getProductIds(@ParameterObject Pageable pageable) {
-		return ResponseEntity.ok(productService.getOnSaleProductIds(pageable));
+		return ResponseEntity.ok(productInternalService.getOnSaleProductIds(pageable));
+	}
+
+	@GetMapping("/getProductIds")
+	public ResponseEntity<List<UUID>> getProductIdsByShopIds(@RequestBody List<UUID> shopIds) {
+		return ResponseEntity.ok(productInternalService.getProductIdsByShopIds(shopIds));
 	}
 
 	@GetMapping("/{productId}/review-status")
 	public ResponseEntity<ProductReviewStatusResponse> canPostReview(@PathVariable UUID productId) {
-		boolean reviewable = productService.isReviewable(productId);
+		boolean reviewable = productInternalService.isReviewable(productId);
 		return ResponseEntity.ok(new ProductReviewStatusResponse(reviewable));
 	}
 }

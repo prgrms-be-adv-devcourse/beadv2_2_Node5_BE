@@ -28,6 +28,9 @@ public interface ProductJpaRepository extends JpaRepository<Product, UUID> {
 
 	List<Product> findByIdInAndStatus(Collection<UUID> ids, ProductStatus status);
 
+	@Query("select p.id from Product p where p.shopId in :shopIds")
+	List<UUID> findIdsByShopIdIn(Collection<UUID> shopIds);
+
 	@Modifying(clearAutomatically = true, flushAutomatically = true)
 	@Transactional
 	@Query("""
