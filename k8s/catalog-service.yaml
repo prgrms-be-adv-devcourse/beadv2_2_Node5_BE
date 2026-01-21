@@ -17,6 +17,10 @@ spec:
       app: catalog-service
   template:
     metadata:
+      annotations:
+        reloader.stakater.com/auto: "true"
+        configmap.reloader.stakater.com/reload: "common-config,catalog-service-config"
+        secret.reloader.stakater.com/reload: "common-secret,catalog-secret"
       labels:
         app: catalog-service
     spec:
@@ -36,7 +40,12 @@ spec:
               value: "-Xms128m -Xmx256m"
           envFrom:
             - secretRef:
+                name: common-secret
+            - secretRef:
                 name: catalog-secret
+          volumeMounts:
+            - name: config
+              mountPath: /config
           resources:
             requests:
               memory: "256Mi"
@@ -68,6 +77,15 @@ spec:
             periodSeconds: 20
             timeoutSeconds: 5
             failureThreshold: 6
+      volumes:
+        - name: config
+          projected:
+            sources:
+              - configMap:
+                  name: common-config
+              - configMap:
+                  name: catalog-service-config
+
 ---
 apiVersion: v1
 kind: Service

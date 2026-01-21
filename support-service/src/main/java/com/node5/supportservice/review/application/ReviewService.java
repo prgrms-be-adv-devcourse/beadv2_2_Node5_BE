@@ -300,9 +300,9 @@ public class ReviewService {
                 .toList();
     }
 
-    public ReviewStatusInfo hasMemberReviewedProduct(UUID memberId, ReviewStatusCommand command) {
+    public ReviewStatusInfo hasMemberReviewedProduct(UUID memberId, UUID orderId, UUID productId) {
         return ReviewStatusInfo.from(
-                reviewDetailRepository.existsReview(memberId, command.orderId(), command.productId())
+                reviewDetailRepository.existsReview(memberId, orderId, productId)
         );
     }
 

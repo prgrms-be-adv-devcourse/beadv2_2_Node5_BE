@@ -17,6 +17,10 @@ spec:
       app: payment-service
   template:
     metadata:
+      annotations:
+        reloader.stakater.com/auto: "true"
+        configmap.reloader.stakater.com/reload: "common-config,payment-service-config"
+        secret.reloader.stakater.com/reload: "common-secret,payment-secret"
       labels:
         app: payment-service
     spec:
@@ -26,7 +30,7 @@ spec:
           image: node5dev/payment-service:latest
           imagePullPolicy: Always
           ports:
-            - containerPort: 8080
+            - containerPort: 8088
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: prod
@@ -34,7 +38,12 @@ spec:
               value: "-Xms128m -Xmx256m"
           envFrom:
             - secretRef:
+                name: common-secret
+            - secretRef:
                 name: payment-secret
+          volumeMounts:
+            - name: config
+              mountPath: /config
           resources:
             requests:
               memory: "256Mi"
@@ -45,7 +54,7 @@ spec:
           startupProbe:
             httpGet:
               path: /actuator/health/readiness
-              port: 8080
+              port: 8088
             initialDelaySeconds: 60
             periodSeconds: 10
             timeoutSeconds: 5
@@ -53,7 +62,7 @@ spec:
           readinessProbe:
             httpGet:
               path: /actuator/health/readiness
-              port: 8080
+              port: 8088
             initialDelaySeconds: 30
             periodSeconds: 10
             timeoutSeconds: 5
@@ -61,11 +70,20 @@ spec:
           livenessProbe:
             httpGet:
               path: /actuator/health/liveness
-              port: 8080
+              port: 8088
             initialDelaySeconds: 60
             periodSeconds: 20
             timeoutSeconds: 5
             failureThreshold: 6
+      volumes:
+        - name: config
+          projected:
+            sources:
+              - configMap:
+                  name: common-config
+              - configMap:
+                  name: payment-service-config
+
 ---
 apiVersion: v1
 kind: Service
@@ -79,5 +97,5 @@ spec:
     app: payment-service
   ports:
     - name: http
-      port: 8080
-      targetPort: 8080
+      port: 8088
+      targetPort: 8088

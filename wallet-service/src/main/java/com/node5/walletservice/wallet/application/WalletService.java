@@ -17,6 +17,8 @@ import com.node5.walletservice.wallet.exception.WalletException;
 import com.node5.walletservice.wallet.application.dto.*;
 import com.node5.walletservice.wallet.domain.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -32,6 +34,7 @@ import static com.node5.walletservice.wallet.exception.WalletErrorCode.*;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Slf4j
 public class WalletService {
 
     private final WalletRepository walletRepository;
@@ -240,35 +243,35 @@ public class WalletService {
     }
 
     @Transactional
-    public void depositRequest(WalletPaymentCommand command) {
-        Wallet wallet = walletRepository.findByMemberIdForUpdate(command.memberId())
-                .orElseThrow(() -> new WalletException(WALLET_NOT_FOUND));
+    public void depositRequest(PaymentDepositEvent event) {
+        if (walletTransactionLogRepository.existsLog(event.memberId(), event.orderId(), COMPLETED)) {
+            log.info("이미 완료된 입금 요청입니다. 건너뜁니다. orderId: {}", event.orderId());
+            return;
+        }
 
-        WalletTransactionLog transactionLog = WalletTransactionLog.builder()
-                .memberId(command.memberId())
-                .referenceId(command.orderId())
-                .type(CHARGE)
-                .groupType(WalletTransactionLogGroupType.IN)
-                .amount(command.amount())
-                .balanceAfter(wallet.getBalance())
-                .status(PENDING)
-                .build();
-        walletTransactionLogRepository.save(transactionLog);
-    }
-
-    @Transactional
-    public void depositConfirm(PaymentDepositEvent event) {
         Wallet wallet = walletRepository.findByMemberIdForUpdate(event.memberId())
                 .orElseThrow(() -> new WalletException(WALLET_NOT_FOUND));
 
         wallet.deposit(event.amount());
 
-        int count = walletTransactionLogRepository.updateStatusByTransactionId(event.memberId(), event.orderId(), CHARGE, PENDING, COMPLETED);
-        if (count == 0) {
-            throw new WalletException(WALLET_DEPOSIT_LOG_NOT_FOUND);
+        try {
+            WalletTransactionLog transactionLog = WalletTransactionLog.builder()
+                    .memberId(event.memberId())
+                    .referenceId(event.orderId())
+                    .type(CHARGE)
+                    .groupType(WalletTransactionLogGroupType.IN)
+                    .amount(event.amount())
+                    .balanceAfter(wallet.getBalance())
+                    .status(COMPLETED)
+                    .build();
+            walletTransactionLogRepository.save(transactionLog);
+        } catch (DataIntegrityViolationException e) {
+            log.warn("중복된 트랜잭션 로그 삽입 시도 감지. 롤백 처리됩니다. orderId: {}", event.orderId());
+            throw new WalletException(WALLET_DUPLICATE_DEPOSIT_REQUEST); // 롤백을 유도하거나 상황에 따라 처리
         }
     }
 
+    // 예치금 결제 취소 요청
     @Transactional
     public void withdrawRequest(WalletPaymentCommand command) {
         Wallet wallet = walletRepository.findByMemberIdForUpdate(command.memberId())
@@ -288,22 +291,5 @@ public class WalletService {
                 .status(COMPLETED)
                 .build();
         walletTransactionLogRepository.save(transactionLog);
-    }
-
-    @Transactional
-    public void cancelDepositRequest(WalletPaymentCommand command) {
-        walletRepository.findByMemberIdForUpdate(command.memberId())
-                .orElseThrow(() -> new WalletException(WALLET_NOT_FOUND));
-
-        int count = walletTransactionLogRepository.updateStatusByTransactionId(
-                command.memberId(),
-                command.orderId(),
-                CHARGE,
-                PENDING,
-                CANCELED
-        );
-        if (count == 0) {
-            throw new WalletException(WALLET_DEPOSIT_LOG_NOT_FOUND);
-        }
     }
 }

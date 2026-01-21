@@ -18,12 +18,6 @@ spring:
                 - Path=/member-service/**
               filters:
                 - RewritePath=/member-service/(?<segment>.*), /$\{segment}
-            - id: subscription-service
-              uri: lb://SUBSCRIPTION-SERVICE
-              predicates:
-                - Path=/subscription-service/**
-              filters:
-                - RewritePath=/subscription-service/(?<segment>.*), /$\{segment}
             - id: settlement-service
               uri: lb://SETTLEMENT-SERVICE
               predicates:

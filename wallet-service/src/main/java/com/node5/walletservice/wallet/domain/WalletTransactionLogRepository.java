@@ -16,5 +16,5 @@ public interface WalletTransactionLogRepository {
 
     WalletTransactionLog save(WalletTransactionLog walletTransactionLog);
 
-
+    boolean existsLog(UUID memberId, String referenceId, WalletTransactionLogStatus status);
 }

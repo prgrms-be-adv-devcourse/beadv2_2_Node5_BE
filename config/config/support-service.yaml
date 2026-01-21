@@ -10,9 +10,6 @@ spring:
     password: ${SPRING_DATASOURCE_PASSWORD}
   jackson:
     time-zone: Asia/Seoul
-  sql:
-    init:
-      mode: always
   jpa:
     hibernate:
       ddl-auto: validate
@@ -23,9 +20,6 @@ spring:
         format_sql: true
         jdbc:
           time_zone: Asia/Seoul
-  batch:
-    jdbc:
-      initialize-schema: never
   mail:
     host: smtp.gmail.com
     port: 587
@@ -87,7 +81,7 @@ kafka:
     product-embedding: catalog-service.product-embedding.v1
     product-index: catalog-service.product-index.v1
     order-status-changed: order-service.order-status-changed.v1
-    subscription-status-changed: subscription-service.subscription-status-changed.v1
+    subscription-status-changed: order-service.subscription-status-changed.v1
 api:
   v1: /api/v1
 

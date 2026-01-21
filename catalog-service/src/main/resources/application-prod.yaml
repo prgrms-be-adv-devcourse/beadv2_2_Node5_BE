@@ -1,3 +1,6 @@
 spring:
   config:
-    import: optional:configserver:http://config-service:8888
+    import: optional:file:/config/application.yml,optional:file:/config/catalog-service.yaml
+  cloud:
+    config:
+      enabled: false

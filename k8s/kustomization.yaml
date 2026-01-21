@@ -5,13 +5,19 @@ resources:
   - apigateway.yaml
   - batch-service.yaml
   - catalog-service.yaml
-  - config-repo-configmap.yaml
-  - config.yaml
+  - batch-service-configmap.yaml
+  - catalog-service-configmap.yaml
+  - common-configmap.yaml
   - discovery.yaml
+  - member-service-configmap.yaml
   - member-service.yaml
+  - order-service-configmap.yaml
   - order-service.yaml
+  - payment-service-configmap.yaml
   - payment-service.yaml
+  - settlement-service-configmap.yaml
   - settlement-service.yaml
-  - subscription-service.yaml
+  - support-service-configmap.yaml
   - support-service.yaml
+  - wallet-service-configmap.yaml
   - wallet-service.yaml
