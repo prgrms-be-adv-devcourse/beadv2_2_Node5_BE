@@ -88,6 +88,7 @@ public class SubscriptionService {
         Subscription savedSubscription = subscriptionRepository.save(subscription);
         subscriptionRecurrenceRuleRepository.saveAll(rules);
 
+        publishStatusChanged(subscription);
         return toSubscriptionInfo(savedSubscription);
     }
 
