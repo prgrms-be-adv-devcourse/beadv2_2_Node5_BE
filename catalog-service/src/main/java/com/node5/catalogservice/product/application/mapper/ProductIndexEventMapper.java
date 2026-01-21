@@ -28,6 +28,7 @@ public final class ProductIndexEventMapper {
 			product.getPrice().longValue(),
 			product.getStatus().name(),
 			product.getCreatedAt(),
+			product.getModifiedAt(),
 			type
 		);
 	}
