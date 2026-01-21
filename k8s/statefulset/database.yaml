@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: database
+  labels:
+    app: database
+spec:
+  serviceName: "database"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: database
+  template:
+    metadata:
+      labels:
+        app: database
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: postgres
+          image: pgvector/pgvector:pg17
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - secretRef:
+                name: database-secret
+          env:
+            - name: POSTGRES_USER
+              value: "node5"
+            - name: POSTGRES_PASSWORD
+              value: "1234"
+            - name: POSTGRES_DB
+              value: "my_routine"
+            - name: LANG
+              value: "ko_KR.utf8"
+          ports:
+            - containerPort: 5432
+              name: postgres
+          command: ["bash", "-c"]
+          args:
+            - |
+              apt-get update && apt-get install -y locales 
+              sed -i 's/# ko_KR.UTF-8 UTF-8/ko_KR.UTF-8 UTF-8/' /etc/locale.gen 
+              locale-gen ko_KR.UTF-8 
+              export LANG=ko_KR.UTF-8
+              exec docker-entrypoint.sh postgres
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "node5", "-d", "my_routine"]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            exec:
+              command: ["pg_isready", "-U", "node5", "-d", "my_routine"]
+            initialDelaySeconds: 10
+            periodSeconds: 20
+      volumes:
+        - name: postgres-data
+          hostPath:
+            path: /home/ubuntu/data/postgres
+            type: DirectoryOrCreate
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: database-service
+  labels:
+    app: database
+spec:
+  ports:
+    - port: 5432
+      targetPort: 5432
+  selector:
+    app: database
+  clusterIP: None

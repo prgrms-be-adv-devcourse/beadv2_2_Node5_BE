@@ -21,3 +21,9 @@ resources:
   - support-service.yaml
   - wallet-service-configmap.yaml
   - wallet-service.yaml
+  - /statefulset/database.yaml
+  - /statefulset/elasticsearch.yaml
+  - /statefulset/kafka.yaml
+  - /statefulset/nginx.yaml
+  - /statefulset/rabbitmq.yaml
+  - /statefulset/redis.yaml

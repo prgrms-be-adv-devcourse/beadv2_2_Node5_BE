@@ -1,0 +1,25 @@
+name: Deploy Infra
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy-infra:
+    name: Deploy Infrastructure (StatefulSet Only)
+    runs-on: self-hosted
+    env:
+      STS_SERVICES: ${{ vars.STS_SERVICES }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Apply StatefulSet YAMLs
+        run: kubectl apply -f k8s/statefulset/
+
+      - name: Wait for Services to be Ready
+        run: |
+          for sts in $STS_SERVICES; do
+            if kubectl get statefulset $sts >/dev/null 2>&1; then
+              kubectl rollout status statefulset/$sts --timeout=300s
+            fi
+          done
