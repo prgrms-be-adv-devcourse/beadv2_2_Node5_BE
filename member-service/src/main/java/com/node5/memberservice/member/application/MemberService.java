@@ -2,6 +2,8 @@ package com.node5.memberservice.member.application;
 
 import com.node5.common.event.MemberDeletedEvent;
 import com.node5.memberservice.auth.domain.OAuthRepository;
+import com.node5.memberservice.client.OrderClient;
+import com.node5.memberservice.client.SettlementClient;
 import com.node5.memberservice.client.WalletClient;
 import com.node5.memberservice.client.dto.WalletInfo;
 import com.node5.memberservice.member.application.dto.*;
@@ -35,6 +37,8 @@ public class MemberService {
     private final ApplicationEventPublisher eventPublisher;
     private final ShopRepository shopRepository;
     private final WalletClient walletClient;
+    private final OrderClient orderClient;
+    private final SettlementClient settlementClient;
 
     public MemberInfoResponse findById(UUID memberId) {
         Member member = getNotDeletedMemberOrThrow(memberId);
@@ -51,9 +55,11 @@ public class MemberService {
     @Transactional
     public void deleteMember(UUID memberId) {
         Member member = getNotDeletedMemberOrThrow(memberId);
-
-        validateCanDeleteMember(member.getId());
         List<UUID> shopIds = getShopIds(memberId);
+
+        validateNoWalletBalance(memberId);
+        validateNoOrderInProgress(memberId);
+        if (!shopIds.isEmpty()) validateNoSettlementInProgress(shopIds);
 
         MemberDeletedEvent event = new MemberDeletedEvent(member.getId(), shopIds);
 
@@ -64,11 +70,11 @@ public class MemberService {
         eventPublisher.publishEvent(event);
     }
 
-    private void validateCanDeleteMember(UUID memberId) {
+    private void validateNoWalletBalance(UUID memberId) {
         try {
             // 예치금 잔액 확인
             WalletInfo wallet = walletClient.getWallet(memberId).getBody();
-            if (wallet != null && wallet.balance() != 0) {
+            if (wallet != null && wallet.balance() != null && wallet.balance() != 0) {
                 throw new MemberException(MemberErrorCode.MEMBER_HAS_BALANCE);
             }
         } catch (FeignException.NotFound e) {
@@ -77,8 +83,28 @@ public class MemberService {
             // billing 서비스가 응답했지만 오류
             throw new MemberException(MemberErrorCode.BILLING_SERVICE_UNAVAILABLE);
         }
-        // Todo - 진행중인 주문 확인
-        // Todo - 남은 정산 확인
+    }
+
+    private void validateNoOrderInProgress(UUID memberId) {
+        try {
+            Boolean orderInProgress = orderClient.hasInProgressOrder(memberId).getBody();
+            if(orderInProgress == null || orderInProgress) {
+                throw new MemberException(MemberErrorCode.MEMBER_HAS_ORDER);
+            }
+        } catch (FeignException e) {
+            throw new MemberException(MemberErrorCode.ORDER_SERVICE_UNAVAILABLE);
+        }
+    }
+
+    private void validateNoSettlementInProgress(List<UUID> shopIds) {
+        try {
+            Boolean settlementInProgress = settlementClient.hasInProgressSettlement(shopIds).getBody();
+            if(settlementInProgress == null || settlementInProgress) {
+                throw new MemberException(MemberErrorCode.MEMBER_HAS_SETTLEMENT);
+            }
+        } catch (FeignException e) {
+            throw new MemberException(MemberErrorCode.SETTLEMENT_SERVICE_UNAVAILABLE);
+        }
     }
 
     private List<UUID> getShopIds(UUID memberId) {
