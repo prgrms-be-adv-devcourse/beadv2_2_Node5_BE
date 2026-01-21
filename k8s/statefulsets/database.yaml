@@ -37,10 +37,10 @@ spec:
           command: ["bash", "-c"]
           args:
             - |
-              apt-get update && apt-get install -y locales 
-              sed -i 's/# ko_KR.UTF-8 UTF-8/ko_KR.UTF-8 UTF-8/' /etc/locale.gen 
-              locale-gen ko_KR.UTF-8 
-              export LANG=ko_KR.UTF-8
+              sed -i 's/# ko_KR.UTF-8 UTF-8/ko_KR.UTF-8 UTF-8/' /etc/locale.gen && \
+              locale-gen ko_KR.UTF-8 && \
+              export LANG=ko_KR.UTF-8 && \
+              export LC_ALL=ko_KR.UTF-8 && \
               exec docker-entrypoint.sh postgres
           volumeMounts:
             - name: postgres-data
