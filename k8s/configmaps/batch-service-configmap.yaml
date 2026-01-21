@@ -50,3 +50,6 @@ data:
     kafka:
       topics:
         subscription-order-batch-result: batch-service.subscription-order-batch-result.v1
+    batch:
+      scheduler:
+        enabled: false
