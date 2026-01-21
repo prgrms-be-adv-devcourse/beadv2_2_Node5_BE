@@ -89,8 +89,12 @@ spec:
               value: "1"
             - name: KAFKA_ZOOKEEPER_CONNECT
               value: "zookeeper-service:2181"
+            - name: HOST_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
             - name: KAFKA_ADVERTISED_LISTENERS
-              value: "PLAINTEXT://10.0.30.54:9092"
+              value: "PLAINTEXT://$(HOST_IP):9092"
             - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
               value: "PLAINTEXT:PLAINTEXT"
             - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
