@@ -44,6 +44,11 @@ public class SubscriptionRepositoryAdapter implements SubscriptionRepository {
     public List<Subscription> findAllByMemberId(UUID memberId){return jpaRepository.findAllByMemberId(memberId);}
 
     @Override
+    public List<Subscription> findAllByShopId(UUID shopId) {
+        return jpaRepository.findAllByShopId(shopId);
+    }
+
+    @Override
     public Page<Subscription> findAllByNextRunDateAndSubscriptionStatus(LocalDate nextRunDate, SubscriptionStatus subscriptionStatus, Pageable pageable) {
         return jpaRepository.findAllByNextRunDateAndSubscriptionStatus(nextRunDate, subscriptionStatus, pageable);
     }

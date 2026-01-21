@@ -180,11 +180,14 @@ public class Subscription extends BaseEntity {
         this.subscriptionStatus = SubscriptionStatus.FAILED;
     }
 
-    public void terminate() {
-        if(this.subscriptionStatus == SubscriptionStatus.TERMINATED) {
-            return;
+    public boolean terminate() {
+        if (this.subscriptionStatus == SubscriptionStatus.TERMINATED) {
+            return false;
         }
         this.subscriptionStatus = SubscriptionStatus.TERMINATED;
-        if(deletedAt == null) this.deletedAt = LocalDateTime.now();
+        if (deletedAt == null) {
+            this.deletedAt = LocalDateTime.now();
+        }
+        return true;
     }
 }

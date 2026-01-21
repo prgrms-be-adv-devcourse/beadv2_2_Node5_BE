@@ -1,5 +1,6 @@
 package com.node5.orderservice.subscription.application;
 
+import com.node5.common.event.SubscriptionStatusChangedEvent;
 import com.node5.orderservice.global.openfeign.client.CatalogClient;
 import com.node5.orderservice.subscription.application.dto.SubscriptionCreateCommand;
 import com.node5.orderservice.subscription.application.dto.SubscriptionInfo;
@@ -11,6 +12,7 @@ import com.node5.orderservice.subscription.exception.SubscriptionException;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -37,6 +39,7 @@ public class SubscriptionService {
     private final SubscriptionRecurrenceRuleRepository subscriptionRecurrenceRuleRepository;
     private final CatalogClient catalogClient;
     private final MemberClient memberClient;
+    private final ApplicationEventPublisher eventPublisher;
 
     public SubscriptionInfo findById(UUID id) {
         Subscription subscription = subscriptionRepository.findById(id)
@@ -132,6 +135,7 @@ public class SubscriptionService {
 
         subscription.pause();
         Subscription updatedSubscription = subscriptionRepository.save(subscription);
+        publishStatusChanged(updatedSubscription);
 
         return toSubscriptionInfo(updatedSubscription);
     }
@@ -143,6 +147,7 @@ public class SubscriptionService {
 
         subscription.resume();
         Subscription updatedSubscription = subscriptionRepository.save(subscription);
+        publishStatusChanged(updatedSubscription);
 
         return toSubscriptionInfo(updatedSubscription);
     }
@@ -154,6 +159,7 @@ public class SubscriptionService {
 
         subscription.cancel();
         Subscription saved = subscriptionRepository.save(subscription);
+        publishStatusChanged(saved);
 
         return toSubscriptionInfo(saved);
     }
@@ -169,14 +175,37 @@ public class SubscriptionService {
     @Transactional
     public void terminateUserSubscriptions(UUID memberId, List<UUID> shopIds) {
         List<Subscription> subscriptions = subscriptionRepository.findAllByMemberId(memberId);
-        subscriptions.forEach(Subscription::terminate);
+        subscriptions.forEach(subscription -> {
+            if (subscription.terminate()) {
+                publishStatusChanged(subscription);
+            }
+        });
         shopIds.forEach(shopId -> {terminateSellerSubscriptions(shopId);});
     }
 
     @Transactional
     public void terminateSellerSubscriptions(UUID shopId) {
         // 대량 처리 고려하여 bulk update
+        List<Subscription> subscriptions = subscriptionRepository.findAllByShopId(shopId);
+        subscriptions.forEach(subscription -> {
+            SubscriptionStatus before = subscription.getSubscriptionStatus();
+            if (before != SubscriptionStatus.TERMINATED) {
+                eventPublisher.publishEvent(new SubscriptionStatusChangedEvent(
+                        subscription.getId().toString(),
+                        subscription.getMemberId().toString(),
+                        SubscriptionStatus.TERMINATED.name()
+                ));
+            }
+        });
         subscriptionRepository.bulkTerminateAllByShop(shopId, LocalDateTime.now());
+    }
+
+    private void publishStatusChanged(Subscription subscription) {
+        eventPublisher.publishEvent(new SubscriptionStatusChangedEvent(
+                subscription.getId().toString(),
+                subscription.getMemberId().toString(),
+                subscription.getSubscriptionStatus().name()
+        ));
     }
 
     private ProductInfoResponse getProductInfo(UUID productId) {
