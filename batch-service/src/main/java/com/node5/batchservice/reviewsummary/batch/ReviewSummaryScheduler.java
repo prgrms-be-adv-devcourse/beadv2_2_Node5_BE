@@ -6,6 +6,7 @@ import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.launch.JobLauncher;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -13,6 +14,7 @@ import java.time.LocalDate;
 
 @Slf4j
 @Component
+@ConditionalOnProperty(name = "batch.scheduler.enabled", havingValue = "true")
 @RequiredArgsConstructor
 public class ReviewSummaryScheduler {
 

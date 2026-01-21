@@ -14,4 +14,6 @@ public interface ProductSearchPort {
 	Page<ProductDocument> search(ProductSearchCommand command, Pageable pageable);
 
 	List<String> autocomplete(ProductAutocompleteCommand command);
+
+	List<ProductDocument> searchSponsored(ProductSearchCommand command, int limit);
 }

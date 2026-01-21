@@ -13,6 +13,7 @@ public record ProductIndexEvent(
 	long price,
 	String status,
 	LocalDateTime createdAt,
+	LocalDateTime modifiedAt,
 	ProductIndexEventType type
 ) {
 }
