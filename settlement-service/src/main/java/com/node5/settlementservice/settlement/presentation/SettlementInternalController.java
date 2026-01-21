@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @Tag(name = "Settlement", description = "정산 API")
 @RestController
@@ -51,6 +52,14 @@ public class SettlementInternalController {
     ) {
         settlementInternalService.saveSettlementResource(items);
         return ResponseEntity.ok().build();
+    }
+
+    // 진행 중인 정산 조회
+    @PostMapping("/in-progress")
+    public ResponseEntity<Boolean> hasInProgressSettlement(
+            @RequestBody List<UUID> shopIdList
+    ) {
+        return ResponseEntity.ok(settlementInternalService.hasInProgressSettlement(shopIdList));
     }
 
 }

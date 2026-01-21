@@ -31,6 +31,7 @@ CREATE TABLE "order".order_item (
 	img_url varchar(255) NULL,
 	"name" varchar(255) NOT NULL,
 	"status" varchar(30) NOT NULL,
+	settlement_status varchar(30) NOT NULL,
 	CONSTRAINT order_item_pkey PRIMARY KEY (id)
 );
 

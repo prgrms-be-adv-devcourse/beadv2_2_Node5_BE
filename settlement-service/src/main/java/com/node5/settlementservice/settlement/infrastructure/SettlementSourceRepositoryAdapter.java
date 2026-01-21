@@ -1,5 +1,6 @@
 package com.node5.settlementservice.settlement.infrastructure;
 
+import com.node5.settlementservice.settlement.domain.SettlementProcessStatus;
 import com.node5.settlementservice.settlement.domain.SettlementSource;
 import com.node5.settlementservice.settlement.domain.SettlementSourceRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,5 +29,10 @@ public class SettlementSourceRepositoryAdapter implements SettlementSourceReposi
     @Override
     public void bulkUpdateStatus(List<UUID> shopIds, LocalDateTime startDateTime, LocalDateTime endDateTime) {
         sourceJpaRepository.bulkUpdateStatus(shopIds, startDateTime, endDateTime);
+    }
+
+    @Override
+    public boolean existsByShopIdInAndStatus(List<UUID> shopIdList, SettlementProcessStatus processStatus) {
+        return sourceJpaRepository.existsByShopIdInAndStatus(shopIdList, processStatus);
     }
 }

@@ -10,4 +10,6 @@ public interface SettlementSourceRepository {
     List<UUID> findDistinctShopIds(LocalDateTime startDateTime, LocalDateTime endDateTime);
 
     void bulkUpdateStatus(List<UUID> shopIds, LocalDateTime startDate, LocalDateTime endDate);
+
+    boolean existsByShopIdInAndStatus(List<UUID> shopIdList, SettlementProcessStatus processStatus);
 }
