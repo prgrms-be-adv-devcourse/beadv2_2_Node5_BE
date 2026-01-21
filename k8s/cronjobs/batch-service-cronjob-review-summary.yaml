@@ -18,6 +18,8 @@ spec:
           labels:
             app: batch-service
         spec:
+          nodeSelector:
+            type: node5-master
           restartPolicy: OnFailure
           containers:
             - name: batch-service

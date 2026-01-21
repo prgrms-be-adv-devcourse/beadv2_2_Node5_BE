@@ -24,6 +24,8 @@ spec:
       labels:
         app: batch-service
     spec:
+      nodeSelector:
+        type: node5-master
       terminationGracePeriodSeconds: 30
       containers:
         - name: batch-service

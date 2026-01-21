@@ -15,6 +15,8 @@ spec:
       labels:
         app: redis
     spec:
+      nodeSelector:
+        type: node5-worker
       terminationGracePeriodSeconds: 30
       containers:
         - name: redis

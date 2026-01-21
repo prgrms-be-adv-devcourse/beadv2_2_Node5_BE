@@ -24,6 +24,8 @@ spec:
       labels:
         app: payment-service
     spec:
+      nodeSelector:
+        type: node5-worker
       terminationGracePeriodSeconds: 30
       containers:
         - name: payment-service
