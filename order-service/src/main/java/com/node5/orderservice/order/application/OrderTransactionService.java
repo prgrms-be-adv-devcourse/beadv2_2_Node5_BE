@@ -1,8 +1,8 @@
 package com.node5.orderservice.order.application;
 
-import com.node5.orderservice.order.client.CatalogClient;
-import com.node5.orderservice.order.client.SettlementClient;
-import com.node5.orderservice.order.client.dto.SettlementSourceItem;
+import com.node5.orderservice.global.openfeign.client.CatalogClient;
+import com.node5.orderservice.global.openfeign.client.SettlementClient;
+import com.node5.orderservice.global.openfeign.client.dto.SettlementSourceItem;
 import com.node5.orderservice.order.domain.*;
 import com.node5.orderservice.order.exception.OrderException;
 import feign.FeignException;

@@ -1,12 +1,13 @@
 package com.node5.orderservice.order.application;
 
 import com.node5.common.domain.PageInfoDto;
+import com.node5.orderservice.global.openfeign.client.CatalogClient;
+import com.node5.orderservice.global.openfeign.client.WalletClient;
+import com.node5.orderservice.global.openfeign.client.dto.*;
 import com.node5.orderservice.order.application.dto.OrderCommand;
 import com.node5.orderservice.order.application.dto.OrderCreateInfo;
 import com.node5.orderservice.order.application.dto.OrderItemCommand;
-import com.node5.orderservice.order.application.dto.OrderStatusInfo;
-import com.node5.orderservice.order.client.CatalogClient;
-import com.node5.orderservice.order.client.dto.*;
+import com.node5.orderservice.order.application.dto.OrderStatusInfo;;
 import com.node5.orderservice.order.domain.Order;
 import com.node5.orderservice.order.domain.OrderItem;
 import com.node5.orderservice.order.domain.OrderItemRepository;
@@ -15,7 +16,6 @@ import com.node5.orderservice.order.exception.*;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import com.node5.orderservice.order.application.dto.*;
-import com.node5.orderservice.order.client.WalletClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
