@@ -15,8 +15,6 @@ resources:
   - order-service.yaml
   - payment-service-configmap.yaml
   - payment-service.yaml
-  - settlement-service-configmap.yaml
-  - settlement-service.yaml
   - support-service-configmap.yaml
   - support-service.yaml
   - wallet-service-configmap.yaml
