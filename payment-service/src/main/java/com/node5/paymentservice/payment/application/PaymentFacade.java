@@ -9,12 +9,18 @@ import com.node5.paymentservice.payment.application.dto.PaymentConfirmInfo;
 import com.node5.paymentservice.payment.client.tossPayments.TossPaymentClient;
 import com.node5.paymentservice.payment.client.tossPayments.dto.TossPaymentResponse;
 import com.node5.paymentservice.payment.domain.Payment;
+import com.node5.paymentservice.payment.domain.PaymentFailureOrigin;
 import com.node5.paymentservice.payment.domain.PaymentTemporaryData;
 import com.node5.paymentservice.payment.exception.PaymentException;
+import com.node5.paymentservice.payment.exception.cancel.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.ResourceAccessException;
 
 import java.util.UUID;
 
@@ -28,8 +34,6 @@ public class PaymentFacade {
     private final PaymentPendingService paymentPendingService;
     private final PaymentConfirmService paymentConfirmService;
     private final PaymentCancelService paymentCancelService;
-    private final PaymentCancelPendingService paymentCancelPendingService;
-    private final PaymentCancelWithdrawService paymentCancelWithdrawService;
 
     private final StringRedisTemplate stringRedisTemplate;
     private final ObjectMapper objectMapper;
@@ -52,18 +56,31 @@ public class PaymentFacade {
     }
 
     public PaymentCancelInfo cancel(UUID memberId, PaymentCancelCommand command) {
-        // db 조회 및 결제 취소 요청 처리
-        Payment payment = paymentCancelPendingService.cancelPendingPaymentProcessing(memberId, command);
+        // 상태 변경 (CONFIRMED -> CANCEL_PENDING)
+        Payment payment = paymentCancelService.cancelPendingPaymentProcessing(memberId, command);
 
-        // 예치금 출금 동기 호출 및 상태 변경
-        paymentCancelWithdrawService.cancelWithdrawPaymentProcessing(payment);
-
-        // 토스페이먼츠 결제 취소 요청
-        cancelTossPayments(command, payment);
-
-        Payment canceledPayment = paymentCancelService.cancelPaymentProcessing(payment);
-
-        return PaymentCancelInfo.from(canceledPayment.getStatus());
+        try {
+            // 예치금 출금 동기 호출 및 상태 변경 (CANCEL_PENDING -> WITHDRAW_CONFIRMED)
+            paymentCancelService.cancelWithdrawPaymentProcessing(payment.getId());
+            // 토스페이먼츠 결제 취소 요청
+            cancelTossPayments(command);
+            // 상태 변경 (CANCEL_PENDING -> CANCELED)
+            Payment canceledPayment = paymentCancelService.cancelPaymentProcessing(payment.getId());
+            return PaymentCancelInfo.from(canceledPayment.getStatus());
+        } catch (WithdrawRejectedException e) {
+            log.error("[결제 취소 실패 - 출금 거절] - MemberId: {}, OrderId: {}, Error: {}", payment.getMemberId(), payment.getOrderId(), e.getMessage());
+            paymentCancelService.rollbackCancelPaymentProcessing(payment.getId());
+            throw new PaymentException(PAYMENT_CANCEL_FAILED);
+        } catch (CancelManualRequiredException e) {
+            log.error("[결제 취소 수동 처리 전환] - MemberId: {}, OrderId: {}, Error: {}", payment.getMemberId(), payment.getOrderId(), e.getMessage());
+            paymentCancelService.markAsManualProcessing(payment.getId(), e.getMessage());
+            switch (e.origin()) {
+                case PG -> throw new PaymentException(PAYMENT_CANCEL_MANUAL_PROCESSING_REQUIRED_BY_PG);
+                case WALLET_SERVICE -> throw new PaymentException(PAYMENT_CANCEL_MANUAL_PROCESSING_REQUIRED_BY_WALLET);
+                case PAYMENT_SERVICE -> throw new PaymentException(PAYMENT_CANCEL_MANUAL_PROCESSING_REQUIRED_BY_PAYMENT);
+                default -> throw new PaymentException(PAYMENT_CANCEL_MANUAL_PROCESSING_REQUIRED);
+            }
+        }
     }
 
     // Redis에서 결제 임시 데이터 조회
@@ -113,13 +130,18 @@ public class PaymentFacade {
         }
     }
 
-    private void cancelTossPayments(PaymentCancelCommand command, Payment payment) {
+    private void cancelTossPayments(PaymentCancelCommand command) {
         try {
             tossPaymentClient.cancel(command);
-        } catch (Exception e) {
-            log.error("[PG 취소 실패] - MemberId: {}, OrderId: {}, Error: {}", payment.getMemberId(), payment.getOrderId(), e.getMessage());
-            paymentCancelService.markAsFailed(payment.getId(), e);
-            throw new PaymentException(PAYMENT_PG_CANCELLATION_FAILED);
+        } catch (HttpClientErrorException e) {
+            // 4xx 오류
+            throw new PgCancelRejectedException(PaymentFailureOrigin.PG, e);
+        } catch (HttpServerErrorException | ResourceAccessException e) {
+            // 5xx, timeout, 네트워크 오류
+            throw new PgCancelUncertainException(PaymentFailureOrigin.PG, e);
+        } catch (HttpStatusCodeException e) {
+            // 기타 HTTP 상태 코드 오류
+            throw new PgCancelUncertainException(PaymentFailureOrigin.PG, e);
         }
     }
 }
