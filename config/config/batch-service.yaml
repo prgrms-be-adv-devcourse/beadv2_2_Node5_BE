@@ -28,6 +28,7 @@ spring:
     scheduling:
       cron:
         subscription-order: ${SUBSCRIPTION_ORDER_CRON}
+        settlement: ${SETTLEMENT_CRON}
   kafka:
     bootstrap-servers: ${KAFKA_HOST}:9092
     listener:
