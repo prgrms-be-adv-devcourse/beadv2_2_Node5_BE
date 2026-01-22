@@ -1,6 +1,6 @@
 package com.node5.paymentservice.payment.presentation;
 
-import com.node5.paymentservice.payment.application.PaymentConfirmFacade;
+import com.node5.paymentservice.payment.application.PaymentFacade;
 import com.node5.paymentservice.payment.application.PaymentRequestService;
 import com.node5.paymentservice.payment.application.PaymentService;
 import com.node5.paymentservice.payment.application.dto.*;
@@ -26,7 +26,7 @@ public class PaymentController {
 
     private final PaymentService paymentService;
     private final PaymentRequestService paymentRedisService;
-    private final PaymentConfirmFacade paymentConfirmFacade;
+    private final PaymentFacade paymentFacade;
 
     @Operation(summary = "결제 내역 조회", description = "예치금 id에 대한 확정된 결제 정보를 페이지 단위로 조회한다.")
     @GetMapping
@@ -43,7 +43,7 @@ public class PaymentController {
     @Operation(summary = "결제 확인", description = "결제 완료 후 결제를 승인한다.")
     @PostMapping("/confirm")
     public ResponseEntity<PaymentConfirmInfo> confirm(@RequestHeader("Member-Id") UUID memberId, @RequestBody PaymentConfirmRequest request) {
-        return ResponseEntity.status(CREATED).body(paymentConfirmFacade.confirm(memberId, request.toCommand()));
+        return ResponseEntity.status(CREATED).body(paymentFacade.confirm(memberId, request.toCommand()));
     }
 
     @Operation(summary = "결제 실패 처리", description = "결제 실패 정보를 기록한다.")
@@ -55,6 +55,6 @@ public class PaymentController {
     @Operation(summary = "결제 취소 요청", description = "결제를 취소를 요청한다.")
     @PutMapping("/cancel")
     public ResponseEntity<PaymentCancelInfo> cancel(@RequestHeader("Member-Id") UUID memberId, @RequestBody PaymentCancelRequest request) {
-        return ResponseEntity.ok(paymentService.cancel(memberId, request.toCommand()));
+        return ResponseEntity.ok(paymentFacade.cancel(memberId, request.toCommand()));
     }
 }
