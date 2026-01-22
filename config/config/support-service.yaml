@@ -42,6 +42,10 @@ spring:
     listener:
       simple:
         default-requeue-rejected: false
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: 6379
   kafka:
     # 1. 공통 설정: 카프카 클러스터 주소
     bootstrap-servers: ${KAFKA_HOST}:9092
