@@ -19,7 +19,7 @@ data:
         properties:
           hibernate:
             default_schema: payment
-            format_sql: true
+            format_sql: false
             jdbc:
               time_zone: Asia/Seoul
       kafka:
@@ -31,7 +31,7 @@ data:
         # 2. Producer 설정 (메시지를 보내는 서비스: 예 - Order, Payment)
         producer:
           key-serializer: org.apache.kafka.common.serialization.StringSerializer
-          value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+          value-serializer: org.springframework.kafka.support.serializer.StringSerializer
     
         # 3. Consumer 설정 (메시지를 받는 서비스: 예 - Notification, Settlement)
         consumer:
@@ -48,9 +48,6 @@ data:
           port: 6379
     api:
       v1: /api/v1
-    kafka:
-      topics:
-        deposit-event: payment-service.deposit-event.v1
     payment:
       toss:
         secret-key: ${TOSS_SECRET_KEY}
