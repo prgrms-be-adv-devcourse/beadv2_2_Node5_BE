@@ -55,7 +55,7 @@ public class SubscriptionController {
     }
 
     @Operation(summary = "구독 재개", description = "일시정지한 구독을 재개합니다.")
-    @PutMapping("{id}/resume")
+    @PatchMapping("{id}/resume")
     public ResponseEntity<SubscriptionInfo> resume(@PathVariable UUID id) {
         return ResponseEntity.ok(subscriptionService.resume(id));
     }
