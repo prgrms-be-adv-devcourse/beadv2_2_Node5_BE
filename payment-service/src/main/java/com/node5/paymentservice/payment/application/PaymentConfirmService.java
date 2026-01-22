@@ -54,7 +54,7 @@ public class PaymentConfirmService {
         payment.failure(errorMessage);
         paymentRepository.save(payment);
 
-        // 결제 실패 이메일 이벤트 저장
+        // 결제 승인 실패 이메일 이벤트 저장
         PaymentSendEmailEvent emailEvent = new PaymentSendEmailEvent(payment.getMemberId(), payment.getOrderId(), payment.getAmount(), payment.getStatus().toString(), payment.getFailReason());
         paymentEventHandler.saveOutbox("PaymentSendEmail", payment.getId(), "payment-service.send-email-event.v1", emailEvent);
     }

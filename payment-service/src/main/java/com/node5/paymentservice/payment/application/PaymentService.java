@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
@@ -99,11 +100,18 @@ public class PaymentService {
             paymentEventHandler.saveOutbox("PaymentSendEmail", payment.getId(), "payment-service.send-email-event.v1", emailEvent);
         } catch (Exception e) {
             payment.cancel_failure("PG사 결제 취소 실패: " + e.getMessage());
-            PaymentSendEmailEvent emailEvent = new PaymentSendEmailEvent(payment.getMemberId(), payment.getOrderId(), payment.getAmount(), payment.getStatus().toString(), payment.getFailReason());
-            paymentEventHandler.saveOutbox("PaymentSendEmail", payment.getId(), "payment-service.send-email-event.v1", emailEvent);
-
+            markAsFailed(payment, e);
+            throw new PaymentException(PAYMENT_PG_CANCELLATION_FAILED);
         }
-
         return PaymentCancelInfo.from(payment.getStatus());
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void markAsFailed(Payment payment, Exception e) {
+        paymentRepository.save(payment);
+
+        // 결제 취소 실패 이메일 이벤트 저장
+        PaymentSendEmailEvent emailEvent = new PaymentSendEmailEvent(payment.getMemberId(), payment.getOrderId(), payment.getAmount(), payment.getStatus().toString(), payment.getFailReason());
+        paymentEventHandler.saveOutbox("PaymentSendEmail", payment.getId(), "payment-service.send-email-event.v1", emailEvent);
     }
 }
