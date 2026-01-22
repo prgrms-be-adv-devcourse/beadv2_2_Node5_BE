@@ -87,7 +87,6 @@ public class PaymentConfirmFacade {
     private TossPaymentResponse confirmTossPayments(PaymentConfirmCommand command, PaymentTemporaryData paymentTemporaryData) {
         try {
             return tossPaymentClient.confirm(command);
-            // 예치금 승인 확정 이벤트 발행
         } catch (Exception e) {
             log.error("[PG 승인 실패] - MemberId: {}, OrderId: {}, Error: {}", paymentTemporaryData.getMemberId(), paymentTemporaryData.getOrderId(), e.getMessage());
             paymentConfirmService.markAsFailed(paymentTemporaryData.getOrderId(), e.getMessage());

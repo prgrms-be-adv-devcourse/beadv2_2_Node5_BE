@@ -19,7 +19,7 @@ data:
         properties:
           hibernate:
             default_schema: payment
-            format_sql: true
+            format_sql: false
             jdbc:
               time_zone: Asia/Seoul
       kafka:
@@ -48,9 +48,6 @@ data:
           port: 6379
     api:
       v1: /api/v1
-    kafka:
-      topics:
-        deposit-event: payment-service.deposit-event.v1
     payment:
       toss:
         secret-key: ${TOSS_SECRET_KEY}
