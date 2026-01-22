@@ -1,14 +1,13 @@
 package com.node5.orderservice.order.application;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.node5.common.domain.PageInfoDto;
-import com.node5.common.exception.ExceptionResponseDto;
+import com.node5.orderservice.global.openfeign.client.CatalogClient;
+import com.node5.orderservice.global.openfeign.client.WalletClient;
 import com.node5.orderservice.global.openfeign.client.dto.*;
 import com.node5.orderservice.order.application.dto.OrderCommand;
 import com.node5.orderservice.order.application.dto.OrderCreateInfo;
 import com.node5.orderservice.order.application.dto.OrderItemCommand;
-import com.node5.orderservice.order.application.dto.OrderStatusInfo;
-import com.node5.orderservice.global.openfeign.client.CatalogClient;
+import com.node5.orderservice.order.application.dto.OrderStatusInfo;;
 import com.node5.orderservice.order.domain.Order;
 import com.node5.orderservice.order.domain.OrderItem;
 import com.node5.orderservice.order.domain.OrderItemRepository;
@@ -17,7 +16,6 @@ import com.node5.orderservice.order.exception.*;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import com.node5.orderservice.order.application.dto.*;
-import com.node5.orderservice.global.openfeign.client.WalletClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -28,8 +26,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -50,7 +46,7 @@ public class OrderService {
     private final OrderTransactionService orderTransactionService;
     private final WalletClient walletClient;
     private final CatalogClient catalogClient;
-    private final ObjectMapper objectMapper;
+    private final FeignErrorDecoderUtil feignUtil;
 
     @Transactional
     public OrderCreateInfo create(UUID memberId, OrderCommand command) {
@@ -73,7 +69,7 @@ public class OrderService {
         try {
             catalogClient.hold(holdRequest);
         } catch(FeignException e) {
-            throw new OrderException(ORDER_STOCK_HOLD_FAILED, "message=" + feignErrorMessage(e));
+            throw new OrderException(ORDER_STOCK_HOLD_FAILED, "message=" + feignUtil.getFeignErrorMessage(e));
         }
 
         // Order 생성 (주문번호 생성, 총 주문 금액 계산)
@@ -104,7 +100,7 @@ public class OrderService {
             paid = true;
         } catch(FeignException e) {
             orderTransactionService.updateOrderStatus(orderId, PAYMENT_FAILED);
-            throw new OrderException(ORDER_PAYMENT_FAILED, "orderId=" + orderId + ", message=" + feignErrorMessage(e));
+            throw new OrderException(ORDER_PAYMENT_FAILED, "orderId=" + orderId + ", message=" + feignUtil.getFeignErrorMessage(e));
         } catch(Exception e) {
             orderTransactionService.updateOrderStatus(orderId, PAYMENT_FAILED);
             throw new OrderException(ORDER_PAYMENT_FAILED, "orderId=" + orderId + ", message=" + e.getMessage());
@@ -127,7 +123,7 @@ public class OrderService {
 
             catalogClient.commit(new StockCommitBatchRequest(orderId, items));
         } catch (FeignException e) {
-            log.error("재고 확정 실패: orderId={}, message={}", orderId, feignErrorMessage(e));
+            log.error("재고 확정 실패: orderId={}, message={}", orderId, feignUtil.getFeignErrorMessage(e));
         } catch (Exception e) {
             log.error("재고 확정 실패: orderId={}, message={}", orderId, e.getMessage(), e);
         }
@@ -141,7 +137,7 @@ public class OrderService {
 
             catalogClient.release(new StockReleaseBatchRequest(orderId, items));
         } catch (FeignException e) {
-            log.error("재고 해제 실패: orderId={}, message={}", orderId, feignErrorMessage(e));
+            log.error("재고 해제 실패: orderId={}, message={}", orderId, feignUtil.getFeignErrorMessage(e));
         } catch (Exception e) {
             log.error("재고 해제 실패: orderId={}, message={}", orderId, e.getMessage(), e);
         }
@@ -152,41 +148,6 @@ public class OrderService {
                 .map(OrderItemCommand::productId)
                 .distinct()
                 .toList();
-    }
-
-    private String feignErrorMessage(FeignException e) {
-        ExceptionResponseDto err = parseFeignError(e);
-        if (err != null) {
-            return err.message();
-        }
-        return " (status:" + e.status() + ", raw:" + safeRawBody(e) + ")";
-    }
-
-    private ExceptionResponseDto parseFeignError(FeignException e) {
-        if (e.responseBody().isEmpty()) {
-            return null;
-        }
-
-        try {
-            ByteBuffer buffer = e.responseBody().get().asReadOnlyBuffer();
-            byte[] bytes = new byte[buffer.remaining()];
-            buffer.get(bytes);
-            return objectMapper.readValue(bytes, ExceptionResponseDto.class);
-        } catch (Exception ex) {
-            return null;
-        }
-    }
-
-    private String safeRawBody(FeignException e) {
-        try {
-            if (e.responseBody().isEmpty()) return "<empty>";
-            ByteBuffer buffer = e.responseBody().get().asReadOnlyBuffer();
-            byte[] bytes = new byte[buffer.remaining()];
-            buffer.get(bytes);
-            return new String(bytes, StandardCharsets.UTF_8);
-        } catch (Exception ex) {
-            return "<unreadable>";
-        }
     }
 
     public OrderListInfo getOrderList(UUID memberId, int page, int size, String period) {
@@ -268,7 +229,7 @@ public class OrderService {
                 if (response.getStatusCode().is2xxSuccessful()) {
                     orderTransactionService.updateOrderStatus(orderId, CANCELED);
                 }
-            } catch(Exception e) {
+            } catch (Exception e) {
                 throw new OrderException(ORDER_PAYMENT_FAILED, "orderId=" + orderId + ", message=" + e.getMessage());
             }
         }else{

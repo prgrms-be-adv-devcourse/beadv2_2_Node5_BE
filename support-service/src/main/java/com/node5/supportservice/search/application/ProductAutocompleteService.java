@@ -15,7 +15,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ProductAutocompleteService {
 
-	private static final int MIN_LENGTH = 2;
+	private static final int MIN_AUTOCOMPLETE_LENGTH = 2;
 
 	private final ProductSearchPort productSearchPort;
 	private final QueryNormalizer queryNormalizer;
@@ -25,10 +25,14 @@ public class ProductAutocompleteService {
 
 		String normalized = queryNormalizer.normalize(keyword);
 		if (normalized.isBlank()) return List.of();
-		if (normalized.length() < MIN_LENGTH) return List.of();
+		if (normalized.length() < MIN_AUTOCOMPLETE_LENGTH) return List.of();
 
 		List<String> raw = productSearchPort.autocomplete(new ProductAutocompleteCommand(normalized));
 
+		return postProcess(raw);
+	}
+
+	private List<String> postProcess(List<String> raw) {
 		return raw.stream()
 			.filter(StringUtils::hasText)
 			.map(String::trim)

@@ -1,0 +1,60 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: batch-service-payment-outbox-cleanup
+  labels:
+    app: batch-service
+spec:
+  schedule: "0 6 * * MON"
+  timeZone: "Asia/Seoul"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 3
+      template:
+        metadata:
+          labels:
+            app: batch-service
+        spec:
+          nodeSelector:
+            type: node5-worker
+          restartPolicy: OnFailure
+          containers:
+            - name: batch-service
+              image: node5dev/batch-service:latest
+              imagePullPolicy: Always
+              env:
+                - name: SPRING_PROFILES_ACTIVE
+                  value: prod
+                - name: JAVA_TOOL_OPTIONS
+                  value: "-Xms128m -Xmx256m"
+              envFrom:
+                - secretRef:
+                    name: common-secret
+                - secretRef:
+                    name: batch-secret
+              volumeMounts:
+                - name: config
+                  mountPath: /config
+              command: ["sh", "-c"]
+              args:
+                - >-
+                  java -jar /app/app.jar
+                  --batch.run.mode=payment-outbox-cleanup
+              resources:
+                requests:
+                  memory: "256Mi"
+                  cpu: "100m"
+                limits:
+                  memory: "512Mi"
+                  cpu: "500m"
+          volumes:
+            - name: config
+              projected:
+                sources:
+                  - configMap:
+                      name: common-config
+                  - configMap:
+                      name: batch-service-config

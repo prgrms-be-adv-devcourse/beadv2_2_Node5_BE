@@ -6,7 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
 
 import static com.node5.orderservice.order.domain.OrderProgress.*;
 
@@ -35,10 +34,10 @@ public class OrderScheduler {
         orderTransactionService.updateOrderItemStatus(DELIVERY_COMPLETED, CONFIRMED);
     }
 
-//    // 매일 CONFIRMED 상태의 주문만 조회하여 정산 API를 호출
-//    @Scheduled(cron = "${scheduling.cron.collect-settlement-source:0 */5 * * * *}")
-//    public void processSettlementRequest(){
-//        orderTransactionService.processSettlementRequest();
-//    }
+    // 매일 CONFIRMED 상태의 주문 상품만 조회하여 정산 API를 호출
+    @Scheduled(cron = "${scheduling.cron.collect-settlement-source:0 */5 * * * *}")
+    public void processSettlementRequest(){
+        orderTransactionService.processSettlementRequest();
+    }
 
 }

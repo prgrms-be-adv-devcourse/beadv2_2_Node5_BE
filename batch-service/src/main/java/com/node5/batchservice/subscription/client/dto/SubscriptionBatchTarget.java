@@ -9,7 +9,7 @@ public record SubscriptionBatchTarget(
         String deliveryAddress,
         UUID productId,
         String productName,
-        String thumbnailUrl,
+        String thumbnailKey,
         BigDecimal pricePerItem,
         Integer quantity,
         BigDecimal totalPrice

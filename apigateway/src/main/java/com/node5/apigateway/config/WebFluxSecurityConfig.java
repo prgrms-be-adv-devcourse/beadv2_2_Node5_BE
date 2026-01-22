@@ -36,7 +36,7 @@ public class WebFluxSecurityConfig {
             "/catalog-service/api/v1/products/*",
             "/support-service/api/v1/products/search",
             "/support-service/api/v1/products/autocomplete",
-            "/support-service/api/v1/reviews/*",
+            "/support-service/api/v1/reviews/static/*",
             "/support-service/api/v1/reviews/detail/*",
             "/support-service/api/v1/review-summaries"
     };

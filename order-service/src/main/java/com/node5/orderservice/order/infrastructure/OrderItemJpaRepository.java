@@ -1,5 +1,6 @@
 package com.node5.orderservice.order.infrastructure;
 
+import com.node5.orderservice.order.domain.OrderItemSettlementStatus;
 import com.node5.orderservice.order.domain.OrderItem;
 import com.node5.orderservice.order.domain.OrderProgress;
 import org.springframework.data.domain.Pageable;
@@ -46,4 +47,14 @@ public interface OrderItemJpaRepository extends JpaRepository<OrderItem, UUID> {
             ") " +
             "AND oi.status NOT IN :doneStatuses")
     boolean existsInProgressByMemberId(@Param("memberId") UUID memberId, @Param("doneStatuses") Collection<OrderProgress> doneStatuses);
+
+    List<OrderItem> findByStatus(OrderProgress status);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("UPDATE OrderItem oi " +
+            "SET oi.settlementStatus = :settlementStatus " +
+            "WHERE oi.id IN :orderItemIds")
+    void updateSettlementStatus(@Param("orderItemIds") List<UUID> orderItemIds, @Param("settlementStatus") OrderItemSettlementStatus settlementStatus);
+
+    Boolean existsByProductIdInAndSettlementStatus(List<UUID> productIds, OrderItemSettlementStatus settlementStatus);
 }

@@ -2,6 +2,7 @@ package com.node5.batchservice.payment.batch;
 
 import com.node5.batchservice.payment.application.PaymentOutboxCleanupService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 @EnableScheduling
+@ConditionalOnProperty(name = "batch.scheduler.enabled", havingValue = "true")
 public class PaymentOutboxCleanupScheduler {
     private final PaymentOutboxCleanupService paymentOutboxService;
 

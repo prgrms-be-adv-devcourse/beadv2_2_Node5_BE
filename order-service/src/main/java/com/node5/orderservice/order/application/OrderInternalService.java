@@ -2,6 +2,7 @@ package com.node5.orderservice.order.application;
 
 import com.node5.orderservice.order.application.dto.OrderStatusCommand;
 import com.node5.orderservice.order.domain.OrderItemRepository;
+import com.node5.orderservice.order.domain.OrderItemSettlementStatus;
 import com.node5.orderservice.order.domain.OrderProgress;
 import com.node5.orderservice.order.domain.OrderRepository;
 import lombok.RequiredArgsConstructor;
@@ -12,8 +13,6 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
-
-import static com.node5.orderservice.order.exception.OrderErrorCode.*;
 
 @Service
 @RequiredArgsConstructor
@@ -55,5 +54,10 @@ public class OrderInternalService {
                 memberId,
                 List.of(OrderProgress.CONFIRMED, OrderProgress.REFUND_COMPLETED)
         );
+    }
+
+    // 정산 대기 중인 주문 상품이 있는지 확인
+    public Boolean hasInProgressSettlementPending(List<UUID> productIds) {
+        return orderItemRepository.existsByProductIdInAndSettlementStatus(productIds, OrderItemSettlementStatus.PENDING);
     }
 }

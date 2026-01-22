@@ -57,6 +57,11 @@ public class ProductRepositoryAdapter implements ProductRepository {
 	}
 
 	@Override
+	public List<UUID> findIdsByShopIdIn(Collection<UUID> shopIds) {
+		return productJpaRepository.findIdsByShopIdIn(shopIds);
+	}
+
+	@Override
 	public int discontinueByShopId(UUID shopId) {
 		return productJpaRepository.discontinueByShopId(shopId);
 	}
