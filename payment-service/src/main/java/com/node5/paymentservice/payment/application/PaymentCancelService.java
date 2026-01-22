@@ -16,7 +16,6 @@ import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
@@ -60,10 +59,8 @@ public class PaymentCancelService {
             payment.withdraw_confirmed();
         } catch (FeignException e) {
             if (e.status() >= 400 && e.status() < 500) {
-                log.error("[예치금 출금 요청 실패] 클라이언트 오류 - MemberId: {}, OrderId: {}, Status: {}, Error: {}", payment.getMemberId(), payment.getOrderId(), e.status(), e.getMessage());
                 throw new WithdrawRejectedException(e);
             }
-            log.error("예치금 서버 시스템 에러 또는 타임아웃 발생");
             throw new WithdrawUncertainException(PaymentFailureOrigin.WALLET_SERVICE, e);
         }
     }
@@ -73,21 +70,28 @@ public class PaymentCancelService {
     public Payment cancelPaymentProcessing(UUID paymentId) {
         Payment payment = findPayment(paymentId);
         payment.cancel();
+        log.info("[결제 취소 완료] - PaymentId: {}, OrderId: {}", payment.getId(), payment.getOrderId());
         PaymentSendEmailEvent emailEvent = new PaymentSendEmailEvent(payment.getMemberId(), payment.getOrderId(), payment.getAmount(), payment.getStatus().toString(), null);
         paymentEventHandler.saveOutbox("PaymentSendEmail", payment.getId(), "payment-service.send-email-event.v1", emailEvent);
         return payment;
     }
 
+    // 결제 취소 롤백 처리
     @Transactional
-    public void rollbackCancelPaymentProcessing(UUID paymentId) {
+    public void rollbackCancelPaymentProcessing(UUID paymentId, String message) {
         Payment payment = findPayment(paymentId);
-        payment.rollbackConfirmation();
+        payment.rollbackConfirmation("결제 취소 실패: " + message);
+        log.error("[결제 취소 롤백] - PaymentId: {}, OrderId: {}, Reason: {}", payment.getId(), payment.getOrderId(), message);
+        PaymentSendEmailEvent emailEvent = new PaymentSendEmailEvent(payment.getMemberId(), payment.getOrderId(), payment.getAmount(), payment.getStatus().toString(), payment.getFailReason());
+        paymentEventHandler.saveOutbox("PaymentSendEmail", payment.getId(), "payment-service.send-email-event.v1", emailEvent);
     }
 
+    // 수동 처리 필요로 상태 변경
     @Transactional
     public void markAsManualProcessing(UUID id, String message) {
         Payment payment = findPayment(id);
         payment.manual_processing_required("수동 처리 필요: " + message);
+        log.error("[결제 취소 수동 처리 필요] - PaymentId: {}, OrderId: {}, Reason: {}", payment.getId(), payment.getOrderId(), message);
         PaymentSendEmailEvent emailEvent = new PaymentSendEmailEvent(payment.getMemberId(), payment.getOrderId(), payment.getAmount(), payment.getStatus().toString(), payment.getFailReason());
         paymentEventHandler.saveOutbox("PaymentSendEmail", payment.getId(), "payment-service.send-email-event.v1", emailEvent);
     }

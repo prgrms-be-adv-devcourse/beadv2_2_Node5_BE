@@ -68,11 +68,9 @@ public class PaymentFacade {
             Payment canceledPayment = paymentCancelService.cancelPaymentProcessing(payment.getId());
             return PaymentCancelInfo.from(canceledPayment.getStatus());
         } catch (WithdrawRejectedException e) {
-            log.error("[결제 취소 실패 - 출금 거절] - MemberId: {}, OrderId: {}, Error: {}", payment.getMemberId(), payment.getOrderId(), e.getMessage());
-            paymentCancelService.rollbackCancelPaymentProcessing(payment.getId());
+            paymentCancelService.rollbackCancelPaymentProcessing(payment.getId(), e.getMessage());
             throw new PaymentException(PAYMENT_CANCEL_FAILED);
         } catch (CancelManualRequiredException e) {
-            log.error("[결제 취소 수동 처리 전환] - MemberId: {}, OrderId: {}, Error: {}", payment.getMemberId(), payment.getOrderId(), e.getMessage());
             paymentCancelService.markAsManualProcessing(payment.getId(), e.getMessage());
             switch (e.origin()) {
                 case PG -> throw new PaymentException(PAYMENT_CANCEL_MANUAL_PROCESSING_REQUIRED_BY_PG);

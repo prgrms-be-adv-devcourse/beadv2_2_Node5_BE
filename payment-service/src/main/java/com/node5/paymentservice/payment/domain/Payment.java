@@ -76,8 +76,9 @@ public class Payment extends BaseEntity {
         this.approvedAt = tossPayment.approvedAt().toLocalDateTime();
     }
 
-    public void rollbackConfirmation() {
+    public void rollbackConfirmation(String failReason) {
         this.status = PaymentStatus.CONFIRMED;
+        this.failReason = failReason;
     }
 
     public void failure(String failReason) {
