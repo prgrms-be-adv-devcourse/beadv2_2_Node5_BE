@@ -35,9 +35,6 @@ public class SubscriptionRepositoryAdapter implements SubscriptionRepository {
     public List<Subscription> findAllById(List<UUID> ids) {return jpaRepository.findAllById(ids);}
 
     @Override
-    public List<Subscription> saveAll(List<Subscription> subscriptions){return jpaRepository.saveAll(subscriptions);}
-
-    @Override
     public Page<Subscription> findAllByMemberId(UUID memberId, Pageable pageable){return jpaRepository.findAllByMemberId(memberId,pageable);}
 
     @Override
@@ -49,8 +46,8 @@ public class SubscriptionRepositoryAdapter implements SubscriptionRepository {
     }
 
     @Override
-    public Page<Subscription> findAllByNextRunDateAndSubscriptionStatus(LocalDate nextRunDate, SubscriptionStatus subscriptionStatus, Pageable pageable) {
-        return jpaRepository.findAllByNextRunDateAndSubscriptionStatus(nextRunDate, subscriptionStatus, pageable);
+    public Page<Subscription> findAllByNextRunDateAndSubscriptionStatusIn(LocalDate nextRunDate, List<SubscriptionStatus> subscriptionStatuses, Pageable pageable) {
+        return jpaRepository.findAllByNextRunDateAndSubscriptionStatusIn(nextRunDate, subscriptionStatuses, pageable);
     }
 
     @Override
@@ -111,6 +108,16 @@ public class SubscriptionRepositoryAdapter implements SubscriptionRepository {
     @Override
     public void bulkMarkFailedByIds(List<UUID> ids) {
         jpaRepository.bulkMarkFailedByIds(ids);
+    }
+
+    @Override
+    public void bulkMarkUnavailableByIds(List<UUID> ids) {
+        jpaRepository.bulkMarkUnavailableByIds(ids);
+    }
+
+    @Override
+    public void bulkMarkActiveByIds(List<UUID> ids) {
+        jpaRepository.bulkMarkActiveByIds(ids);
     }
 
     @Override

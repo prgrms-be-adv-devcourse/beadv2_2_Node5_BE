@@ -20,7 +20,7 @@ public interface SubscriptionJpaRepository extends JpaRepository<Subscription, U
 
     List<Subscription> findAllByShopId(UUID shopId);
 
-    Page<Subscription> findAllByNextRunDateAndSubscriptionStatus(LocalDate nextRunDate, SubscriptionStatus subscriptionStatus, Pageable pageable);
+    Page<Subscription> findAllByNextRunDateAndSubscriptionStatusIn(LocalDate nextRunDate, List<SubscriptionStatus> subscriptionStatuses, Pageable pageable);
 
     Page<Subscription> findAllByProductId(UUID productId, Pageable pageable);
 
@@ -50,4 +50,22 @@ public interface SubscriptionJpaRepository extends JpaRepository<Subscription, U
             and s.subscriptionStatus not in ('CANCELLED', 'UNAVAILABLE', 'TERMINATED')
     """)
     void bulkMarkFailedByIds(List<UUID> ids);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+        update Subscription s
+        set s.subscriptionStatus = 'UNAVAILABLE'
+        where s.id in :ids
+            and s.subscriptionStatus not in ('CANCELLED', 'UNAVAILABLE', 'TERMINATED')
+    """)
+    void bulkMarkUnavailableByIds(List<UUID> ids);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+        update Subscription s
+        set s.subscriptionStatus = 'ACTIVE'
+        where s.id in :ids
+            and s.subscriptionStatus = 'FAILED'
+    """)
+    void bulkMarkActiveByIds(List<UUID> ids);
 }
