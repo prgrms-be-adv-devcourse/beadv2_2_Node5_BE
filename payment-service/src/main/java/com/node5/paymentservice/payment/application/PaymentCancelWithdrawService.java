@@ -8,6 +8,7 @@ import com.node5.paymentservice.payment.exception.PaymentException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import static com.node5.paymentservice.payment.exception.PaymentErrorCode.PAYMENT_WALLET_WITHDRAW_FAILED;
 
@@ -19,6 +20,7 @@ public class PaymentCancelWithdrawService {
     private final PaymentRepository paymentRepository;
     private final WalletClient walletClient;
 
+    @Transactional
     public void cancelWithdrawPaymentProcessing(Payment payment) {        // 예치금 출금 요청
         try {
             WalletRequest withdrawRequest = new WalletRequest(
