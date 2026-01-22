@@ -48,13 +48,17 @@ spec:
           readinessProbe:
             exec:
               command: ["pg_isready", "-U", "node5", "-d", "my_routine"]
-            initialDelaySeconds: 5
-            periodSeconds: 5
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
           livenessProbe:
             exec:
               command: ["pg_isready", "-U", "node5", "-d", "my_routine"]
             initialDelaySeconds: 10
             periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 3
       volumes:
         - name: postgres-data
           hostPath:
