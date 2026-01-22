@@ -2,6 +2,7 @@ package com.node5.memberservice.settlement.application;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.node5.common.exception.ExceptionResponseDto;
+import com.node5.memberservice.settlement.client.CatalogClient;
 import com.node5.memberservice.settlement.client.OrderClient;
 import com.node5.memberservice.settlement.application.dto.SettlementSourceItem;
 import com.node5.memberservice.settlement.domain.SettlementProcessStatus;
@@ -14,7 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -27,6 +27,7 @@ public class SettlementInternalService {
 
     private final SettlementSourceRepository settlementSourceRepository;
     private final OrderClient orderClient;
+    private final CatalogClient catalogClient;
     private final ObjectMapper objectMapper;
 
     // 정산 요청: Order -> SettlementSource 생성
@@ -51,23 +52,18 @@ public class SettlementInternalService {
         }
 
         // 판매하는 상품 중 정산 대기 중인 것이 존재하는지 OrderItem 테이블 확인
-        List<UUID> productIds = new ArrayList<>();
-//                List.of(
-//                    UUID.fromString("a10e8400-e29b-41d4-a716-446655440001"),
-//                    UUID.fromString("a10e8400-e29b-41d4-a716-446655440002")
-//                );
-        // TODO List<UUID> productIds = catalogClient.getProductIdsByShopIds(shopIdList);
-        if(!productIds.isEmpty()){
-            try {
+        try {
+            List<UUID> productIds = catalogClient.getProductIdsByShopIds(shopIdList).getBody();
+            if(productIds != null && !productIds.isEmpty()){
                 ResponseEntity<Boolean> hasSettlementPending = orderClient.hasInProgressSettlementPending(productIds);
                 if (Boolean.TRUE.equals(hasSettlementPending.getBody())) {
                     return true;
                 }
-            } catch(FeignException e) {
-                throw new SettlementException(SETTLEMENT_FEIGN_ERROR, "message=" + getFeignErrorMessage(e));
-            } catch(Exception e) {
-                throw new SettlementException(SETTLEMENT_FEIGN_ERROR, "message=" + e.getMessage());
             }
+        } catch(FeignException e) {
+            throw new SettlementException(SETTLEMENT_FEIGN_ERROR, "message=" + getFeignErrorMessage(e));
+        } catch(Exception e) {
+            throw new SettlementException(SETTLEMENT_FEIGN_ERROR, "message=" + e.getMessage());
         }
 
         // SettlementProcessStatus PENDING인 것 존재하는지 SettlementSource 테이블 확인
