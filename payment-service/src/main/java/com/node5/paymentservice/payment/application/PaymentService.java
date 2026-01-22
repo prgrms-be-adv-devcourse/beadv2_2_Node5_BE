@@ -1,11 +1,13 @@
 package com.node5.paymentservice.payment.application;
 
+import com.node5.common.event.PaymentSendEmailEvent;
 import com.node5.paymentservice.payment.application.dto.*;
 import com.node5.paymentservice.payment.client.tossPayments.TossPaymentClient;
 import com.node5.paymentservice.payment.client.openfeign.WalletClient;
 import com.node5.paymentservice.payment.client.openfeign.dto.WalletRequest;
 import com.node5.paymentservice.payment.domain.*;
 import com.node5.paymentservice.payment.exception.PaymentException;
+import com.node5.paymentservice.payment.infrastructure.kafka.handler.PaymentEventHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -26,6 +28,7 @@ public class PaymentService {
 
     private final WalletClient walletClient;
     private final TossPaymentClient tossPaymentClient;
+    private final PaymentEventHandler paymentEventHandler;
 
     // memberId로 결제 내역 조회
     public Page<PaymentInfo> findAll(UUID memberId, Pageable pageable) {
@@ -92,9 +95,13 @@ public class PaymentService {
         try {
             tossPaymentClient.cancel(command);
             payment.cancel();
+            PaymentSendEmailEvent emailEvent = new PaymentSendEmailEvent(payment.getMemberId(), payment.getOrderId(), payment.getAmount(), payment.getStatus().toString(), null);
+            paymentEventHandler.saveOutbox("PaymentSendEmail", payment.getId(), "payment-service.send-email-event.v1", emailEvent);
         } catch (Exception e) {
             payment.cancel_failure("PG사 결제 취소 실패: " + e.getMessage());
-            //TODO: MessageQueue로 알림 전송
+            PaymentSendEmailEvent emailEvent = new PaymentSendEmailEvent(payment.getMemberId(), payment.getOrderId(), payment.getAmount(), payment.getStatus().toString(), payment.getFailReason());
+            paymentEventHandler.saveOutbox("PaymentSendEmail", payment.getId(), "payment-service.send-email-event.v1", emailEvent);
+
         }
 
         return PaymentCancelInfo.from(payment.getStatus());
