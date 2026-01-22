@@ -1,18 +1,3 @@
 spring:
   config:
     import: optional:configserver:http://localhost:8888
-
-  datasource:
-    # 1. Batch 서비스
-    primary:
-      jdbc-url: ${SPRING_DATASOURCE_URL}
-      username: ${SPRING_DATASOURCE_USERNAME}
-      password: ${SPRING_DATASOURCE_PASSWORD}
-      driver-class-name: org.postgresql.Driver
-
-    # 2. Member 서비스
-    member:
-      jdbc-url: ${SPRING_DATASOURCE_URL}
-      username: ${SPRING_DATASOURCE_USERNAME}
-      password: ${SPRING_DATASOURCE_PASSWORD}
-      driver-class-name: org.postgresql.Driver
