@@ -2,8 +2,9 @@ package com.node5.orderservice.subscription.application;
 
 import com.node5.common.domain.PageInfoDto;
 import com.node5.common.domain.PagedResponseDto;
-import com.node5.common.event.SubscriptionStatusChangedEvent;
 import com.node5.common.event.SubscriptionOrderBatchChunkResultEvent;
+import com.node5.common.event.SubscriptionOrderBatchResultType;
+import com.node5.common.event.SubscriptionStatusChangedEvent;
 import com.node5.orderservice.subscription.application.dto.SubscriptionBatchTarget;
 import com.node5.orderservice.subscription.domain.Subscription;
 import com.node5.orderservice.subscription.domain.SubscriptionRecurrenceRule;
@@ -40,7 +41,11 @@ public class SubscriptionInternalService {
 
     public PagedResponseDto<SubscriptionBatchTarget> findBatchTargets(LocalDate runDate, Pageable pageable) {
         Page<Subscription> page = subscriptionRepository
-                .findAllByNextRunDateAndSubscriptionStatus(runDate, SubscriptionStatus.ACTIVE, pageable);
+                .findAllByNextRunDateAndSubscriptionStatusIn(
+                        runDate,
+                        List.of(SubscriptionStatus.ACTIVE, SubscriptionStatus.FAILED),
+                        pageable
+                );
 
         List<SubscriptionBatchTarget> targets = page.getContent().stream()
                 .map(this::toBatchTarget)
@@ -61,28 +66,32 @@ public class SubscriptionInternalService {
         LocalDate runDate = LocalDate.parse(event.runDate());
         List<SubscriptionOrderBatchChunkResultEvent.SubscriptionOrderBatchResultItem> results = event.results();
 
-        List<UUID> successIds = results.stream()
-                .filter(SubscriptionOrderBatchChunkResultEvent.SubscriptionOrderBatchResultItem::success)
-                .map(result -> UUID.fromString(result.subscriptionId()))
-                .toList();
+        List<UUID> successIds = new java.util.ArrayList<>();
+        List<UUID> paymentFailedIds = new java.util.ArrayList<>();
+        List<UUID> unavailableIds = new java.util.ArrayList<>();
+        List<UUID> retryIds = new java.util.ArrayList<>();
+        List<UUID> failedIds = new java.util.ArrayList<>();
 
-        List<UUID> retryIds = results.stream()
-                .filter(result -> !result.success() && result.retryable())
-                .map(result -> UUID.fromString(result.subscriptionId()))
-                .toList();
+        for (var result : results) {
+            UUID subscriptionId = UUID.fromString(result.subscriptionId());
+            SubscriptionOrderBatchResultType resultType = result.resultType();
 
-        List<UUID> failedIds = results.stream()
-                .filter(result -> !result.success() && !result.retryable())
-                .map(result -> UUID.fromString(result.subscriptionId()))
-                .toList();
+            if (resultType != SubscriptionOrderBatchResultType.SUCCESS) {
+                log.warn("Subscription batch non-success result: {} type={}", result.subscriptionId(), resultType);
+            }
 
-        results.stream()
-                .filter(result -> !result.success())
-                .forEach(result -> log.warn("Subscription batch failed: {} reason={}",
-                        result.subscriptionId(), result.failureReason()));
+            switch (resultType) {
+                case SUCCESS -> successIds.add(subscriptionId);
+                case PAYMENT_FAILED -> paymentFailedIds.add(subscriptionId);
+                case UNAVAILABLE -> unavailableIds.add(subscriptionId);
+                case RETRYABLE_FAILURE -> retryIds.add(subscriptionId);
+                case NON_RETRYABLE_FAILURE -> failedIds.add(subscriptionId);
+            }
+        }
 
         if (!successIds.isEmpty()) {
             applySuccessResults(successIds, runDate);
+            restoreFailedSubscriptions(successIds);
         }
 
         if (!retryIds.isEmpty()) {
@@ -90,8 +99,21 @@ public class SubscriptionInternalService {
             log.info("Subscription batch retry scheduled: {} items", retryIds.size());
         }
 
+        if (!paymentFailedIds.isEmpty()) {
+            publishStatusChanges(paymentFailedIds, SubscriptionStatus.FAILED);
+            subscriptionRepository.bulkMarkFailedByIds(paymentFailedIds);
+            subscriptionRepository.bulkUpdateNextRunDateByIds(paymentFailedIds, runDate.plusDays(1));
+            log.info("Subscription batch payment failed: {} items", paymentFailedIds.size());
+        }
+
+        if (!unavailableIds.isEmpty()) {
+            publishStatusChanges(unavailableIds, SubscriptionStatus.UNAVAILABLE);
+            subscriptionRepository.bulkMarkUnavailableByIds(unavailableIds);
+            log.info("Subscription batch marked unavailable: {} items", unavailableIds.size());
+        }
+
         if (!failedIds.isEmpty()) {
-            publishFailedStatusChanges(failedIds);
+            publishStatusChanges(failedIds, SubscriptionStatus.FAILED);
             subscriptionRepository.bulkMarkFailedByIds(failedIds);
             log.info("Subscription batch marked failed: {} items", failedIds.size());
         }
@@ -150,16 +172,36 @@ public class SubscriptionInternalService {
         );
     }
 
-    private void publishFailedStatusChanges(List<UUID> failedIds) {
-        List<Subscription> subscriptions = subscriptionRepository.findAllById(failedIds);
+    private void restoreFailedSubscriptions(List<UUID> subscriptionIds) {
+        List<Subscription> subscriptions = subscriptionRepository.findAllById(subscriptionIds);
+        if (subscriptions.isEmpty()) {
+            return;
+        }
+
+        List<UUID> failedIds = subscriptions.stream()
+                .filter(subscription -> subscription.getSubscriptionStatus() == SubscriptionStatus.FAILED)
+                .map(Subscription::getId)
+                .toList();
+
+        if (failedIds.isEmpty()) {
+            return;
+        }
+
+        subscriptionRepository.bulkMarkActiveByIds(failedIds);
+        publishStatusChanges(failedIds, SubscriptionStatus.ACTIVE);
+        log.info("Subscription batch restored to active: {} items", failedIds.size());
+    }
+
+    private void publishStatusChanges(List<UUID> subscriptionIds, SubscriptionStatus status) {
+        List<Subscription> subscriptions = subscriptionRepository.findAllById(subscriptionIds);
         if (subscriptions.isEmpty()) {
             return;
         }
 
         subscriptions.forEach(subscription -> eventPublisher.publishEvent(new SubscriptionStatusChangedEvent(
-                        subscription.getId().toString(),
-                        subscription.getMemberId().toString(),
-                        SubscriptionStatus.FAILED.name()
-                )));
+                subscription.getId().toString(),
+                subscription.getMemberId().toString(),
+                status.name()
+        )));
     }
 }

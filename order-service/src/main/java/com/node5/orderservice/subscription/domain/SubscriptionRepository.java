@@ -17,15 +17,13 @@ public interface SubscriptionRepository {
 
     List<Subscription> findAllById(List<UUID> ids);
 
-    List<Subscription> saveAll(List<Subscription> subscriptions);
-
     Page<Subscription> findAllByMemberId(UUID memberId, Pageable pageable);
 
     List<Subscription> findAllByMemberId(UUID memberId);
 
     List<Subscription> findAllByShopId(UUID shopId);
 
-    Page<Subscription> findAllByNextRunDateAndSubscriptionStatus(LocalDate nextRunDate, SubscriptionStatus subscriptionStatus, Pageable pageable);
+    Page<Subscription> findAllByNextRunDateAndSubscriptionStatusIn(LocalDate nextRunDate, List<SubscriptionStatus> subscriptionStatuses, Pageable pageable);
 
     Page<Subscription> findAllByProductId(UUID productId, Pageable pageable);
 
@@ -34,6 +32,10 @@ public interface SubscriptionRepository {
     void bulkUpdateNextRunDates(java.util.Map<UUID, LocalDate> nextRunDates, LocalDate processedRunDate);
 
     void bulkMarkFailedByIds(List<UUID> ids);
+
+    void bulkMarkUnavailableByIds(List<UUID> ids);
+
+    void bulkMarkActiveByIds(List<UUID> ids);
 
     void bulkTerminateAllByShop(UUID shopId, LocalDateTime dateTime);
 }
