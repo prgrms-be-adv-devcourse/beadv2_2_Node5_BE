@@ -2,6 +2,8 @@ package com.node5.paymentservice.payment.application;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.node5.paymentservice.payment.application.dto.PaymentCancelCommand;
+import com.node5.paymentservice.payment.application.dto.PaymentCancelInfo;
 import com.node5.paymentservice.payment.application.dto.PaymentConfirmCommand;
 import com.node5.paymentservice.payment.application.dto.PaymentConfirmInfo;
 import com.node5.paymentservice.payment.client.tossPayments.TossPaymentClient;
@@ -22,9 +24,12 @@ import static com.node5.paymentservice.payment.exception.PaymentErrorCode.PAYMEN
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class PaymentConfirmFacade {
+public class PaymentFacade {
     private final PaymentPendingService paymentPendingService;
     private final PaymentConfirmService paymentConfirmService;
+    private final PaymentCancelService paymentCancelService;
+    private final PaymentCancelPendingService paymentCancelPendingService;
+    private final PaymentCancelWithdrawService paymentCancelWithdrawService;
 
     private final StringRedisTemplate stringRedisTemplate;
     private final ObjectMapper objectMapper;
@@ -46,8 +51,22 @@ public class PaymentConfirmFacade {
         return PaymentConfirmInfo.from(payment.getStatus());
     }
 
-    // Redis에서 결제 임시 데이터 조회
+    public PaymentCancelInfo cancel(UUID memberId, PaymentCancelCommand command) {
+        // db 조회 및 결제 취소 요청 처리
+        Payment payment = paymentCancelPendingService.cancelPendingPaymentProcessing(memberId, command);
 
+        // 예치금 출금 동기 호출 및 상태 변경
+        paymentCancelWithdrawService.cancelWithdrawPaymentProcessing(payment);
+
+        // 토스페이먼츠 결제 취소 요청
+        cancelTossPayments(command, payment);
+
+        Payment canceledPayment = paymentCancelService.cancelPaymentProcessing(payment);
+
+        return PaymentCancelInfo.from(canceledPayment.getStatus());
+    }
+
+    // Redis에서 결제 임시 데이터 조회
     private PaymentTemporaryData loadToRedis(UUID memberId, String orderId, Long amount) {
         String redisKey = "payment:ready:" + orderId;
         String jsonValue = stringRedisTemplate.opsForValue().get(redisKey);
@@ -64,8 +83,8 @@ public class PaymentConfirmFacade {
         }
         return readyData;
     }
-    // 결제 검증
 
+    // 결제 검증
     private void validatePayment(UUID memberId, String orderId, Long amount, PaymentTemporaryData paymentTemporaryData) {
         // 회원 ID 검증
         if (!paymentTemporaryData.getMemberId().equals(memberId)) {
@@ -91,6 +110,16 @@ public class PaymentConfirmFacade {
             log.error("[PG 승인 실패] - MemberId: {}, OrderId: {}, Error: {}", paymentTemporaryData.getMemberId(), paymentTemporaryData.getOrderId(), e.getMessage());
             paymentConfirmService.markAsFailed(paymentTemporaryData.getOrderId(), e.getMessage());
             throw new PaymentException(PAYMENT_PG_CONFIRMATION_FAILED);
+        }
+    }
+
+    private void cancelTossPayments(PaymentCancelCommand command, Payment payment) {
+        try {
+            tossPaymentClient.cancel(command);
+        } catch (Exception e) {
+            log.error("[PG 취소 실패] - MemberId: {}, OrderId: {}, Error: {}", payment.getMemberId(), payment.getOrderId(), e.getMessage());
+            paymentCancelService.markAsFailed(payment.getId(), e);
+            throw new PaymentException(PAYMENT_PG_CANCELLATION_FAILED);
         }
     }
 }

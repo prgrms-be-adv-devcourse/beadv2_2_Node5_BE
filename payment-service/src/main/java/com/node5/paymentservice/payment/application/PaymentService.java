@@ -1,13 +1,7 @@
 package com.node5.paymentservice.payment.application;
 
-import com.node5.common.event.PaymentSendEmailEvent;
 import com.node5.paymentservice.payment.application.dto.*;
-import com.node5.paymentservice.payment.client.tossPayments.TossPaymentClient;
-import com.node5.paymentservice.payment.client.openfeign.WalletClient;
-import com.node5.paymentservice.payment.client.openfeign.dto.WalletRequest;
 import com.node5.paymentservice.payment.domain.*;
-import com.node5.paymentservice.payment.exception.PaymentException;
-import com.node5.paymentservice.payment.infrastructure.kafka.handler.PaymentEventHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -17,18 +11,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
-import static com.node5.paymentservice.payment.exception.PaymentErrorCode.*;
-
 @Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class PaymentService {
     private final PaymentRepository paymentRepository;
-
-    private final WalletClient walletClient;
-    private final TossPaymentClient tossPaymentClient;
-    private final PaymentEventHandler paymentEventHandler;
 
     // memberId로 결제 내역 조회
     public Page<PaymentInfo> findAll(UUID memberId, Pageable pageable) {
@@ -59,51 +47,5 @@ public class PaymentService {
                     log.info("새로운 결제 실패 기록을 생성했습니다: {}", command.orderId());
                     return PaymentFailureInfo.from(payment.getStatus());
                 });
-    }
-
-    // 결제 취소
-    @Transactional
-    public PaymentCancelInfo cancel(UUID memberId, PaymentCancelCommand command) {
-        Payment payment = paymentRepository.findByOrderId(command.orderId())
-                .orElseThrow(() -> new PaymentException(PAYMENT_NOT_FOUND));
-
-        // 결제 키와 금액 검증
-        payment.validateValue(memberId, command);
-
-        // 결제 상태 검증
-        payment.validateStatus(payment, PaymentStatus.CONFIRMED);
-
-        // 결제 상태 변경
-        payment.pending_cancel();
-        paymentRepository.saveAndFlush(payment);
-
-        // 예치금 출금 요청
-        try {
-            WalletRequest withdrawRequest = new WalletRequest(
-                    payment.getMemberId(),
-                    payment.getOrderId(),
-                    payment.getAmount()
-            );
-            walletClient.withdrawRequest(withdrawRequest);
-            payment.withdraw_confirmed();
-            paymentRepository.saveAndFlush(payment);
-        } catch (Exception e) {
-            log.error("[예치금 출금 요청 실패] 결제 취소 실패 처리 - MemberId: {}, OrderId: {}, Error: {}", payment.getMemberId(), payment.getOrderId(), e.getMessage());
-            throw new PaymentException(PAYMENT_WALLET_WITHDRAW_FAILED); //예치금 출금 요청 실패
-        }
-
-        try {
-            tossPaymentClient.cancel(command);
-            payment.cancel();
-            PaymentSendEmailEvent emailEvent = new PaymentSendEmailEvent(payment.getMemberId(), payment.getOrderId(), payment.getAmount(), payment.getStatus().toString(), null);
-            paymentEventHandler.saveOutbox("PaymentSendEmail", payment.getId(), "payment-service.send-email-event.v1", emailEvent);
-        } catch (Exception e) {
-            payment.cancel_failure("PG사 결제 취소 실패: " + e.getMessage());
-            PaymentSendEmailEvent emailEvent = new PaymentSendEmailEvent(payment.getMemberId(), payment.getOrderId(), payment.getAmount(), payment.getStatus().toString(), payment.getFailReason());
-            paymentEventHandler.saveOutbox("PaymentSendEmail", payment.getId(), "payment-service.send-email-event.v1", emailEvent);
-
-        }
-
-        return PaymentCancelInfo.from(payment.getStatus());
     }
 }
