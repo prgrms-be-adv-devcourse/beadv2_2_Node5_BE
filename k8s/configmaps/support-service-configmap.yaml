@@ -83,6 +83,7 @@ data:
         product-index: catalog-service.product-index.v1
         order-status-changed: order-service.order-status-changed.v1
         subscription-status-changed: order-service.subscription-status-changed.v1
+        payment-send-email: payment-service.send-email-event.v1
     api:
       v1: /api/v1
     app:
