@@ -74,12 +74,12 @@ spec:
         type: node5-worker
       initContainers:
         - name: wait-for-zookeeper
-          image: busybox:1.28
+          image: busybox:1.36
           command:
             - 'sh'
             - '-c'
             - >
-              until nc -zv zookeeper-0.zookeeper-service 2181; do
+              until nc -zv zookeeper-service.default.svc.cluster.local 2181; do
                 echo "Waiting for zookeeper-0:2181...";
                 sleep 2;
               done;
