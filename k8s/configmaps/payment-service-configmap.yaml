@@ -31,7 +31,7 @@ data:
         # 2. Producer 설정 (메시지를 보내는 서비스: 예 - Order, Payment)
         producer:
           key-serializer: org.apache.kafka.common.serialization.StringSerializer
-          value-serializer: org.springframework.kafka.support.serializer.StringSerializer
+          value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
     
         # 3. Consumer 설정 (메시지를 받는 서비스: 예 - Notification, Settlement)
         consumer:
