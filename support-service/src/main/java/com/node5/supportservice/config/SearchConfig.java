@@ -7,7 +7,8 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @EnableConfigurationProperties({
 	SearchIndexProperties.class,
-	SearchReindexProperties.class
+	SearchReindexProperties.class,
+	SearchSponsoredProperties.class
 })
 public class SearchConfig {
 
