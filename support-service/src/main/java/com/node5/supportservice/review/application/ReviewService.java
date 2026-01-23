@@ -6,7 +6,6 @@ import com.node5.supportservice.global.openfeign.client.CatalogClient;
 import com.node5.supportservice.global.openfeign.client.MemberClient;
 import com.node5.supportservice.global.openfeign.client.OrderClient;
 import com.node5.supportservice.global.openfeign.client.dto.OrderStatusRequest;
-import com.node5.supportservice.global.openfeign.client.dto.OrderStatusResponse;
 import com.node5.supportservice.review.application.dto.*;
 import com.node5.supportservice.global.openfeign.client.dto.ProductStatusResponse;
 import com.node5.supportservice.review.domain.*;
@@ -91,10 +90,9 @@ public class ReviewService {
                     command.orderId(),
                     command.productId()
             );
-            ResponseEntity<OrderStatusResponse> response = orderClient.canPostReview(memberId, request);
+            ResponseEntity<Boolean> response = orderClient.canPostReview(memberId, request);
             boolean isReviewable = Optional.ofNullable(response)
                     .map(ResponseEntity::getBody)
-                    .map(OrderStatusResponse::isReviewable)
                     .orElse(false);
             if (!isReviewable) {
                 throw new ReviewException(ReviewErrorCode.ORDER_INVALID);
@@ -300,10 +298,17 @@ public class ReviewService {
                 .toList();
     }
 
-    public ReviewStatusInfo hasMemberReviewedProduct(UUID memberId, UUID orderId, UUID productId) {
-        return ReviewStatusInfo.from(
-                reviewDetailRepository.existsReview(memberId, orderId, productId)
-        );
+    public ReviewStatusInfo reviewableProduct(UUID memberId, UUID orderId, UUID productId) {
+        if (reviewDetailRepository.existsReview(memberId, orderId, productId)) {
+            return ReviewStatusInfo.from(false);
+        }
+
+        Boolean reviewableFromOrder = Optional.ofNullable(
+                orderClient.canPostReview(memberId, new OrderStatusRequest(orderId, productId))
+                        .getBody()
+        ).orElse(false);
+
+        return ReviewStatusInfo.from(reviewableFromOrder);
     }
 
     @Transactional

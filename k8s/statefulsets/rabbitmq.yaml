@@ -37,11 +37,15 @@ spec:
               port: 5672
             initialDelaySeconds: 20
             periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 3
           readinessProbe:
             tcpSocket:
               port: 5672
             initialDelaySeconds: 10
             periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
 
 ---
 apiVersion: v1

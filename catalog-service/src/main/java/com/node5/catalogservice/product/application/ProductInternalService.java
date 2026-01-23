@@ -1,5 +1,6 @@
 package com.node5.catalogservice.product.application;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -13,6 +14,8 @@ import com.node5.catalogservice.product.domain.Product;
 import com.node5.catalogservice.product.domain.ProductRepository;
 import com.node5.catalogservice.product.domain.ProductStatus;
 import com.node5.catalogservice.product.exception.ProductErrorCode;
+import com.node5.catalogservice.product.presentation.dto.ProductIndexSummaryListResponse;
+import com.node5.catalogservice.product.presentation.dto.ProductIndexSummaryResponse;
 import com.node5.common.exception.BaseException;
 
 import lombok.RequiredArgsConstructor;
@@ -67,5 +70,46 @@ public class ProductInternalService {
 	@Transactional(readOnly = true)
 	public boolean isReviewable(UUID productId) {
 		return productRepository.findByIdAndStatus(productId, ProductStatus.ON_SALE).isPresent();
+	}
+
+
+	@Transactional(readOnly = true)
+	public ProductIndexSummaryListResponse getProductIndexSummaries(List<UUID> productIds) {
+		if (productIds == null || productIds.isEmpty()) {
+			return new ProductIndexSummaryListResponse(List.of());
+		}
+
+		Map<UUID, Integer> order = new HashMap<>();
+		for (int i = 0; i < productIds.size(); i++) order.put(productIds.get(i), i);
+
+		List<UUID> distinctIds = productIds.stream().distinct().toList();
+		List<Product> products = productRepository.findAllByIdInAndStatus(distinctIds, ProductStatus.ON_SALE);
+
+		List<ProductIndexSummaryResponse> summaries = products.stream()
+			.map(p -> new ProductIndexSummaryResponse(
+				p.getId(),
+				p.getShopId(),
+				p.getName(),
+				buildNameAutocomplete(p.getName()),
+				p.getCategory().name(),
+				p.getThumbnailKey(),
+				toLongPrice(p.getPrice()),
+				p.getStatus().name(),
+				p.getCreatedAt(),
+				p.getModifiedAt()
+			))
+			.sorted(java.util.Comparator.comparingInt(s -> order.getOrDefault(s.productId(), Integer.MAX_VALUE)))
+			.toList();
+
+		return new ProductIndexSummaryListResponse(summaries);
+	}
+
+	private String buildNameAutocomplete(String name) {
+		return name;
+	}
+
+	private long toLongPrice(java.math.BigDecimal price) {
+		if (price == null) return 0L;
+		return price.longValue();
 	}
 }

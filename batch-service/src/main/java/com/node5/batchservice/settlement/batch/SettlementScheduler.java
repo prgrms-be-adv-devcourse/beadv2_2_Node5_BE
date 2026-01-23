@@ -8,6 +8,7 @@ import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.beans.factory.annotation.Value;;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
@@ -20,6 +21,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Component
+@ConditionalOnProperty(name = "batch.scheduler.enabled", havingValue = "true")
 @RequiredArgsConstructor
 @Slf4j
 public class SettlementScheduler {

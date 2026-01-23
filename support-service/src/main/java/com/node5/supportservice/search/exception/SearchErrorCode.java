@@ -10,7 +10,8 @@ import lombok.RequiredArgsConstructor;
 public enum SearchErrorCode implements BaseErrorCode {
 
 	INVALID_PRICE_RANGE(400, "SEARCH_INVALID_PRICE_RANGE", "가격 범위가 올바르지 않습니다."),
-	PRICE_RANGE_INCOMPLETE(400, "SEARCH_PRICE_RANGE_INCOMPLETE", "최소/최대 가격은 함께 입력해야 합니다.");
+	PRICE_RANGE_INCOMPLETE(400, "SEARCH_PRICE_RANGE_INCOMPLETE", "최소/최대 가격은 함께 입력해야 합니다."),
+	REINDEX_FAILED(500, "SEARCH_REINDEX_FAILED", "상품 재색인에 실패했습니다.");
 
 	private final int status;
 	private final String code;
