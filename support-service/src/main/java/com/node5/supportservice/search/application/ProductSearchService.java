@@ -1,6 +1,12 @@
 package com.node5.supportservice.search.application;
 
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -18,14 +24,36 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ProductSearchService {
 
+	private static final int SPONSORED_LIMIT = 3;
+
 	private final ProductSearchPort productSearchPort;
 	private final QueryNormalizer queryNormalizer;
 
 	public Page<ProductSearchResponse> search(ProductSearchCommand command, Pageable pageable) {
 		validatePriceRange(command.minPrice(), command.maxPrice());
 
+		ProductSearchCommand normalizedCommand = normalize(command);
+
+		List<ProductDocument> sponsored = productSearchPort.searchSponsored(normalizedCommand, SPONSORED_LIMIT);
+		Page<ProductDocument> normalPage = productSearchPort.search(normalizedCommand, pageable);
+
+		Set<String> sponsoredIds = sponsored.stream()
+			.map(ProductDocument::getProductId)
+			.collect(Collectors.toSet());
+
+		List<ProductDocument> normalWithoutSponsored = normalPage.getContent().stream()
+			.filter(doc -> !sponsoredIds.contains(doc.getProductId()))
+			.toList();
+
+		List<ProductDocument> merged = mergePreserveOrder(sponsored, normalWithoutSponsored);
+		Page<ProductDocument> mergedPage = new PageImpl<>(merged, pageable, normalPage.getTotalElements());
+
+		return mergedPage.map(ProductSearchResponse::from);
+	}
+
+	private ProductSearchCommand normalize(ProductSearchCommand command) {
 		String normalizedKeyword = queryNormalizer.normalize(command.keyword());
-		ProductSearchCommand normalizedCommand = new ProductSearchCommand(
+		return new ProductSearchCommand(
 			normalizedKeyword,
 			command.shopId(),
 			command.category(),
@@ -33,9 +61,17 @@ public class ProductSearchService {
 			command.maxPrice(),
 			command.sort()
 		);
+	}
 
-		Page<ProductDocument> page = productSearchPort.search(normalizedCommand, pageable);
-		return page.map(ProductSearchResponse::from);
+	private List<ProductDocument> mergePreserveOrder(List<ProductDocument> sponsored, List<ProductDocument> normal) {
+		LinkedHashMap<String, ProductDocument> map = new LinkedHashMap<>();
+		for (ProductDocument d : sponsored) {
+			map.put(d.getProductId(), d);
+		}
+		for (ProductDocument d : normal) {
+			map.put(d.getProductId(), d);
+		}
+		return List.copyOf(map.values());
 	}
 
 	private void validatePriceRange(Integer minPrice, Integer maxPrice) {

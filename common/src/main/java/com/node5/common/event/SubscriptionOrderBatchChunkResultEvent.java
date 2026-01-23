@@ -8,10 +8,8 @@ public record SubscriptionOrderBatchChunkResultEvent(
 ) {
     public record SubscriptionOrderBatchResultItem(
             String subscriptionId,
-            boolean success,
-            String orderId,
-            String failureReason,
-            boolean retryable
+            SubscriptionOrderBatchResultType resultType,
+            String orderId
     ) {
     }
 }

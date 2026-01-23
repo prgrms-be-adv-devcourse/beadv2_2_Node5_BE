@@ -14,19 +14,20 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.node5.catalogservice.client.ShopOwnershipPort;
 import com.node5.catalogservice.product.application.dto.ProductCommand;
 import com.node5.catalogservice.product.application.dto.ProductInfo;
 import com.node5.catalogservice.product.application.dto.ProductUpdateCommand;
+import com.node5.catalogservice.product.application.port.ProductDiscontinuedEventPort;
 import com.node5.catalogservice.product.application.port.ProductEmbeddingEventPort;
 import com.node5.catalogservice.product.application.port.ProductIndexEventPort;
 import com.node5.catalogservice.product.domain.Product;
 import com.node5.catalogservice.product.domain.ProductCategory;
 import com.node5.catalogservice.product.domain.ProductRepository;
 import com.node5.catalogservice.product.domain.ProductStatus;
-import com.node5.common.event.ProductIndexEventType;
 import com.node5.catalogservice.product.exception.ProductErrorCode;
-import com.node5.catalogservice.shop.client.ShopOwnershipClient;
 import com.node5.catalogservice.testsupport.ProductTestFactory;
+import com.node5.common.event.ProductIndexEventType;
 import com.node5.common.exception.BaseException;
 
 @ExtendWith(MockitoExtension.class)
@@ -42,7 +43,10 @@ class ProductServiceTest {
 	private ProductEmbeddingEventPort productEmbeddingEventPort;
 
 	@Mock
-	private ShopOwnershipClient shopOwnershipClient;
+	private ProductDiscontinuedEventPort productDiscontinuedEventPort;
+
+	@Mock
+	private ShopOwnershipPort shopOwnershipPort;
 
 	@InjectMocks
 	private ProductService productService;
@@ -62,7 +66,7 @@ class ProductServiceTest {
 			"thumb.png"
 		);
 
-		given(shopOwnershipClient.getOwnerMemberId(shopId)).willReturn(memberId);
+		given(shopOwnershipPort.getOwnerMemberId(shopId)).willReturn(memberId);
 
 		Product saved = ProductTestFactory.onSale();
 		given(productRepository.save(any(Product.class))).willReturn(saved);
@@ -72,7 +76,7 @@ class ProductServiceTest {
 
 		// then
 		assertThat(result).isNotNull();
-		then(shopOwnershipClient).should().getOwnerMemberId(shopId);
+		then(shopOwnershipPort).should().getOwnerMemberId(shopId);
 		then(productRepository).should().save(any(Product.class));
 
 		then(productIndexEventPort).should().publish(argThat(e ->
@@ -84,6 +88,8 @@ class ProductServiceTest {
 		then(productEmbeddingEventPort).should().publish(argThat(e ->
 			e != null && e.productId().equals(saved.getId())
 		));
+
+		then(productDiscontinuedEventPort).shouldHaveNoInteractions();
 	}
 
 	@Test
@@ -104,7 +110,7 @@ class ProductServiceTest {
 		);
 
 		given(productRepository.findById(productId)).willReturn(Optional.of(existing));
-		given(shopOwnershipClient.getOwnerMemberId(shopId)).willReturn(memberId);
+		given(shopOwnershipPort.getOwnerMemberId(shopId)).willReturn(memberId);
 		given(productRepository.save(existing)).willReturn(existing);
 
 		// when
@@ -112,6 +118,7 @@ class ProductServiceTest {
 
 		// then
 		assertThat(result).isNotNull();
+		then(shopOwnershipPort).should().getOwnerMemberId(shopId);
 		then(productRepository).should().save(existing);
 
 		then(productIndexEventPort).should().publish(argThat(e ->
@@ -123,6 +130,8 @@ class ProductServiceTest {
 		then(productEmbeddingEventPort).should().publish(argThat(e ->
 			e != null && e.productId().equals(existing.getId())
 		));
+
+		then(productDiscontinuedEventPort).shouldHaveNoInteractions();
 	}
 
 	@Test
@@ -152,6 +161,8 @@ class ProductServiceTest {
 		then(productRepository).should(never()).save(any());
 		then(productIndexEventPort).shouldHaveNoInteractions();
 		then(productEmbeddingEventPort).shouldHaveNoInteractions();
+		then(productDiscontinuedEventPort).shouldHaveNoInteractions();
+		then(shopOwnershipPort).shouldHaveNoInteractions();
 	}
 
 	@Test
@@ -169,6 +180,11 @@ class ProductServiceTest {
 		// then
 		assertThat(result).isNotNull();
 		then(productRepository).should().findByIdAndStatus(productId, ProductStatus.ON_SALE);
+
+		then(productIndexEventPort).shouldHaveNoInteractions();
+		then(productEmbeddingEventPort).shouldHaveNoInteractions();
+		then(productDiscontinuedEventPort).shouldHaveNoInteractions();
+		then(shopOwnershipPort).shouldHaveNoInteractions();
 	}
 
 	private static UUID uuid() {

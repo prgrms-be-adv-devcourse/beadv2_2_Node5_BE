@@ -42,6 +42,10 @@ spring:
     listener:
       simple:
         default-requeue-rejected: false
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: 6379
   kafka:
     # 1. 공통 설정: 카프카 클러스터 주소
     bootstrap-servers: ${KAFKA_HOST}:9092
@@ -82,6 +86,7 @@ kafka:
     product-index: catalog-service.product-index.v1
     order-status-changed: order-service.order-status-changed.v1
     subscription-status-changed: order-service.subscription-status-changed.v1
+    payment-send-email: payment-service.send-email-event.v1
 api:
   v1: /api/v1
 

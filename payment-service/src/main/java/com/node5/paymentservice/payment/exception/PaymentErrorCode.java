@@ -15,7 +15,8 @@ public enum PaymentErrorCode implements BaseErrorCode {
     PAYMENT_VALIDATION_FAILED(BAD_REQUEST.value(), "PAYMENT_005", "결제 검증에 실패했습니다."),
     PAYMENT_PG_CONFIRMATION_FAILED(BAD_REQUEST.value(), "PAYMENT_006", "PG사 결제 승인에 실패했습니다."),
     PAYMENT_WALLET_DEPOSIT_FAILED(BAD_REQUEST.value(), "PAYMENT_007", "예치금 입금 요청에 실패했습니다."),
-    PAYMENT_WALLET_WITHDRAW_FAILED(BAD_REQUEST.value(), "PAYMENT_008", "예치금 출금 요청에 실패했습니다.");
+    PAYMENT_WALLET_WITHDRAW_FAILED(BAD_REQUEST.value(), "PAYMENT_008", "예치금 출금 요청에 실패했습니다."),
+    PAYMENT_PG_CANCELLATION_FAILED(BAD_REQUEST.value(), "PAYMENT_009", "PG사 결제 취소에 실패했습니다.");
 
     private final int status;
     private final String code;

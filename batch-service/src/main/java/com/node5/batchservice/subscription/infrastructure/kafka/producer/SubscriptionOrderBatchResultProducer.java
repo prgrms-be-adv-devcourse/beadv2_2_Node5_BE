@@ -25,10 +25,8 @@ public class SubscriptionOrderBatchResultProducer {
         List<SubscriptionOrderBatchChunkResultEvent.SubscriptionOrderBatchResultItem> items = results.stream()
                 .map(result -> new SubscriptionOrderBatchChunkResultEvent.SubscriptionOrderBatchResultItem(
                         result.subscriptionId().toString(),
-                        result.success(),
-                        result.orderId() != null ? result.orderId().toString() : null,
-                        result.failureReason(),
-                        result.retryable()
+                        result.resultType(),
+                        result.orderId() != null ? result.orderId().toString() : null
                 ))
                 .toList();
         SubscriptionOrderBatchChunkResultEvent event = new SubscriptionOrderBatchChunkResultEvent(

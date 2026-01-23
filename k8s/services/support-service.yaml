@@ -1,0 +1,102 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: support-service
+  labels:
+    app: support-service
+spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  replicas: 1
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      app: support-service
+  template:
+    metadata:
+      annotations:
+        reloader.stakater.com/auto: "true"
+        configmap.reloader.stakater.com/reload: "common-config,support-service-config"
+        secret.reloader.stakater.com/reload: "common-secret,support-secret"
+      labels:
+        app: support-service
+    spec:
+      nodeSelector:
+        type: node5-master
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: support-service
+          image: node5dev/support-service:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8087
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: prod
+            - name: JAVA_TOOL_OPTIONS
+              value: "-Xms128m -Xmx256m"
+          envFrom:
+            - secretRef:
+                name: common-secret
+            - secretRef:
+                name: support-secret
+          volumeMounts:
+            - name: config
+              mountPath: /config
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "600Mi"
+          startupProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8087
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 60
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8087
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8087
+            initialDelaySeconds: 10
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 6
+      volumes:
+        - name: config
+          projected:
+            sources:
+              - configMap:
+                  name: common-config
+              - configMap:
+                  name: support-service-config
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: support-service
+  labels:
+    app: support-service
+spec:
+  type: ClusterIP
+  selector:
+    app: support-service
+  ports:
+    - name: http
+      port: 8087
+      targetPort: 8087

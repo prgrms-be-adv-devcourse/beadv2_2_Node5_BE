@@ -25,6 +25,7 @@
   "mappings": {
     "properties": {
       "productId": { "type": "keyword" },
+      "shopId": { "type": "keyword" },
       "name": { "type": "text" },
       "name_autocomplete": {
         "type": "text",
@@ -32,7 +33,12 @@
         "search_analyzer": "autocomplete_search"
       },
       "category": { "type": "keyword" },
-      "status": { "type": "keyword" }
+      "thumbnailKey": { "type": "keyword" },
+      "price": { "type": "long" },
+      "status": { "type": "keyword" },
+      "isSponsored": { "type": "boolean" },
+      "createdAt": { "type": "date", "format": "strict_date_optional_time||epoch_millis" },
+      "modifiedAt": { "type": "date", "format": "strict_date_optional_time||epoch_millis" }
     }
   }
 }

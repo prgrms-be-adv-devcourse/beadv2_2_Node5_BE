@@ -14,16 +14,22 @@ import com.node5.supportservice.recommendation.exception.RecommendationErrorCode
 import com.node5.supportservice.recommendation.exception.RecommendationException;
 import com.node5.supportservice.recommendation.client.openai.EmbeddingClient;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.UUID;
+import java.time.Duration;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -35,6 +41,8 @@ public class RecommendationService {
 
     private static final int DEFAULT_LIMIT = 5;
     private static final int MAX_LIMIT = 10;
+    private static final Duration RECOMMENDATION_CACHE_TTL = Duration.ofMinutes(30);
+    private static final String CACHE_KEY_PREFIX = "recommendation:taste:";
 
     private final ProductEmbeddingRepository productEmbeddingRepository;
     private final ChatService chatService;
@@ -42,9 +50,15 @@ public class RecommendationService {
     private final ObjectMapper objectMapper;
     private final CatalogClient catalogClient;
     private final OrderClient orderClient;
+    private final StringRedisTemplate stringRedisTemplate;
 
     // 장바구니 아이템 받아서 취향 임베딩 반환
     public Result recommendTaste(UUID memberId, List<UUID> cartItemProductIds) {
+        Result cachedResult = getCachedTaste(memberId, cartItemProductIds);
+        if (cachedResult != null) {
+            return cachedResult;
+        }
+
         // 장바구니 내역
         ProductSummaryListResponse cartItemResponse = getProductInfo(memberId, cartItemProductIds, "장바구니");
         log.info("조회된 장바구니 내역 size: {}", cartItemResponse.products().size());
@@ -66,7 +80,9 @@ public class RecommendationService {
         log.info("** LLM TASTE SUMMARY: {}", tasteSummary);
         log.info("** LLM TASTE EMBEDDING: {}", Arrays.toString(embedding));
 
-        return new Result(tasteSummary, embedding, existedProductIds);
+        Result result = new Result(tasteSummary, embedding, existedProductIds);
+        cacheTaste(memberId, cartItemProductIds, result);
+        return result;
     }
 
     private List<UUID> getExistedProductIds(List<UUID> cartItemProductIds, List<UUID> recentOrderProductIds) {
@@ -172,4 +188,57 @@ public class RecommendationService {
         }
         return limit;
     }
+
+    private Result getCachedTaste(UUID memberId, List<UUID> cartItemProductIds) {
+        String cacheKey = buildCacheKey(memberId, cartItemProductIds);
+        try {
+            String cachedJson = stringRedisTemplate.opsForValue().get(cacheKey);
+            if (cachedJson == null || cachedJson.isBlank()) {
+                return null;
+            }
+            CachedTaste cachedTaste = objectMapper.readValue(cachedJson, CachedTaste.class);
+            return new Result(cachedTaste.tasteSummary(), cachedTaste.embedding(), cachedTaste.existedProductIds());
+        } catch (Exception ex) {
+            log.warn("추천 캐시 조회 실패 (key: {}): {}", cacheKey, ex.getMessage());
+            return null;
+        }
+    }
+
+    private void cacheTaste(UUID memberId, List<UUID> cartItemProductIds, Result result) {
+        String cacheKey = buildCacheKey(memberId, cartItemProductIds);
+        try {
+            CachedTaste cachedTaste = new CachedTaste(result.tasteSummary(), result.embedding(), result.existedProductIds());
+            String cachedJson = objectMapper.writeValueAsString(cachedTaste);
+            stringRedisTemplate.opsForValue().set(cacheKey, cachedJson, RECOMMENDATION_CACHE_TTL);
+        } catch (Exception ex) {
+            log.warn("추천 캐시 저장 실패 (key: {}): {}", cacheKey, ex.getMessage());
+        }
+    }
+
+    private String buildCacheKey(UUID memberId, List<UUID> cartItemProductIds) {
+        List<UUID> sortedIds = new ArrayList<>();
+        if (cartItemProductIds != null) {
+            sortedIds.addAll(cartItemProductIds);
+        }
+        sortedIds.sort(Comparator.comparing(UUID::toString));
+        String rawKey = memberId + ":" + sortedIds;
+        return CACHE_KEY_PREFIX + sha256(rawKey);
+    }
+
+    private String sha256(String value) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(value.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hex = new StringBuilder(hash.length * 2);
+            for (byte b : hash) {
+                hex.append(String.format("%02x", b));
+            }
+            return hex.toString();
+        } catch (NoSuchAlgorithmException ex) {
+            log.warn("SHA-256 not available. Falling back to raw cache key.");
+            return value;
+        }
+    }
+
+    private record CachedTaste(String tasteSummary, float[] embedding, List<UUID> existedProductIds) {}
 }
