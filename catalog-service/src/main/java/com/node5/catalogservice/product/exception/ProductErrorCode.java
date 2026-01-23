@@ -12,7 +12,11 @@ public enum ProductErrorCode implements BaseErrorCode {
 	SHOP_FORBIDDEN(403, "SHOP_FORBIDDEN", "해당 상점에 대한 권한이 없습니다."),
 	PRODUCT_NOT_FOUND(404, "PRODUCT_NOT_FOUND", "상품을 찾을 수 없습니다."),
 	ON_SALE_PRODUCT_NOT_FOUND(404, "ON_SALE_PRODUCT_NOT_FOUND", "판매 중인 상품이 아니거나 존재하지 않습니다."),
-	PRODUCT_STATUS_CHANGE_NOT_ALLOWED(409, "PRODUCT_STATUS_CHANGE_NOT_ALLOWED", "판매 중단된 상품은 수정/상태 변경이 불가합니다.");
+	PRODUCT_STATUS_CHANGE_NOT_ALLOWED(409, "PRODUCT_STATUS_CHANGE_NOT_ALLOWED", "판매 중단된 상품은 수정/상태 변경이 불가합니다."),
+
+	IDEMPOTENCY_REQUEST_IN_PROGRESS(409, "IDEMPOTENCY_REQUEST_IN_PROGRESS", "동일한 요청이 처리 중입니다. 같은 Idempotency-Key로 잠시 후 다시 시도해주세요."),
+	IDEMPOTENCY_PREVIOUSLY_FAILED(409, "IDEMPOTENCY_PREVIOUSLY_FAILED", "이전 동일 요청이 실패했습니다. 새로운 요청으로 다시 시도해주세요."),
+	IDEMPOTENCY_DATA_CORRUPTED(500, "IDEMPOTENCY_DATA_CORRUPTED", "멱등성 데이터가 손상되었습니다. 관리자에게 문의하세요.");
 
 	private final int status;
 	private final String code;

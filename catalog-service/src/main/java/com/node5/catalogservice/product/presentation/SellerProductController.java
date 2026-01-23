@@ -74,11 +74,12 @@ public class SellerProductController {
 	})
 	public ResponseEntity<ProductInfo> createProduct(
 		@RequestHeader("Member-Id") UUID memberId,
+		@RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
 		@PathVariable("shopId") UUID shopId,
 		@Valid @RequestBody ProductRequest request
 	) {
 		ProductCommand command = request.toCommand();
-		ProductInfo created = productService.createProduct(memberId, shopId, command);
+		ProductInfo created = productService.createProduct(memberId, shopId, command, idempotencyKey);
 		return ResponseEntity.status(HttpStatus.CREATED).body(created);
 	}
 
