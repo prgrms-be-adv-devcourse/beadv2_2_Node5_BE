@@ -3,7 +3,6 @@ package com.node5.memberservice.member.application;
 import com.node5.common.event.MemberDeletedEvent;
 import com.node5.memberservice.auth.domain.OAuthRepository;
 import com.node5.memberservice.client.OrderClient;
-import com.node5.memberservice.client.SettlementClient;
 import com.node5.memberservice.client.WalletClient;
 import com.node5.memberservice.client.dto.WalletInfo;
 import com.node5.memberservice.member.application.dto.*;
@@ -11,6 +10,7 @@ import com.node5.memberservice.member.domain.*;
 import com.node5.memberservice.member.exception.MemberErrorCode;
 import com.node5.memberservice.member.exception.MemberException;
 import com.node5.memberservice.redis.application.RedisService;
+import com.node5.memberservice.settlement.application.SettlementInternalService;
 import com.node5.memberservice.shop.domain.Shop;
 import com.node5.memberservice.shop.domain.ShopRepository;
 import feign.FeignException;
@@ -38,7 +38,7 @@ public class MemberService {
     private final ShopRepository shopRepository;
     private final WalletClient walletClient;
     private final OrderClient orderClient;
-    private final SettlementClient settlementClient;
+    private final SettlementInternalService settlementInternalService;
 
     public MemberInfoResponse findById(UUID memberId) {
         Member member = getNotDeletedMemberOrThrow(memberId);
@@ -98,7 +98,7 @@ public class MemberService {
 
     private void validateNoSettlementInProgress(List<UUID> shopIds) {
         try {
-            Boolean settlementInProgress = settlementClient.hasInProgressSettlement(shopIds).getBody();
+            Boolean settlementInProgress = settlementInternalService.hasInProgressSettlement(shopIds);
             if(settlementInProgress == null || settlementInProgress) {
                 throw new MemberException(MemberErrorCode.MEMBER_HAS_SETTLEMENT);
             }
