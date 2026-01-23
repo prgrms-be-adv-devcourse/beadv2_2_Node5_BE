@@ -1,5 +1,6 @@
 package com.node5.orderservice.order.application;
 
+
 import com.node5.common.domain.PageInfoDto;
 import com.node5.orderservice.global.openfeign.client.CatalogClient;
 import com.node5.orderservice.global.openfeign.client.WalletClient;
@@ -8,10 +9,7 @@ import com.node5.orderservice.order.application.dto.OrderCommand;
 import com.node5.orderservice.order.application.dto.OrderCreateInfo;
 import com.node5.orderservice.order.application.dto.OrderItemCommand;
 import com.node5.orderservice.order.application.dto.OrderStatusInfo;;
-import com.node5.orderservice.order.domain.Order;
-import com.node5.orderservice.order.domain.OrderItem;
-import com.node5.orderservice.order.domain.OrderItemRepository;
-import com.node5.orderservice.order.domain.OrderRepository;
+import com.node5.orderservice.order.domain.*;
 import com.node5.orderservice.order.exception.*;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
@@ -185,8 +183,8 @@ public class OrderService {
                     List<OrderItemInfo> orderedItemInfos = orderItemList.stream()
                             .map(OrderItemInfo::from)
                             .toList();
-            return OrderListInfo.OrderListDetailInfo.from(order, orderedItemInfos);
-        }).toList();
+                    return OrderListInfo.OrderListDetailInfo.from(order, orderedItemInfos);
+                }).toList();
 
         // - OrderListInfo DTO 생성 (OrderListDetailInfo + 페이징 정보)
         return OrderListInfo.from(pageInfo, orderListInfos);
@@ -224,13 +222,22 @@ public class OrderService {
             // 예치금 환불 API 호출
             try {
                 BigDecimal roundedAmount = order.getTotalAmount().setScale(0, RoundingMode.HALF_UP);
-                ResponseEntity<WalletInfo> response = walletClient.requestRefund(memberId, new WalletRefundRequest(order.getId(), roundedAmount.longValue()));
+                walletClient.requestRefund(memberId, new WalletRefundRequest(order.getId(), roundedAmount.longValue()));
 
-                if (response.getStatusCode().is2xxSuccessful()) {
-                    orderTransactionService.updateOrderStatus(orderId, CANCELED);
+                List<OrderItem> orderItems = orderItemRepository.findByOrderId(orderId);
+                if (orderItems != null && !orderItems.isEmpty()) {
+                    // 재고 복구 API 호출
+                    //StockReleaseBatchRequest request = StockReleaseBatchRequest.create(orderId, orderItems);
+                    //catalogClient.release(request);
+
+                    // OrderItem 상태 변경
+                    orderItems.forEach(item -> item.updateStatus(OrderProgress.CANCELED));
+
+                    // Order 상태 변경
+                    order.updateStatus(CANCELED);
                 }
             } catch (Exception e) {
-                throw new OrderException(ORDER_PAYMENT_FAILED, "orderId=" + orderId + ", message=" + e.getMessage());
+                throw new OrderException(ORDER_CANCEL_FAILED, "orderId=" + orderId + ", message=" + e.getMessage());
             }
         }else{
             String msg = String.format("취소는 주문의 상태가 결제 완료일 때 가능합니다.(orderId: %s, orderStatus: %s)",

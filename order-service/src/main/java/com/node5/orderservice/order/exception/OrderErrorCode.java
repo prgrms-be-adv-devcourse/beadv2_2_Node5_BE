@@ -15,6 +15,7 @@ public enum OrderErrorCode implements BaseErrorCode {
     ORDER_GET_SHOPID_FAILED(400, "ORDER_006", "(catalog-client 연동 오류) Product Id로 Shop Id 조회하는데 실패했습니다."),
     ORDER_ITEM_NOT_FOUND(404, "ORDER_007", "해당하는 주문 상품 내역이 없습니다."),
     ORDER_STOCK_HOLD_FAILED(400, "ORDER_008", "재고 선점에 실패하여 주문이 불가합니다."),
+    ORDER_CANCEL_FAILED(400, "ORDER_009", "주문 취소에 실패했습니다.")
     ;
 
     private final int status;

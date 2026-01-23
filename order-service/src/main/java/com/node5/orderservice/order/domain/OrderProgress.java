@@ -12,6 +12,7 @@ public enum OrderProgress {
     REFUND_PENDING("환불처리중"),
     REFUND_COMPLETED("환불완료"),
     CONFIRMED("구매확정"),
+    CANCELED("주문취소됨")
     ;
 
     private final String name;
