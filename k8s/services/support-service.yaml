@@ -25,7 +25,7 @@ spec:
         app: support-service
     spec:
       nodeSelector:
-        type: node5-master
+        type: node5-worker
       terminationGracePeriodSeconds: 30
       containers:
         - name: support-service

@@ -16,7 +16,7 @@ spec:
         app: database
     spec:
       nodeSelector:
-        type: node5-worker
+        type: node5-master
       terminationGracePeriodSeconds: 30
       containers:
         - name: postgres

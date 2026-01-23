@@ -41,12 +41,16 @@ spec:
               port: 9200
             initialDelaySeconds: 90
             periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 3
           readinessProbe:
             httpGet:
               path: /_cluster/health?local=true
               port: 9200
             initialDelaySeconds: 45
             periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
       volumes:
         - name: es-data
           hostPath:
