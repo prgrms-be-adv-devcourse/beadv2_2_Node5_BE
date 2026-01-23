@@ -24,7 +24,7 @@ public class OrderInternalController {
     }
 
     // 상품에 대한 리뷰 작성 가능 여부 확인
-    @GetMapping("/review-status")
+    @PostMapping("/review-status")
     public ResponseEntity<Boolean> canPostReview(
             @RequestHeader("Member-Id") UUID memberId,
             @RequestBody OrderStatusRequest request
