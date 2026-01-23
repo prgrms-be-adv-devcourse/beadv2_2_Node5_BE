@@ -78,7 +78,7 @@ public class ReviewController {
 
     @Operation(summary = "상품 리뷰 작성 가능 여부 조회", description = "회원이 해당 상품에 대해 리뷰를 작성했는지 조회한다.")
     @GetMapping("/reviewable")
-    public ResponseEntity<ReviewStatusInfo> ReviewableProduct(@RequestHeader("Member-Id") UUID memberId, @RequestParam("orderId") UUID orderId, @RequestParam("productId") UUID productId) {
-        return ResponseEntity.ok(reviewService.ReviewableProduct(memberId, orderId, productId));
+    public ResponseEntity<ReviewStatusInfo> reviewableProduct(@RequestHeader("Member-Id") UUID memberId, @RequestParam("orderId") UUID orderId, @RequestParam("productId") UUID productId) {
+        return ResponseEntity.ok(reviewService.reviewableProduct(memberId, orderId, productId));
     }
 }

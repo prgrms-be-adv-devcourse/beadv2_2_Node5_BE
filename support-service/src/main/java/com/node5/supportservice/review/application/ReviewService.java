@@ -298,7 +298,7 @@ public class ReviewService {
                 .toList();
     }
 
-    public ReviewStatusInfo ReviewableProduct(UUID memberId, UUID orderId, UUID productId) {
+    public ReviewStatusInfo reviewableProduct(UUID memberId, UUID orderId, UUID productId) {
         if (reviewDetailRepository.existsReview(memberId, orderId, productId)) {
             return ReviewStatusInfo.from(false);
         }
