@@ -96,5 +96,7 @@ data:
           product: products
         reindex:
           page-size: 500
+        sponsored:
+          limit: 1
     server:
       port: 8087
