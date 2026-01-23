@@ -6,7 +6,6 @@ import com.node5.supportservice.global.openfeign.client.CatalogClient;
 import com.node5.supportservice.global.openfeign.client.MemberClient;
 import com.node5.supportservice.global.openfeign.client.OrderClient;
 import com.node5.supportservice.global.openfeign.client.dto.OrderStatusRequest;
-import com.node5.supportservice.global.openfeign.client.dto.OrderStatusResponse;
 import com.node5.supportservice.review.application.dto.*;
 import com.node5.supportservice.global.openfeign.client.dto.ProductStatusResponse;
 import com.node5.supportservice.review.domain.*;
@@ -91,10 +90,9 @@ public class ReviewService {
                     command.orderId(),
                     command.productId()
             );
-            ResponseEntity<OrderStatusResponse> response = orderClient.canPostReview(memberId, request);
+            ResponseEntity<Boolean> response = orderClient.canPostReview(memberId, request);
             boolean isReviewable = Optional.ofNullable(response)
                     .map(ResponseEntity::getBody)
-                    .map(OrderStatusResponse::isReviewable)
                     .orElse(false);
             if (!isReviewable) {
                 throw new ReviewException(ReviewErrorCode.ORDER_INVALID);

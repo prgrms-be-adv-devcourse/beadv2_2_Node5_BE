@@ -1,7 +1,6 @@
 package com.node5.supportservice.global.openfeign.client;
 
 import com.node5.supportservice.global.openfeign.client.dto.OrderStatusRequest;
-import com.node5.supportservice.global.openfeign.client.dto.OrderStatusResponse;
 import jakarta.validation.Valid;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +21,7 @@ public interface OrderClient {
     );
 
     @PostMapping("/internal/orders/review-status")
-    ResponseEntity<OrderStatusResponse> canPostReview(
+    ResponseEntity<Boolean> canPostReview(
             @RequestHeader("Member-Id") UUID memberId,
             @Valid @RequestBody OrderStatusRequest request
     );
