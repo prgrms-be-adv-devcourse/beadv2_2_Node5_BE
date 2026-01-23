@@ -82,7 +82,7 @@ public class PaymentCancelService {
         Payment payment = findPayment(paymentId);
         payment.rollbackConfirmation("결제 취소 실패: " + message);
         log.error("[결제 취소 롤백] - PaymentId: {}, OrderId: {}, Reason: {}", payment.getId(), payment.getOrderId(), message);
-        PaymentSendEmailEvent emailEvent = new PaymentSendEmailEvent(payment.getMemberId(), payment.getOrderId(), payment.getAmount(), payment.getStatus().toString(), payment.getFailReason());
+        PaymentSendEmailEvent emailEvent = new PaymentSendEmailEvent(payment.getMemberId(), payment.getOrderId(), payment.getAmount(), "CANCEL_FAILED", payment.getFailReason());
         paymentEventHandler.saveOutbox("PaymentSendEmail", payment.getId(), "payment-service.send-email-event.v1", emailEvent);
     }
 
