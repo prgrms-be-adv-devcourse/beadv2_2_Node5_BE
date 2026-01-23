@@ -22,7 +22,7 @@ public interface OrderClient {
     );
 
     @PostMapping("/internal/orders/review-status")
-    ResponseEntity<OrderStatusResponse> canPostReview(
+    ResponseEntity<Boolean> canPostReview(
             @RequestHeader("Member-Id") UUID memberId,
             @Valid @RequestBody OrderStatusRequest request
     );

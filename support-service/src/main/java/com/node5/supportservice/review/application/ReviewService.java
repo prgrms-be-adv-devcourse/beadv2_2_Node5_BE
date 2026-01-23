@@ -91,10 +91,9 @@ public class ReviewService {
                     command.orderId(),
                     command.productId()
             );
-            ResponseEntity<OrderStatusResponse> response = orderClient.canPostReview(memberId, request);
+            ResponseEntity<Boolean> response = orderClient.canPostReview(memberId, request);
             boolean isReviewable = Optional.ofNullable(response)
                     .map(ResponseEntity::getBody)
-                    .map(OrderStatusResponse::isReviewable)
                     .orElse(false);
             if (!isReviewable) {
                 throw new ReviewException(ReviewErrorCode.ORDER_INVALID);
