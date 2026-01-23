@@ -1,6 +1,0 @@
-spring:
-  config:
-    import: optional:file:/config/application.yml,optional:file:/config/settlement-service.yaml
-  cloud:
-    config:
-      enabled: false
