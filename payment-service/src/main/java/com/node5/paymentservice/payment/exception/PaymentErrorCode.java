@@ -15,8 +15,11 @@ public enum PaymentErrorCode implements BaseErrorCode {
     PAYMENT_VALIDATION_FAILED(BAD_REQUEST.value(), "PAYMENT_005", "결제 검증에 실패했습니다."),
     PAYMENT_PG_CONFIRMATION_FAILED(BAD_REQUEST.value(), "PAYMENT_006", "PG사 결제 승인에 실패했습니다."),
     PAYMENT_WALLET_DEPOSIT_FAILED(BAD_REQUEST.value(), "PAYMENT_007", "예치금 입금 요청에 실패했습니다."),
-    PAYMENT_WALLET_WITHDRAW_FAILED(BAD_REQUEST.value(), "PAYMENT_008", "예치금 출금 요청에 실패했습니다."),
-    PAYMENT_PG_CANCELLATION_FAILED(BAD_REQUEST.value(), "PAYMENT_009", "PG사 결제 취소에 실패했습니다.");
+    PAYMENT_CANCEL_FAILED(BAD_REQUEST.value(), "PAYMENT_008", "결제 취소에 실패했습니다. 다시 시도해 주세요."),
+    PAYMENT_CANCEL_MANUAL_PROCESSING_REQUIRED_BY_PG(BAD_REQUEST.value(), "PAYMENT_010", "PG사에 문제가 생겨 결제 취소에 실패했습니다. 관리자에게 문의하세요."),
+    PAYMENT_CANCEL_MANUAL_PROCESSING_REQUIRED_BY_WALLET(BAD_REQUEST.value(), "PAYMENT_011", "예치금 서비스에 문제가 생거 결제 취소에 실패했습니다. 관리자에게 문의하세요."),
+    PAYMENT_CANCEL_MANUAL_PROCESSING_REQUIRED_BY_PAYMENT(BAD_REQUEST.value(), "PAYMENT_012", "결제 서비스에 문제가 생겨 결제 취소에 실패했습니다. 관리자에게 문의하세요."),
+    PAYMENT_CANCEL_MANUAL_PROCESSING_REQUIRED(BAD_REQUEST.value(), "PAYMENT_009", "알 수 없는 이유로 결제 취소에 실패했습니다. 관리자에게 문의하세요.");
 
     private final int status;
     private final String code;
