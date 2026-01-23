@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.node5.catalogservice.product.application.ProductInternalService;
 import com.node5.catalogservice.product.domain.Product;
 import com.node5.catalogservice.product.presentation.dto.ProductIdsRequest;
+import com.node5.catalogservice.product.presentation.dto.ProductIndexSummaryListResponse;
 import com.node5.catalogservice.product.presentation.dto.ProductReviewStatusResponse;
 import com.node5.catalogservice.product.presentation.dto.ProductSummaryListResponse;
 import com.node5.catalogservice.product.presentation.dto.ProductSummaryResponse;
@@ -77,5 +78,12 @@ public class ProductInternalController {
 	public ResponseEntity<ProductReviewStatusResponse> canPostReview(@PathVariable UUID productId) {
 		boolean reviewable = productInternalService.isReviewable(productId);
 		return ResponseEntity.ok(new ProductReviewStatusResponse(reviewable));
+	}
+
+	@PostMapping("/summaries")
+	public ResponseEntity<ProductIndexSummaryListResponse> getProductIndexSummaries(
+		@Valid @RequestBody ProductIdsRequest request
+	) {
+		return ResponseEntity.ok(productInternalService.getProductIndexSummaries(request.productIds()));
 	}
 }
