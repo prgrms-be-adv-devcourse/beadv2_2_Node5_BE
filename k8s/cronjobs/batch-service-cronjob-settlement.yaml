@@ -5,7 +5,7 @@ metadata:
   labels:
     app: batch-service
 spec:
-  schedule: "0 3 1 * *"
+  schedule: "0 4 1 * *"
   timeZone: "Asia/Seoul"
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 1
