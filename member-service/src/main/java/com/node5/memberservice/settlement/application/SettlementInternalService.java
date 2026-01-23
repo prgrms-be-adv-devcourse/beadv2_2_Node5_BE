@@ -2,8 +2,8 @@ package com.node5.memberservice.settlement.application;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.node5.common.exception.ExceptionResponseDto;
-import com.node5.memberservice.settlement.client.CatalogClient;
-import com.node5.memberservice.settlement.client.OrderClient;
+import com.node5.memberservice.client.CatalogClient;
+import com.node5.memberservice.client.OrderClient;
 import com.node5.memberservice.settlement.application.dto.SettlementSourceItem;
 import com.node5.memberservice.settlement.domain.SettlementProcessStatus;
 import com.node5.memberservice.settlement.domain.SettlementSource;
