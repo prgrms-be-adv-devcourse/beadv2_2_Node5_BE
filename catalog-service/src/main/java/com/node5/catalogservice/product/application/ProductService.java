@@ -1,12 +1,14 @@
 package com.node5.catalogservice.product.application;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import com.node5.catalogservice.client.ShopOwnershipPort;
 import com.node5.catalogservice.product.application.dto.ProductCommand;
@@ -18,6 +20,8 @@ import com.node5.catalogservice.product.application.port.ProductDiscontinuedEven
 import com.node5.catalogservice.product.application.port.ProductEmbeddingEventPort;
 import com.node5.catalogservice.product.application.port.ProductIndexEventPort;
 import com.node5.catalogservice.product.domain.Product;
+import com.node5.catalogservice.product.domain.ProductIdempotency;
+import com.node5.catalogservice.product.domain.ProductIdempotencyRepository;
 import com.node5.catalogservice.product.domain.ProductRepository;
 import com.node5.catalogservice.product.domain.ProductStatus;
 import com.node5.catalogservice.product.exception.ProductErrorCode;
@@ -31,6 +35,7 @@ import lombok.RequiredArgsConstructor;
 public class ProductService {
 
 	private final ProductRepository productRepository;
+	private final ProductIdempotencyRepository productIdempotencyRepository;
 	private final ProductIndexEventPort productIndexEventPort;
 	private final ProductEmbeddingEventPort productEmbeddingEventPort;
 	private final ProductDiscontinuedEventPort productDiscontinuedEventPort;
@@ -46,23 +51,64 @@ public class ProductService {
 	}
 
 	@Transactional
-	public ProductInfo createProduct(UUID memberId, UUID shopId, ProductCommand command) {
+	public ProductInfo createProduct(UUID memberId, UUID shopId, ProductCommand command, String idempotencyKey) {
 		validateShopOwnership(memberId, shopId);
 
-		Product product = Product.create(
-			shopId,
-			command.name(),
-			command.description(),
-			command.price(),
-			command.status(),
-			command.category(),
-			command.thumbnailKey()
-		);
+		// Idempotency-Key 미포함 요청은 하위 호환을 위해 기존 방식으로 처리
+		if (!StringUtils.hasText(idempotencyKey)) {
+			return createProductInternal(shopId, command);
+		}
 
-		Product saved = productRepository.save(product);
-		productIndexEventPort.publish(ProductIndexEventMapper.forCreate(saved));
-		productEmbeddingEventPort.publish(ProductEmbeddingEventMapper.from(saved));
-		return ProductInfo.from(saved);
+		boolean started = productIdempotencyRepository.tryStartProcessing(idempotencyKey);
+
+		if (!started) {
+			ProductIdempotency existing = productIdempotencyRepository.findByKey(idempotencyKey)
+				.orElseThrow(() -> new BaseException(ProductErrorCode.IDEMPOTENCY_DATA_CORRUPTED));
+
+			return switch (existing.getStatus()) {
+				case COMPLETED -> {
+					UUID productId = existing.getProductId();
+					if (productId == null) {
+						throw new BaseException(ProductErrorCode.IDEMPOTENCY_DATA_CORRUPTED);
+					}
+					Product saved = productRepository.findById(productId)
+						.orElseThrow(() -> new BaseException(ProductErrorCode.IDEMPOTENCY_DATA_CORRUPTED));
+					yield ProductInfo.from(saved);
+				}
+				case PROCESSING -> throw new BaseException(ProductErrorCode.IDEMPOTENCY_REQUEST_IN_PROGRESS);
+				case FAILED -> throw new BaseException(ProductErrorCode.IDEMPOTENCY_PREVIOUSLY_FAILED);
+			};
+		}
+
+		try {
+			Product product = Product.create(
+				shopId,
+				command.name(),
+				command.description(),
+				command.price(),
+				command.status(),
+				command.category(),
+				command.thumbnailKey()
+			);
+
+			Product saved = productRepository.save(product);
+
+			ProductIdempotency idem = productIdempotencyRepository.findByKey(idempotencyKey)
+				.orElseThrow(() -> new BaseException(ProductErrorCode.IDEMPOTENCY_DATA_CORRUPTED));
+			idem.complete(saved.getId());
+			productIdempotencyRepository.save(idem);
+
+			productIndexEventPort.publish(ProductIndexEventMapper.forCreate(saved));
+			productEmbeddingEventPort.publish(ProductEmbeddingEventMapper.from(saved));
+
+			return ProductInfo.from(saved);
+
+		} catch (RuntimeException e) {
+			if (!(e instanceof BaseException)) {
+				markIdempotencyFailed(idempotencyKey);
+			}
+			throw e;
+		}
 	}
 
 	@Transactional
@@ -120,6 +166,33 @@ public class ProductService {
 
 		return productRepository.findByShopId(shopId, pageable)
 			.map(ProductInfo::from);
+	}
+
+	private ProductInfo createProductInternal(UUID shopId, ProductCommand command) {
+		Product product = Product.create(
+			shopId,
+			command.name(),
+			command.description(),
+			command.price(),
+			command.status(),
+			command.category(),
+			command.thumbnailKey()
+		);
+
+		Product saved = productRepository.save(product);
+		productIndexEventPort.publish(ProductIndexEventMapper.forCreate(saved));
+		productEmbeddingEventPort.publish(ProductEmbeddingEventMapper.from(saved));
+		return ProductInfo.from(saved);
+	}
+
+	private void markIdempotencyFailed(String idempotencyKey) {
+		Optional<ProductIdempotency> idemOpt = productIdempotencyRepository.findByKey(idempotencyKey);
+		if (idemOpt.isEmpty()) {
+			return;
+		}
+		ProductIdempotency idempotency = idemOpt.get();
+		idempotency.fail();
+		productIdempotencyRepository.save(idempotency);
 	}
 
 	private Product getProductOrThrow(UUID productId) {

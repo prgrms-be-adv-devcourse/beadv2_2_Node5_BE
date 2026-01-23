@@ -74,6 +74,24 @@ public enum PaymentStatus {
                     body
             );
         }
+    },
+    MANUAL_PROCESSING_REQUIRED {
+        @Override
+        public Set<NotificationChannel> channels() {
+            return Set.of(NotificationChannel.EMAIL);
+        }
+
+        @Override
+        public NotificationMessage message(PaymentSendEmailEvent event) {
+            String body = "회원님의 결제 금액 " + event.amount() + "원이 환불 실패했습니다.\n" +
+                    "관리자에세 문의바랍니다.\n" +
+                    "실패 사유: " + event.failureReason();
+            return new PaymentStatusNotificationMessage(
+                    event.memberId().toString(),
+                    "결재 환불 실패",
+                    body
+            );
+        }
     };
 
     public abstract Set<NotificationChannel> channels();

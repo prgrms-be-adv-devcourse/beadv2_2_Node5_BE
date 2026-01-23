@@ -23,6 +23,8 @@ import com.node5.catalogservice.product.application.port.ProductEmbeddingEventPo
 import com.node5.catalogservice.product.application.port.ProductIndexEventPort;
 import com.node5.catalogservice.product.domain.Product;
 import com.node5.catalogservice.product.domain.ProductCategory;
+import com.node5.catalogservice.product.domain.ProductIdempotency;
+import com.node5.catalogservice.product.domain.ProductIdempotencyRepository;
 import com.node5.catalogservice.product.domain.ProductRepository;
 import com.node5.catalogservice.product.domain.ProductStatus;
 import com.node5.catalogservice.product.exception.ProductErrorCode;
@@ -35,6 +37,9 @@ class ProductServiceTest {
 
 	@Mock
 	private ProductRepository productRepository;
+
+	@Mock
+	private ProductIdempotencyRepository productIdempotencyRepository;
 
 	@Mock
 	private ProductIndexEventPort productIndexEventPort;
@@ -52,7 +57,7 @@ class ProductServiceTest {
 	private ProductService productService;
 
 	@Test
-	void 상품_생성_성공시_소유권검증후_저장하고_색인과_임베딩_이벤트를_발행한다() {
+	void 상품_생성_키없음_성공시_소유권검증후_저장하고_색인과_임베딩_이벤트를_발행한다() {
 		// given
 		UUID memberId = uuid();
 		UUID shopId = uuid();
@@ -71,13 +76,15 @@ class ProductServiceTest {
 		Product saved = ProductTestFactory.onSale();
 		given(productRepository.save(any(Product.class))).willReturn(saved);
 
-		// when
-		ProductInfo result = productService.createProduct(memberId, shopId, command);
+		// when (idempotencyKey 없음)
+		ProductInfo result = productService.createProduct(memberId, shopId, command, null);
 
 		// then
 		assertThat(result).isNotNull();
 		then(shopOwnershipPort).should().getOwnerMemberId(shopId);
 		then(productRepository).should().save(any(Product.class));
+
+		then(productIdempotencyRepository).shouldHaveNoInteractions();
 
 		then(productIndexEventPort).should().publish(argThat(e ->
 			e != null
@@ -89,6 +96,137 @@ class ProductServiceTest {
 			e != null && e.productId().equals(saved.getId())
 		));
 
+		then(productDiscontinuedEventPort).shouldHaveNoInteractions();
+	}
+
+	@Test
+	void 상품_생성_키있음_최초요청이면_PROCESSING선점후_상품을생성하고_idempotency를_COMPLETED로_업데이트한다() {
+		// given
+		UUID memberId = uuid();
+		UUID shopId = uuid();
+		String idempotencyKey = "idem-001";
+
+		ProductCommand command = new ProductCommand(
+			"name",
+			"desc",
+			BigDecimal.valueOf(1000),
+			ProductStatus.ON_SALE,
+			anyCategory(),
+			"thumb.png"
+		);
+
+		given(shopOwnershipPort.getOwnerMemberId(shopId)).willReturn(memberId);
+
+		given(productIdempotencyRepository.tryStartProcessing(idempotencyKey)).willReturn(true);
+
+		ProductIdempotency processing = ProductIdempotency.processing(idempotencyKey);
+		given(productIdempotencyRepository.findByKey(idempotencyKey)).willReturn(Optional.of(processing));
+
+		Product saved = ProductTestFactory.onSale();
+		given(productRepository.save(any(Product.class))).willReturn(saved);
+
+		// when
+		ProductInfo result = productService.createProduct(memberId, shopId, command, idempotencyKey);
+
+		// then
+		assertThat(result).isNotNull();
+
+		then(productIdempotencyRepository).should().tryStartProcessing(idempotencyKey);
+		then(productRepository).should().save(any(Product.class));
+
+		then(productIdempotencyRepository).should().save(argThat(idem ->
+			idem != null
+				&& idem.getIdempotencyKey().equals(idempotencyKey)
+				&& idem.getStatus() == ProductIdempotency.Status.COMPLETED
+				&& saved.getId().equals(idem.getProductId())
+		));
+
+		then(productIndexEventPort).should().publish(argThat(e ->
+			e != null
+				&& e.productId().equals(saved.getId())
+				&& e.type() == ProductIndexEventType.CREATE
+		));
+
+		then(productEmbeddingEventPort).should().publish(argThat(e ->
+			e != null && e.productId().equals(saved.getId())
+		));
+
+		then(productDiscontinuedEventPort).shouldHaveNoInteractions();
+	}
+
+	@Test
+	void 상품_생성_키있음_이미_COMPLETED면_기존상품을_반환하고_이벤트는_발행하지않는다() {
+		// given
+		UUID memberId = uuid();
+		UUID shopId = uuid();
+		String idempotencyKey = "idem-002";
+
+		ProductCommand command = new ProductCommand(
+			"name",
+			"desc",
+			BigDecimal.valueOf(1000),
+			ProductStatus.ON_SALE,
+			anyCategory(),
+			"thumb.png"
+		);
+
+		given(shopOwnershipPort.getOwnerMemberId(shopId)).willReturn(memberId);
+
+		given(productIdempotencyRepository.tryStartProcessing(idempotencyKey)).willReturn(false);
+
+		Product existingProduct = ProductTestFactory.onSale();
+		ProductIdempotency completed = ProductIdempotency.processing(idempotencyKey);
+		completed.complete(existingProduct.getId());
+
+		given(productIdempotencyRepository.findByKey(idempotencyKey)).willReturn(Optional.of(completed));
+		given(productRepository.findById(existingProduct.getId())).willReturn(Optional.of(existingProduct));
+
+		// when
+		ProductInfo result = productService.createProduct(memberId, shopId, command, idempotencyKey);
+
+		// then
+		assertThat(result).isNotNull();
+
+		then(productRepository).should(never()).save(any(Product.class));
+		then(productIndexEventPort).shouldHaveNoInteractions();
+		then(productEmbeddingEventPort).shouldHaveNoInteractions();
+		then(productDiscontinuedEventPort).shouldHaveNoInteractions();
+	}
+
+	@Test
+	void 상품_생성_키있음_PROCESSING이면_409_IDEMPOTENCY_REQUEST_IN_PROGRESS() {
+		// given
+		UUID memberId = uuid();
+		UUID shopId = uuid();
+		String idempotencyKey = "idem-003";
+
+		ProductCommand command = new ProductCommand(
+			"name",
+			"desc",
+			BigDecimal.valueOf(1000),
+			ProductStatus.ON_SALE,
+			anyCategory(),
+			"thumb.png"
+		);
+
+		given(shopOwnershipPort.getOwnerMemberId(shopId)).willReturn(memberId);
+
+		given(productIdempotencyRepository.tryStartProcessing(idempotencyKey)).willReturn(false);
+
+		ProductIdempotency processing = ProductIdempotency.processing(idempotencyKey);
+		given(productIdempotencyRepository.findByKey(idempotencyKey)).willReturn(Optional.of(processing));
+
+		// when & then
+		assertThatThrownBy(() -> productService.createProduct(memberId, shopId, command, idempotencyKey))
+			.isInstanceOf(BaseException.class)
+			.satisfies(ex -> {
+				BaseException be = (BaseException) ex;
+				assertThat(be.getErrorCode()).isEqualTo(ProductErrorCode.IDEMPOTENCY_REQUEST_IN_PROGRESS);
+			});
+
+		then(productRepository).should(never()).save(any(Product.class));
+		then(productIndexEventPort).shouldHaveNoInteractions();
+		then(productEmbeddingEventPort).shouldHaveNoInteractions();
 		then(productDiscontinuedEventPort).shouldHaveNoInteractions();
 	}
 

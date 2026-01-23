@@ -48,6 +48,10 @@ data:
         listener:
           simple:
             default-requeue-rejected: false
+      data:
+        redis:
+          host: ${REDIS_HOST}
+          port: 6379
       kafka:
         bootstrap-servers: ${KAFKA_HOST}:9092
         listener:

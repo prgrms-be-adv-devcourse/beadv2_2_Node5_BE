@@ -76,13 +76,13 @@ public class Payment extends BaseEntity {
         this.approvedAt = tossPayment.approvedAt().toLocalDateTime();
     }
 
-    public void failure(String failReason) {
-        this.status = PaymentStatus.PAYMENT_FAILED;
+    public void rollbackConfirmation(String failReason) {
+        this.status = PaymentStatus.CONFIRMED;
         this.failReason = failReason;
     }
 
-    public void cancel_failure(String failReason) {
-        this.status = PaymentStatus.CANCEL_FAILED;
+    public void failure(String failReason) {
+        this.status = PaymentStatus.PAYMENT_FAILED;
         this.failReason = failReason;
     }
 
@@ -96,6 +96,11 @@ public class Payment extends BaseEntity {
 
     public void withdraw_confirmed() {
         this.status = PaymentStatus.WITHDRAW_CONFIRMED;
+    }
+
+    public void manual_processing_required(String failReason) {
+        this.status = PaymentStatus.MANUAL_PROCESSING_REQUIRED;
+        this.failReason = failReason;
     }
 
     public void validateValue(UUID memberId, PaymentCancelCommand command) {

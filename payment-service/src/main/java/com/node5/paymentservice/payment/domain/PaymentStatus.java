@@ -7,5 +7,5 @@ package com.node5.paymentservice.payment.domain;
         WITHDRAW_CONFIRMED,
         CANCELED,
         PAYMENT_FAILED,
-        CANCEL_FAILED
+        MANUAL_PROCESSING_REQUIRED
     }
