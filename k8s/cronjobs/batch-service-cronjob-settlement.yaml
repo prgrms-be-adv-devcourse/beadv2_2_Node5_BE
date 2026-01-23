@@ -42,7 +42,7 @@ spec:
               args:
                 - >-
                   java -jar /app/app.jar
-                  --batch.run.mode=subscription-order
+                  --batch.run.mode=settlement
               resources:
                 requests:
                   memory: "256Mi"
