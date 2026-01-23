@@ -11,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.node5.common.exception.BaseException;
+import com.node5.supportservice.config.SearchSponsoredProperties;
 import com.node5.supportservice.search.application.dto.ProductSearchCommand;
 import com.node5.supportservice.search.application.dto.ProductSearchResponse;
 import com.node5.supportservice.search.application.port.ProductSearchPort;
@@ -24,17 +25,18 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ProductSearchService {
 
-	private static final int SPONSORED_LIMIT = 3;
-
 	private final ProductSearchPort productSearchPort;
 	private final QueryNormalizer queryNormalizer;
+	private final SearchSponsoredProperties sponsoredProps;
 
 	public Page<ProductSearchResponse> search(ProductSearchCommand command, Pageable pageable) {
 		validatePriceRange(command.minPrice(), command.maxPrice());
 
 		ProductSearchCommand normalizedCommand = normalize(command);
 
-		List<ProductDocument> sponsored = productSearchPort.searchSponsored(normalizedCommand, SPONSORED_LIMIT);
+		int limit = sponsoredProps.getLimit();
+		List<ProductDocument> sponsored = productSearchPort.searchSponsored(normalizedCommand, limit);
+
 		Page<ProductDocument> normalPage = productSearchPort.search(normalizedCommand, pageable);
 
 		Set<String> sponsoredIds = sponsored.stream()
