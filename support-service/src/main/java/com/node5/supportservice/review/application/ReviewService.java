@@ -6,7 +6,6 @@ import com.node5.supportservice.global.openfeign.client.CatalogClient;
 import com.node5.supportservice.global.openfeign.client.MemberClient;
 import com.node5.supportservice.global.openfeign.client.OrderClient;
 import com.node5.supportservice.global.openfeign.client.dto.OrderStatusRequest;
-import com.node5.supportservice.global.openfeign.client.dto.OrderStatusResponse;
 import com.node5.supportservice.review.application.dto.*;
 import com.node5.supportservice.global.openfeign.client.dto.ProductStatusResponse;
 import com.node5.supportservice.review.domain.*;

@@ -1,7 +1,6 @@
 package com.node5.supportservice.global.openfeign.client;
 
 import com.node5.supportservice.global.openfeign.client.dto.OrderStatusRequest;
-import com.node5.supportservice.global.openfeign.client.dto.OrderStatusResponse;
 import jakarta.validation.Valid;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
