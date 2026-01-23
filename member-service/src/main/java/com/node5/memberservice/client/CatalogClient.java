@@ -1,4 +1,4 @@
-package com.node5.memberservice.settlement.client;
+package com.node5.memberservice.client;
 
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
@@ -10,7 +10,6 @@ import java.util.UUID;
 
 @FeignClient(name = "catalog-service")
 public interface CatalogClient {
-
     @GetMapping("internal/products/getProductIds")
     ResponseEntity<List<UUID>> getProductIdsByShopIds(@RequestBody List<UUID> shopIds);
 }

@@ -1,4 +1,4 @@
-package com.node5.memberservice.settlement.client;
+package com.node5.memberservice.settlement.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.node5.common.exception.ExceptionResponseDto;
