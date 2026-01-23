@@ -22,6 +22,7 @@ resources:
   - cronjobs/batch-service-cronjob-payment-outbox-cleanup.yaml
   - cronjobs/batch-service-cronjob-review-summary.yaml
   - cronjobs/batch-service-cronjob-subscription-order.yaml
+  - cronjobs/batch-service-cronjob-settlement.yaml
   - statefulsets/database.yaml
   - statefulsets/elasticsearch.yaml
   - statefulsets/kafka.yaml
