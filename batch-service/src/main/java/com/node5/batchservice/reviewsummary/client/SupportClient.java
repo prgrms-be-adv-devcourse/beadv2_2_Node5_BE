@@ -27,6 +27,6 @@ public interface SupportClient {
     @PostMapping("/internal/review-summaries")
     ResponseEntity<Void> upsertReviewSummary(@RequestBody ReviewSummaryUpsertRequest request);
 
-    @PostMapping("/reindex-embeddings")
+    @PostMapping("/internal/reviews/reindex-embeddings")
     ResponseEntity<Void> reindexReviewEmbeddings();
 }
