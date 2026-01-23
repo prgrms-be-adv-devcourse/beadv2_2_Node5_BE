@@ -97,3 +97,5 @@ app:
   search:
     index:
       product: products
+    reindex:
+      page-size: 500

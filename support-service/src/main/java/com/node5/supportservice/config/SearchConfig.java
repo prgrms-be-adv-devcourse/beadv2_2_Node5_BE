@@ -5,8 +5,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@EnableConfigurationProperties(SearchIndexProperties.class)
-public class SearchIndexNameConfig {
+@EnableConfigurationProperties({
+	SearchIndexProperties.class,
+	SearchReindexProperties.class
+})
+public class SearchConfig {
 
 	@Bean(name = "productIndexName")
 	public String productIndexName(SearchIndexProperties props) {
