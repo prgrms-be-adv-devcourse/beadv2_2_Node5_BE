@@ -94,5 +94,7 @@ data:
       search:
         index:
           product: products
+        reindex:
+          page-size: 500
     server:
       port: 8087
