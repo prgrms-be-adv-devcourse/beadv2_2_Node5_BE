@@ -298,10 +298,17 @@ public class ReviewService {
                 .toList();
     }
 
-    public ReviewStatusInfo hasMemberReviewedProduct(UUID memberId, UUID orderId, UUID productId) {
-        return ReviewStatusInfo.from(
-                reviewDetailRepository.existsReview(memberId, orderId, productId)
-        );
+    public ReviewStatusInfo reviewableProduct(UUID memberId, UUID orderId, UUID productId) {
+        if (reviewDetailRepository.existsReview(memberId, orderId, productId)) {
+            return ReviewStatusInfo.from(false);
+        }
+
+        Boolean reviewableFromOrder = Optional.ofNullable(
+                orderClient.canPostReview(memberId, new OrderStatusRequest(orderId, productId))
+                        .getBody()
+        ).orElse(false);
+
+        return ReviewStatusInfo.from(reviewableFromOrder);
     }
 
     @Transactional
