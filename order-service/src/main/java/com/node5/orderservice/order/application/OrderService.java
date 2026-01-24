@@ -9,16 +9,17 @@ import com.node5.orderservice.order.application.dto.OrderCommand;
 import com.node5.orderservice.order.application.dto.OrderCreateInfo;
 import com.node5.orderservice.order.application.dto.OrderItemCommand;
 import com.node5.orderservice.order.application.dto.OrderStatusInfo;;
+import com.node5.orderservice.order.infrastructure.kafka.StockRestoreEvent;
 import com.node5.orderservice.order.domain.*;
 import com.node5.orderservice.order.exception.*;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import com.node5.orderservice.order.application.dto.*;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,6 +46,7 @@ public class OrderService {
     private final WalletClient walletClient;
     private final CatalogClient catalogClient;
     private final FeignErrorDecoderUtil feignUtil;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public OrderCreateInfo create(UUID memberId, OrderCommand command) {
@@ -226,15 +228,14 @@ public class OrderService {
 
                 List<OrderItem> orderItems = orderItemRepository.findByOrderId(orderId);
                 if (orderItems != null && !orderItems.isEmpty()) {
-                    // 재고 복구 API 호출
-                    //StockReleaseBatchRequest request = StockReleaseBatchRequest.create(orderId, orderItems);
-                    //catalogClient.release(request);
-
                     // OrderItem 상태 변경
                     orderItems.forEach(item -> item.updateStatus(OrderProgress.CANCELED));
 
                     // Order 상태 변경
                     order.updateStatus(CANCELED);
+
+                    // 재고 복구 이벤트 발행
+                    eventPublisher.publishEvent(StockRestoreEvent.create(orderId, orderItems, "주문 취소"));
                 }
             } catch (Exception e) {
                 throw new OrderException(ORDER_CANCEL_FAILED, "orderId=" + orderId + ", message=" + e.getMessage());
