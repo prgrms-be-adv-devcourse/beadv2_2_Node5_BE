@@ -131,6 +131,7 @@ jobs:
       - name: Deploy Core Infra
         run: |
           kubectl apply -f k8s/configmaps/common-configmap.yaml
+          kubectl apply -f k8s/cronjobs/
           
           ENV_PATH="/home/ubuntu/env"
           for env_file in $ENV_PATH/.env.*; do
@@ -164,6 +165,7 @@ jobs:
       - name: Deploy & Rollout
         run: |
           kubectl apply -f k8s/configmaps/common-configmap.yaml
+          kubectl apply -f k8s/cronjobs/
           if [ -f k8s/configmaps/${{ matrix.service }}-configmap.yaml ]; then
             kubectl apply -f k8s/configmaps/${{ matrix.service }}-configmap.yaml
           fi

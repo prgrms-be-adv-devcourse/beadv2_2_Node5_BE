@@ -74,6 +74,13 @@ CREATE TABLE catalog.product_idempotency (
     CONSTRAINT ck_product_idempotency_status CHECK (status IN ('PROCESSING', 'COMPLETED', 'FAILED'))
 );
 
+CREATE TABLE catalog.processed_event (
+    event_type VARCHAR(50) NOT NULL,
+    event_id uuid NOT NULL,
+    created_at timestamp(6) NOT NULL DEFAULT now(),
+    CONSTRAINT pk_processed_event PRIMARY KEY (event_type, event_id)
+);
+
 CREATE INDEX ix_stock_reservation_product_status
     ON catalog.stock_reservation (product_id, status);
 
