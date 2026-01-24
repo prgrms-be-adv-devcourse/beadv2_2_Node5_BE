@@ -40,6 +40,7 @@ app:
       product-index: catalog-service.product-index.v1
       product-embedding: catalog-service.product-embedding.v1
       product-discontinued: catalog-service.product-discontinued.v1
+      stock-restore: order-service.stock-restore.v1
 
   s3:
     bucket: ${S3_BUCKET_NAME}
