@@ -9,9 +9,9 @@ import com.node5.orderservice.order.application.dto.OrderCommand;
 import com.node5.orderservice.order.application.dto.OrderCreateInfo;
 import com.node5.orderservice.order.application.dto.OrderItemCommand;
 import com.node5.orderservice.order.application.dto.OrderStatusInfo;;
-import com.node5.orderservice.order.infrastructure.kafka.StockRestoreEvent;
 import com.node5.orderservice.order.domain.*;
 import com.node5.orderservice.order.exception.*;
+import com.node5.orderservice.order.infrastructure.kafka.StockRestoreKafkaRequest;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import com.node5.orderservice.order.application.dto.*;
@@ -220,9 +220,9 @@ public class OrderService {
         }
 
         // 취소가 가능한 주문 상태인지 확인
-        if(order.getStatus() == PAID){
-            // 예치금 환불 API 호출
+        if(order.getStatus() == OrderStatus.PAID){
             try {
+                // 예치금 환불 API 호출
                 BigDecimal roundedAmount = order.getTotalAmount().setScale(0, RoundingMode.HALF_UP);
                 walletClient.requestRefund(memberId, new WalletRefundRequest(order.getId(), roundedAmount.longValue()));
 
@@ -232,10 +232,11 @@ public class OrderService {
                     orderItems.forEach(item -> item.updateStatus(OrderProgress.CANCELED));
 
                     // Order 상태 변경
-                    order.updateStatus(CANCELED);
+                    order.updateStatus(OrderStatus.CANCELED);
 
                     // 재고 복구 이벤트 발행
-                    eventPublisher.publishEvent(StockRestoreEvent.create(orderId, orderItems, "주문 취소"));
+                    StockRestoreKafkaRequest request = StockRestoreKafkaRequest.create(orderId, orderItems, "주문 취소");
+                    eventPublisher.publishEvent(request);
                 }
             } catch (Exception e) {
                 throw new OrderException(ORDER_CANCEL_FAILED, "orderId=" + orderId + ", message=" + e.getMessage());
@@ -249,37 +250,43 @@ public class OrderService {
         return OrderStatusInfo.from(order);
     }
 
-//    @Transactional
-//    public OrderStatusInfo refund(UUID orderId, UUID memberId) {
-//        Order order = orderRepository.findById(orderId)
-//                .orElseThrow(() -> new OrderException(ORDER_NOT_FOUND, "orderId=" + orderId));
-//
-//        if(!order.getMemberId().equals(memberId)){
-//            String msg = "[환불] memberId: " + memberId + ", orderId: " + order.getId();
-//            throw new OrderException(ORDER_ACCESS_DENIED, msg);
-//        }
-//
-//        // 환불이 가능한 주문 상태인지 확인
-//        if(order.getStatus() == DELIVERY_ING || order.getStatus() == DELIVERY_COMPLETED){
-//            // 예치금 환불 API 호출
-//            try {
-//                BigDecimal roundedAmount = order.getTotalAmount().setScale(0, RoundingMode.HALF_UP);
-//                ResponseEntity<WalletInfo> response = billingClient.requestRefund(memberId, new WalletRefundRequest(order.getId(), roundedAmount.longValue()));
-//
-//                if (response.getStatusCode().is2xxSuccessful()) {
-//                    orderTransactionService.updateOrderStatus(orderId, REFUND_COMPLETED);
-//                }
-//            } catch(Exception e) {
-//                throw new OrderException(ORDER_PAYMENT_FAILED, "orderId=" + orderId + ", message=" + e.getMessage());
-//            }
-//        }else{
-//            String msg = String.format("환불은 주문의 상태가 배송 중이거나 배송 완료일 때 가능합니다.(orderId: %s, orderStatus: %s)",
-//                    order.getId(), order.getStatus());
-//            throw new OrderException(ORDER_REQUEST_NOT_ALLOWED, msg);
-//        }
-//
-//        return OrderStatusInfo.from(order);
-//    }
+    @Transactional
+    public OrderStatusInfo refund(UUID memberId, UUID orderId, UUID productId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderException(ORDER_NOT_FOUND, "orderId=" + orderId));
+
+        if(!order.getMemberId().equals(memberId)){
+            String msg = "[환불] memberId: " + memberId + ", orderId: " + order.getId();
+            throw new OrderException(ORDER_ACCESS_DENIED, msg);
+        }
+
+        OrderItem orderItem = orderItemRepository.findByOrderIdAndProductId(orderId, productId)
+                .orElseThrow(() -> new OrderException(ORDER_ITEM_NOT_FOUND, "orderId=" + orderId + ", productId=" + productId));
+
+        // 환불이 가능한 주문 상태인지 확인
+        if(orderItem.getStatus() == OrderProgress.DELIVERY_ING || orderItem.getStatus() == OrderProgress.DELIVERY_COMPLETED){
+            try {
+                // 예치금 환불 API 호출
+                BigDecimal roundedAmount = order.getTotalAmount().setScale(0, RoundingMode.HALF_UP);
+                walletClient.requestRefund(memberId, new WalletRefundRequest(order.getId(), roundedAmount.longValue()));
+
+                // OrderItem 상태 변경
+                orderItem.updateStatus(OrderProgress.REFUNDED);
+
+                // 재고 복구 이벤트 발행
+                StockRestoreKafkaRequest request = StockRestoreKafkaRequest.create(orderId, List.of(orderItem), "상품 환불");
+                eventPublisher.publishEvent(request);
+            } catch(Exception e) {
+                throw new OrderException(ORDER_REFUND_FAILED, "orderId=" + orderId + ", message=" + e.getMessage());
+            }
+        }else{
+            String msg = String.format("환불은 주문의 상태가 배송 중이거나 배송 완료일 때 가능합니다.(orderId: %s, orderStatus: %s)",
+                    order.getId(), order.getStatus());
+            throw new OrderException(ORDER_REQUEST_NOT_ALLOWED, msg);
+        }
+
+        return OrderStatusInfo.from(order);
+    }
 
     private String generateNewOrderNum() {
         Long nextSequenceValue = orderRepository.getNextSequenceNum();

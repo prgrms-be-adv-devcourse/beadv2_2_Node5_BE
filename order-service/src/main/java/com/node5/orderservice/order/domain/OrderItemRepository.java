@@ -28,4 +28,6 @@ public interface OrderItemRepository {
     void updateSettlementStatus(List<UUID> orderItemIds, OrderItemSettlementStatus settlementStatus);
 
     Boolean existsByProductIdInAndSettlementStatus(List<UUID> productIds, OrderItemSettlementStatus orderItemSettlementStatus);
+
+    Optional<OrderItem> findByOrderIdAndProductId(UUID orderId, UUID productId);
 }

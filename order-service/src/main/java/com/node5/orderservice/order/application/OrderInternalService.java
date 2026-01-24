@@ -52,7 +52,7 @@ public class OrderInternalService {
     public Boolean hasInProgressOrder(UUID memberId) {
         return orderItemRepository.existsInProgressByMemberId(
                 memberId,
-                List.of(OrderProgress.CONFIRMED, OrderProgress.REFUND_COMPLETED)
+                List.of(OrderProgress.CONFIRMED, OrderProgress.REFUNDED)
         );
     }
 
