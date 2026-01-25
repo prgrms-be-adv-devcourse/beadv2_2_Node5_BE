@@ -68,4 +68,8 @@ public class OrderItemRepositoryAdapter implements OrderItemRepository {
         return orderItemJpaRepository.existsByProductIdInAndSettlementStatus(productIds, settlementStatus);
     }
 
+    @Override
+    public Optional<OrderItem> findByOrderIdAndProductId(UUID orderId, UUID productId) {
+        return orderItemJpaRepository.findByOrderIdAndProductId(orderId, productId);
+    }
 }

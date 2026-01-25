@@ -90,4 +90,8 @@ public class OrderItem extends BaseEntity {
                 .settlementStatus(OrderItemSettlementStatus.PENDING)
                 .build();
     }
+
+    public void updateStatus(OrderProgress status){
+        this.status = status;
+    }
 }
