@@ -1,4 +1,4 @@
-package com.node5.orderservice.order.infrastructure.kafka;
+package com.node5.orderservice.order.infrastructure.kafka.producer;
 
 import com.node5.common.event.ProductSalesIncrementEvent;
 import lombok.RequiredArgsConstructor;

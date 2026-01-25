@@ -5,7 +5,7 @@ import com.node5.orderservice.global.openfeign.client.MemberClient;
 import com.node5.orderservice.global.openfeign.client.dto.SettlementSourceItem;
 import com.node5.orderservice.order.domain.*;
 import com.node5.orderservice.order.exception.OrderException;
-import com.node5.orderservice.order.infrastructure.kafka.ProductSalesIncrementKafkaRequest;
+import com.node5.orderservice.order.infrastructure.kafka.dto.ProductSalesIncrementKafkaRequest;
 import feign.FeignException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;

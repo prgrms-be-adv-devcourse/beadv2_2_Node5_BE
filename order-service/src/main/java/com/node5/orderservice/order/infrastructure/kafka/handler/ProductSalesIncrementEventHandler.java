@@ -1,6 +1,7 @@
-package com.node5.orderservice.order.infrastructure.kafka;
+package com.node5.orderservice.order.infrastructure.kafka.handler;
 
 import com.node5.common.event.ProductSalesIncrementEvent;
+import com.node5.orderservice.order.infrastructure.kafka.producer.ProductSalesIncrementProducer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

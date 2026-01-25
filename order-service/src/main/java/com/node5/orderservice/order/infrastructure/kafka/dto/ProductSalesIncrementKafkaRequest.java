@@ -1,4 +1,4 @@
-package com.node5.orderservice.order.infrastructure.kafka;
+package com.node5.orderservice.order.infrastructure.kafka.dto;
 
 import com.node5.common.event.ProductSalesIncrementEvent;
 import com.node5.orderservice.order.domain.OrderItem;

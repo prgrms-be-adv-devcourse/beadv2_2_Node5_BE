@@ -11,7 +11,7 @@ import com.node5.orderservice.order.application.dto.OrderItemCommand;
 import com.node5.orderservice.order.application.dto.OrderStatusInfo;;
 import com.node5.orderservice.order.domain.*;
 import com.node5.orderservice.order.exception.*;
-import com.node5.orderservice.order.infrastructure.kafka.StockRestoreKafkaRequest;
+import com.node5.orderservice.order.infrastructure.kafka.dto.StockRestoreKafkaRequest;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import com.node5.orderservice.order.application.dto.*;

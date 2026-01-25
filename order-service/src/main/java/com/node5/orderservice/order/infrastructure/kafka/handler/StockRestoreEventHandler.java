@@ -1,8 +1,9 @@
-package com.node5.orderservice.order.infrastructure.kafka;
+package com.node5.orderservice.order.infrastructure.kafka.handler;
 
+import com.node5.orderservice.order.infrastructure.kafka.producer.StockRestoreProducer;
+import com.node5.orderservice.order.infrastructure.kafka.dto.StockRestoreKafkaRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
