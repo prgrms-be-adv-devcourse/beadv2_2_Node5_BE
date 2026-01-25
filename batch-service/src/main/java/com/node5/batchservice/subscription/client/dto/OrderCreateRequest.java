@@ -1,0 +1,22 @@
+package com.node5.batchservice.subscription.client.dto;
+
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.UUID;
+
+public record OrderCreateRequest(
+        String orderType,
+        UUID subscriptionKey,
+        String recipientName,
+        String recipientAddress,
+        List<OrderItemRequest> items
+) {
+    public record OrderItemRequest(
+            UUID productId,
+            String name,
+            String imgUrl,
+            BigDecimal unitPrice,
+            Integer quantity,
+            BigDecimal totalPrice
+    ){}
+}

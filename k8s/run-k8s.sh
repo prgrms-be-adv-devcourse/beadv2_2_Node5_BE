@@ -14,7 +14,8 @@ $KUBECTL apply -k k8s
 # Show core resources and wait for deployments to roll out.
 $KUBECTL get all
 
-for deploy in apigateway billing-service catalog-service config-service discovery \
-  member-service order-service settlement-service shop-service subscription-service; do
+for deploy in apigateway catalog-service discovery \
+  member-service order-service \
+  payment-service wallet-service; do
   $KUBECTL rollout status "deploy/${deploy}" || true
 done

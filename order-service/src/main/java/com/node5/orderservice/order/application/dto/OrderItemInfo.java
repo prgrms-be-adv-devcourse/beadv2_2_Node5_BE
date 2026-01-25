@@ -7,6 +7,7 @@ import java.util.UUID;
 
 public record OrderItemInfo(
         UUID productId,
+        String status,
         String productName,
         String imgUrl,
         BigDecimal unitPrice,
@@ -17,6 +18,7 @@ public record OrderItemInfo(
     public static OrderItemInfo from(OrderItem oi) {
         return new OrderItemInfo(
                 oi.getProductId(),
+                oi.getStatus().getName(),
                 oi.getName(),
                 oi.getImgUrl(),
                 oi.getUnitPrice(),

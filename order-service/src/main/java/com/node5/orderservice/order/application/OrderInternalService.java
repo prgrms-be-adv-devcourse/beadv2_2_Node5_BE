@@ -1,6 +1,9 @@
 package com.node5.orderservice.order.application;
 
+import com.node5.orderservice.order.application.dto.OrderStatusCommand;
 import com.node5.orderservice.order.domain.OrderItemRepository;
+import com.node5.orderservice.order.domain.OrderItemSettlementStatus;
+import com.node5.orderservice.order.domain.OrderProgress;
 import com.node5.orderservice.order.domain.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -30,5 +33,31 @@ public class OrderInternalService {
         }
 
         return orderItemRepository.findRecentProductIds(orderIds, PageRequest.of(0, RECENT_ORDER_ITEM_CNT));
+    }
+
+    // orderId, productId로 OrderItem의 status 조회
+    public Boolean getOrderStatus(UUID memberId, OrderStatusCommand command) {
+        // Order 확인
+        boolean existsMyOrder = orderRepository.existsByIdAndMemberId(command.orderId(), memberId);
+        if(!existsMyOrder) return false;
+
+        // OrderItem 확인
+        OrderProgress status = orderItemRepository
+                .findStatusByOrderIdAndProductId(command.orderId(), command.productId())
+                .orElse(null);
+        return status == OrderProgress.CONFIRMED;
+    }
+
+    // 진행 중인 주문이 있는지 확인
+    public Boolean hasInProgressOrder(UUID memberId) {
+        return orderItemRepository.existsInProgressByMemberId(
+                memberId,
+                List.of(OrderProgress.CONFIRMED, OrderProgress.REFUNDED)
+        );
+    }
+
+    // 정산 대기 중인 주문 상품이 있는지 확인
+    public Boolean hasInProgressSettlementPending(List<UUID> productIds) {
+        return orderItemRepository.existsByProductIdInAndSettlementStatus(productIds, OrderItemSettlementStatus.PENDING);
     }
 }

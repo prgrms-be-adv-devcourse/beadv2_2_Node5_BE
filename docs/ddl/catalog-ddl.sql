@@ -64,6 +64,23 @@ CREATE TABLE catalog.stock_reservation (
     CONSTRAINT uq_stock_reservation UNIQUE (order_id, product_id)
 );
 
+CREATE TABLE catalog.product_idempotency (
+    idempotency_key varchar(80) NOT NULL,
+    product_id uuid NULL,
+    status varchar(20) NOT NULL,
+    created_at timestamp(6) NOT NULL DEFAULT now(),
+    modified_at timestamp(6) NOT NULL DEFAULT now(),
+    CONSTRAINT pk_product_idempotency PRIMARY KEY (idempotency_key),
+    CONSTRAINT ck_product_idempotency_status CHECK (status IN ('PROCESSING', 'COMPLETED', 'FAILED'))
+);
+
+CREATE TABLE catalog.processed_event (
+    event_type VARCHAR(50) NOT NULL,
+    event_id uuid NOT NULL,
+    created_at timestamp(6) NOT NULL DEFAULT now(),
+    CONSTRAINT pk_processed_event PRIMARY KEY (event_type, event_id)
+);
+
 CREATE INDEX ix_stock_reservation_product_status
     ON catalog.stock_reservation (product_id, status);
 

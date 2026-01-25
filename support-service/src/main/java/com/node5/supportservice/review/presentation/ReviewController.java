@@ -4,6 +4,7 @@ import com.node5.supportservice.review.application.ReviewService;
 import com.node5.supportservice.review.application.dto.ReviewDetailInfo;
 import com.node5.supportservice.review.application.dto.ReviewIdInfo;
 import com.node5.supportservice.review.application.dto.ReviewInfo;
+import com.node5.supportservice.review.application.dto.ReviewStatusInfo;
 import com.node5.supportservice.review.presentation.dto.ReviewCreateRequest;
 import com.node5.supportservice.review.presentation.dto.ReviewUpdateRequest;
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,7 +33,7 @@ public class ReviewController {
     }
 
     @Operation(summary = "리뷰 통계 조회", description = "상품의 리뷰 통계 정보를 조회한다.")
-    @GetMapping("/{productId}")
+    @GetMapping("/static/{productId}")
     public ResponseEntity<ReviewInfo> getReview(@PathVariable UUID productId) {
         return ResponseEntity.ok(reviewService.getReviewInfo(productId));
     }
@@ -73,5 +74,11 @@ public class ReviewController {
     public ResponseEntity<ReviewIdInfo> likeReview(@RequestHeader("Member-Id") UUID memberId,
                                                    @PathVariable UUID reviewId) {
         return ResponseEntity.ok(reviewService.likeReview(memberId, reviewId));
+    }
+
+    @Operation(summary = "상품 리뷰 작성 가능 여부 조회", description = "회원이 해당 상품에 대해 리뷰를 작성했는지 조회한다.")
+    @GetMapping("/reviewable")
+    public ResponseEntity<ReviewStatusInfo> reviewableProduct(@RequestHeader("Member-Id") UUID memberId, @RequestParam("orderId") UUID orderId, @RequestParam("productId") UUID productId) {
+        return ResponseEntity.ok(reviewService.reviewableProduct(memberId, orderId, productId));
     }
 }

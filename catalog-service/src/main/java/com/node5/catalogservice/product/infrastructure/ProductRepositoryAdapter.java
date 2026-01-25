@@ -55,4 +55,14 @@ public class ProductRepositoryAdapter implements ProductRepository {
 	public List<Product> findAllByIdInAndStatus(Collection<UUID> ids, ProductStatus status) {
 		return productJpaRepository.findByIdInAndStatus(ids, status);
 	}
+
+	@Override
+	public List<UUID> findIdsByShopIdIn(Collection<UUID> shopIds) {
+		return productJpaRepository.findIdsByShopIdIn(shopIds);
+	}
+
+	@Override
+	public int discontinueByShopId(UUID shopId) {
+		return productJpaRepository.discontinueByShopId(shopId);
+	}
 }

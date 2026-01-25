@@ -5,8 +5,8 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.node5.catalogservice.cart.domain.CartRepository;
 import com.node5.catalogservice.cart.domain.CartItemRepository;
+import com.node5.catalogservice.cart.domain.CartRepository;
 
 import lombok.RequiredArgsConstructor;
 

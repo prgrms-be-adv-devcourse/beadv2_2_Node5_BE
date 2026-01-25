@@ -27,39 +27,55 @@ jobs:
           DOMAINS='${{ vars.DOMAIN_SERVICES }}'
           INFRA='${{ vars.INFRA_SERVICES }}'
           ALL=$(echo "$DOMAINS $INFRA" | jq -s -c '.[0] + .[1] | unique')
-          INFRA_PATTERN=$(echo "$INFRA" | jq -r '. | join("|")')
           ALL_PATTERN=$(echo "$ALL" | jq -r '. | join("|")')
           
-          # 2. 비교 대상 설정 (수동: develop..deploy / 자동: before..sha)
+          # infra 목록은 "문자열 리스트"로만 사용
+          INFRA_LIST=$(echo "$INFRA" | jq -r '.[]')
+          
+          echo "ALL=$ALL"
+          echo "INFRA_LIST=$INFRA_LIST"
+          echo "ALL_PATTERN=$ALL_PATTERN"
+          
+          # 2. 비교 대상 설정
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             git fetch origin deploy develop
-            BASE="origin/deploy"; HEAD="origin/develop"
-            DIFF_SPEC="$BASE..$HEAD" # 수동 배포 시 dev와 deploy 간 변경사항 확인
+            DIFF_SPEC="origin/deploy..origin/develop"
           else
-            BASE="${{ github.event.before }}"; HEAD="${{ github.sha }}"
-            DIFF_SPEC="$BASE $HEAD" # 자동 배포 시 develop의 모든 변경사항 확인
+            DIFF_SPEC="${{ github.event.before }} ${{ github.sha }}"
           fi
           
-          # 3. 변경 파일 및 서비스 추출
-          CHANGED=$(git diff --name-only $DIFF_SPEC || echo "")
+          # 3. 변경 파일 목록
+          CHANGED=$(git diff --name-only $DIFF_SPEC || true)
           
-          # common이 변경되면 전체 서비스, 아니면 해당 디렉토리 서비스만 추출
-          if echo "$CHANGED" | grep -qE "^((common|$INFRA_PATTERN)/)"; then
+          # 4. infra / common 변경 여부 판별 (jq ❌)
+          CLOUD_CHANGED="false"
+          for infra in $INFRA_LIST common; do
+            if echo "$CHANGED" | grep -q "^${infra}/"; then
+              CLOUD_CHANGED="true"
+              break
+            fi
+          done
+          
+          # 5. 빌드 대상 계산
+          if [ "$CLOUD_CHANGED" = "true" ]; then
             BUILD_LIST="$ALL"
             DOMAIN_LIST="$DOMAINS"
-            CLOUD_CHANGED="true"
           else
-            BUILD_LIST=$(echo "$CHANGED" | awk -F/ '{print $1}' | sort -u | grep -E "^($ALL_PATTERN)$" | jq -R . | jq -s -c . || echo "[]")
+            BUILD_LIST=$(echo "$CHANGED" \
+              | awk -F/ '{print $1}' \
+              | sort -u \
+              | grep -E "^($ALL_PATTERN)$" \
+              | jq -R . | jq -s -c . || echo "[]")
             DOMAIN_LIST="$BUILD_LIST"
-            CLOUD_CHANGED="false"
           fi
           
-          # 4. 결과 출력
           HAS_CHANGES=$([ "$BUILD_LIST" != "[]" ] && echo "true" || echo "false")
           
+          # 6. 출력
+          echo "CHANGED:"
           echo "$CHANGED"
-          echo "Build Target List: $BUILD_LIST"
-          echo "Has Changes: $HAS_CHANGES"
+          echo "CLOUD_CHANGED=$CLOUD_CHANGED"
+          echo "BUILD_LIST=$BUILD_LIST"
           
           echo "build_matrix={\"service\":$BUILD_LIST}" >> "$GITHUB_OUTPUT"
           echo "domain_matrix={\"service\":$DOMAIN_LIST}" >> "$GITHUB_OUTPUT"
@@ -72,7 +88,7 @@ jobs:
     needs: detect
     if: needs.detect.outputs.has_changes == 'true'
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix: ${{ fromJson(needs.detect.outputs.build_matrix) }}
     steps:
       - uses: actions/checkout@v4
@@ -114,7 +130,8 @@ jobs:
 
       - name: Deploy Core Infra
         run: |
-          kubectl apply -f k8s/config-repo-configmap.yaml
+          kubectl apply -f k8s/configmaps/common-configmap.yaml
+          kubectl apply -f k8s/cronjobs/
           
           ENV_PATH="/home/ubuntu/env"
           for env_file in $ENV_PATH/.env.*; do
@@ -125,8 +142,8 @@ jobs:
             --dry-run=client -o yaml | kubectl apply -f -
           done
 
-          for svc in config discovery apigateway; do
-            kubectl apply -f k8s/$svc.yaml
+          for svc in discovery apigateway; do
+            kubectl apply -f k8s/services/$svc.yaml
             kubectl rollout restart deployment/$svc
             kubectl rollout status deployment/$svc --timeout=300s
           done
@@ -147,7 +164,12 @@ jobs:
       - uses: actions/checkout@v4
       - name: Deploy & Rollout
         run: |
-          kubectl apply -f k8s/${{ matrix.service }}.yaml
+          kubectl apply -f k8s/configmaps/common-configmap.yaml
+          kubectl apply -f k8s/cronjobs/
+          if [ -f k8s/configmaps/${{ matrix.service }}-configmap.yaml ]; then
+            kubectl apply -f k8s/configmaps/${{ matrix.service }}-configmap.yaml
+          fi
+          kubectl apply -f k8s/services/${{ matrix.service }}.yaml
           kubectl rollout restart deployment/${{ matrix.service }}
           kubectl rollout status deployment/${{ matrix.service }} --timeout=300s
 

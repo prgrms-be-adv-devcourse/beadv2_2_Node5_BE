@@ -1,0 +1,32 @@
+package com.node5.supportservice.search.application.dto;
+
+import java.time.LocalDateTime;
+
+import com.node5.supportservice.search.domain.ProductDocument;
+
+public record ProductSearchResponse(
+	String productId,
+	String shopId,
+	String name,
+	String category,
+	String thumbnailKey,
+	Long price,
+	String status,
+	LocalDateTime createdAt,
+	Boolean isSponsored
+) {
+
+	public static ProductSearchResponse from(ProductDocument doc) {
+		return new ProductSearchResponse(
+			doc.getProductId(),
+			doc.getShopId(),
+			doc.getName(),
+			doc.getCategory(),
+			doc.getThumbnailKey(),
+			doc.getPrice(),
+			doc.getStatus(),
+			LocalDateTime.parse(doc.getCreatedAt()),
+			Boolean.TRUE.equals(doc.getIsSponsored())
+		);
+	}
+}

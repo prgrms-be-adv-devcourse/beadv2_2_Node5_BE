@@ -91,6 +91,26 @@ public class ReviewDetailRepositoryAdapter implements ReviewDetailRepository {
         return reviewDetailJpaRepository.findAllByEmbeddingIsNullOrderByCreatedAtDesc();
     }
 
+    @Override
+    public Boolean existsReview(UUID memberId, UUID orderId, UUID productId) {
+        return reviewDetailJpaRepository.existsByMemberIdAndOrderIdAndProductIdAndDeletedAtIsNull(memberId, orderId, productId);
+    }
+
+    @Override
+    public void dropEmbeddingIndex() {
+        reviewDetailJpaRepository.dropEmbeddingIndex();
+    }
+
+    @Override
+    public void createEmbeddingIndex() {
+        reviewDetailJpaRepository.createEmbeddingIndex();
+    }
+
+    @Override
+    public void analyzeTable() {
+        reviewDetailJpaRepository.analyzeTable();
+    }
+
 //    @Override
 //    public void updateReviewEmbedding(UUID reviewId, PGvector vector) {
 //        reviewDetailJpaRepository.updateReviewEmbedding(reviewId, vector);

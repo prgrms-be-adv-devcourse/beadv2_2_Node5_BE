@@ -2,14 +2,23 @@ package com.node5.memberservice.member.presentation.dto;
 
 import com.node5.memberservice.member.application.dto.MemberModifyCommand;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
 public record MemberModifyRequest(
+        @Size(max = 20, message = "name은 20자를 초과할 수 없습니다.")
         @NotBlank(message = "name은 필수입니다.")
         String name,
+        @Size(max = 20, message = "nickname은 20자를 초과할 수 없습니다.")
         @NotBlank(message = "nickname은 필수입니다.")
         String nickname,
+        @Pattern(
+                regexp = "^(01[0-9]{8,9}|0[2-6][0-9]{7,8})$",
+                message = "phoneNumber 형식이 올바르지 않습니다."
+        )
         @NotBlank(message = "phoneNumber는 필수입니다.")
         String phoneNumber,
+        @Size(max = 100, message = "address는 100자를 초과할 수 없습니다.")
         @NotBlank(message = "address는 필수입니다.")
         String address
 ) {
