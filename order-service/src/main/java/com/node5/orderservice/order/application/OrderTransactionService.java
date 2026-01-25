@@ -55,9 +55,6 @@ public class OrderTransactionService {
         }
 
         itemsToConfirm.forEach(item -> item.updateStatus(OrderProgress.CONFIRMED));
-        List<String> confirmedItemLogs = itemsToConfirm.stream()
-                .map(item -> String.format("(%s, %s, %d)", item.getOrderId(), item.getProductId(), item.getQuantity()))
-                .toList();
         ProductSalesIncrementKafkaRequest request = ProductSalesIncrementKafkaRequest.create(itemsToConfirm);
         eventPublisher.publishEvent(request.toEvent());
     }
@@ -67,7 +64,17 @@ public class OrderTransactionService {
         log.info("구매 확정된 상품 정보를 정산 테이블에 적재 시도");
 
         // CONFIRMED 상태의 주문 상품 목록 조회
-        List<OrderItem> orderItems = orderItemRepository.findByStatus(OrderProgress.CONFIRMED);
+        List<OrderItem> orderItems = orderItemRepository.findByStatusAndSettlementStatus(OrderProgress.CONFIRMED, OrderItemSettlementStatus.PENDING);
+        StringBuilder str = new StringBuilder();
+        for(OrderItem oi : orderItems){
+            str.append(oi.getId()).append(" ");
+        }
+        log.info(String.valueOf(str));
+
+        if(orderItems.isEmpty()){
+            log.info("CONFIRMED 상태의 주문 상품이 없습니다. 정산 요청을 생략합니다.");
+            return;
+        }
 
         // Product ID로 Shop ID 조회 (catalog-client 연동)
         List<UUID> allProductIds = orderItems.stream()
