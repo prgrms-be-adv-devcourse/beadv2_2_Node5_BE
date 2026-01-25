@@ -25,7 +25,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("${api.v1}/stocks")
 @RequiredArgsConstructor
-@Tag(name = "Inventory", description = "상품 재고를 관리하는 API")
+@Tag(name = "Inventory", description = "상품 재고를 관리하는 관리용 API")
 public class InventoryController {
 
 	private final InventoryStockService inventoryStockService;
