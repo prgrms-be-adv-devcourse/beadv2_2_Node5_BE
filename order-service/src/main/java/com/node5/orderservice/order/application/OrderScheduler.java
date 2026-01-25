@@ -31,7 +31,7 @@ public class OrderScheduler {
     // OrderItem status DELIVERY_COMPLETED -> CONFIRMED 갱신
     @Scheduled(cron = "0 2/3 * * * *")
     public void updateItemStatusFromCompletedToConfirmed() {
-        orderTransactionService.updateOrderItemStatus(DELIVERY_COMPLETED, CONFIRMED);
+        orderTransactionService.confirmOrderItemsAndPublishSalesEvent();
     }
 
     // 매일 CONFIRMED 상태의 주문 상품만 조회하여 정산 API를 호출

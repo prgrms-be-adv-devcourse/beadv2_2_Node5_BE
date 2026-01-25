@@ -50,3 +50,5 @@ kafka:
     shop-deleted: member-service.shop-deleted.v1
     subscription-status-changed: order-service.subscription-status-changed.v1
     stock-restore: order-service.stock-restore.v1
+    product-sales-incremented: order-service.product-sales-incremented.v1
+

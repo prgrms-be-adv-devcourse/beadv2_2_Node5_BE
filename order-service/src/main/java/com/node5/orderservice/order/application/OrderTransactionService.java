@@ -5,10 +5,12 @@ import com.node5.orderservice.global.openfeign.client.MemberClient;
 import com.node5.orderservice.global.openfeign.client.dto.SettlementSourceItem;
 import com.node5.orderservice.order.domain.*;
 import com.node5.orderservice.order.exception.OrderException;
+import com.node5.orderservice.order.infrastructure.kafka.ProductSalesIncrementKafkaRequest;
 import feign.FeignException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -28,6 +30,7 @@ public class OrderTransactionService {
     private final MemberClient memberClient;
     private final OrderItemRepository orderItemRepository;
     private final FeignErrorDecoderUtil feignUtil;
+    private final ApplicationEventPublisher eventPublisher;
 
     // Order status 업데이트
     @Transactional
@@ -42,6 +45,21 @@ public class OrderTransactionService {
     @Transactional
     public void updateOrderItemStatus(OrderProgress fromStatus, OrderProgress toStatus) {
         orderItemRepository.updateStatusByCreatedAtBefore(fromStatus, toStatus);
+    }
+
+    @Transactional
+    public void confirmOrderItemsAndPublishSalesEvent() {
+        List<OrderItem> itemsToConfirm = orderItemRepository.findByStatus(OrderProgress.DELIVERY_COMPLETED);
+        if (itemsToConfirm == null || itemsToConfirm.isEmpty()) {
+            return;
+        }
+
+        itemsToConfirm.forEach(item -> item.updateStatus(OrderProgress.CONFIRMED));
+        List<String> confirmedItemLogs = itemsToConfirm.stream()
+                .map(item -> String.format("(%s, %s, %d)", item.getOrderId(), item.getProductId(), item.getQuantity()))
+                .toList();
+        ProductSalesIncrementKafkaRequest request = ProductSalesIncrementKafkaRequest.create(itemsToConfirm);
+        eventPublisher.publishEvent(request.toEvent());
     }
 
     @Transactional
