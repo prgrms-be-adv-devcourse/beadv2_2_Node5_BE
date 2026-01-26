@@ -1,5 +1,6 @@
 package com.node5.orderservice.order.application;
 
+
 import com.node5.common.domain.PageInfoDto;
 import com.node5.orderservice.global.openfeign.client.CatalogClient;
 import com.node5.orderservice.global.openfeign.client.WalletClient;
@@ -8,19 +9,17 @@ import com.node5.orderservice.order.application.dto.OrderCommand;
 import com.node5.orderservice.order.application.dto.OrderCreateInfo;
 import com.node5.orderservice.order.application.dto.OrderItemCommand;
 import com.node5.orderservice.order.application.dto.OrderStatusInfo;;
-import com.node5.orderservice.order.domain.Order;
-import com.node5.orderservice.order.domain.OrderItem;
-import com.node5.orderservice.order.domain.OrderItemRepository;
-import com.node5.orderservice.order.domain.OrderRepository;
+import com.node5.orderservice.order.domain.*;
 import com.node5.orderservice.order.exception.*;
+import com.node5.orderservice.order.infrastructure.kafka.StockRestoreKafkaRequest;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import com.node5.orderservice.order.application.dto.*;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,6 +46,7 @@ public class OrderService {
     private final WalletClient walletClient;
     private final CatalogClient catalogClient;
     private final FeignErrorDecoderUtil feignUtil;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public OrderCreateInfo create(UUID memberId, OrderCommand command) {
@@ -185,8 +185,8 @@ public class OrderService {
                     List<OrderItemInfo> orderedItemInfos = orderItemList.stream()
                             .map(OrderItemInfo::from)
                             .toList();
-            return OrderListInfo.OrderListDetailInfo.from(order, orderedItemInfos);
-        }).toList();
+                    return OrderListInfo.OrderListDetailInfo.from(order, orderedItemInfos);
+                }).toList();
 
         // - OrderListInfo DTO 생성 (OrderListDetailInfo + 페이징 정보)
         return OrderListInfo.from(pageInfo, orderListInfos);
@@ -220,17 +220,26 @@ public class OrderService {
         }
 
         // 취소가 가능한 주문 상태인지 확인
-        if(order.getStatus() == PAID){
-            // 예치금 환불 API 호출
+        if(order.getStatus() == OrderStatus.PAID){
             try {
+                // 예치금 환불 API 호출
                 BigDecimal roundedAmount = order.getTotalAmount().setScale(0, RoundingMode.HALF_UP);
-                ResponseEntity<WalletInfo> response = walletClient.requestRefund(memberId, new WalletRefundRequest(order.getId(), roundedAmount.longValue()));
+                walletClient.requestRefund(memberId, new WalletRefundRequest(order.getId(), roundedAmount.longValue()));
 
-                if (response.getStatusCode().is2xxSuccessful()) {
-                    orderTransactionService.updateOrderStatus(orderId, CANCELED);
+                List<OrderItem> orderItems = orderItemRepository.findByOrderId(orderId);
+                if (orderItems != null && !orderItems.isEmpty()) {
+                    // OrderItem 상태 변경
+                    orderItems.forEach(item -> item.updateStatus(OrderProgress.CANCELED));
+
+                    // Order 상태 변경
+                    order.updateStatus(OrderStatus.CANCELED);
+
+                    // 재고 복구 이벤트 발행
+                    StockRestoreKafkaRequest request = StockRestoreKafkaRequest.create(orderId, orderItems, "주문 취소");
+                    eventPublisher.publishEvent(request);
                 }
             } catch (Exception e) {
-                throw new OrderException(ORDER_PAYMENT_FAILED, "orderId=" + orderId + ", message=" + e.getMessage());
+                throw new OrderException(ORDER_CANCEL_FAILED, "orderId=" + orderId + ", message=" + e.getMessage());
             }
         }else{
             String msg = String.format("취소는 주문의 상태가 결제 완료일 때 가능합니다.(orderId: %s, orderStatus: %s)",
@@ -241,37 +250,43 @@ public class OrderService {
         return OrderStatusInfo.from(order);
     }
 
-//    @Transactional
-//    public OrderStatusInfo refund(UUID orderId, UUID memberId) {
-//        Order order = orderRepository.findById(orderId)
-//                .orElseThrow(() -> new OrderException(ORDER_NOT_FOUND, "orderId=" + orderId));
-//
-//        if(!order.getMemberId().equals(memberId)){
-//            String msg = "[환불] memberId: " + memberId + ", orderId: " + order.getId();
-//            throw new OrderException(ORDER_ACCESS_DENIED, msg);
-//        }
-//
-//        // 환불이 가능한 주문 상태인지 확인
-//        if(order.getStatus() == DELIVERY_ING || order.getStatus() == DELIVERY_COMPLETED){
-//            // 예치금 환불 API 호출
-//            try {
-//                BigDecimal roundedAmount = order.getTotalAmount().setScale(0, RoundingMode.HALF_UP);
-//                ResponseEntity<WalletInfo> response = billingClient.requestRefund(memberId, new WalletRefundRequest(order.getId(), roundedAmount.longValue()));
-//
-//                if (response.getStatusCode().is2xxSuccessful()) {
-//                    orderTransactionService.updateOrderStatus(orderId, REFUND_COMPLETED);
-//                }
-//            } catch(Exception e) {
-//                throw new OrderException(ORDER_PAYMENT_FAILED, "orderId=" + orderId + ", message=" + e.getMessage());
-//            }
-//        }else{
-//            String msg = String.format("환불은 주문의 상태가 배송 중이거나 배송 완료일 때 가능합니다.(orderId: %s, orderStatus: %s)",
-//                    order.getId(), order.getStatus());
-//            throw new OrderException(ORDER_REQUEST_NOT_ALLOWED, msg);
-//        }
-//
-//        return OrderStatusInfo.from(order);
-//    }
+    @Transactional
+    public OrderStatusInfo refund(UUID memberId, UUID orderId, UUID productId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderException(ORDER_NOT_FOUND, "orderId=" + orderId));
+
+        if(!order.getMemberId().equals(memberId)){
+            String msg = "[환불] memberId: " + memberId + ", orderId: " + order.getId();
+            throw new OrderException(ORDER_ACCESS_DENIED, msg);
+        }
+
+        OrderItem orderItem = orderItemRepository.findByOrderIdAndProductId(orderId, productId)
+                .orElseThrow(() -> new OrderException(ORDER_ITEM_NOT_FOUND, "orderId=" + orderId + ", productId=" + productId));
+
+        // 환불이 가능한 주문 상태인지 확인
+        if(orderItem.getStatus() == OrderProgress.DELIVERY_ING || orderItem.getStatus() == OrderProgress.DELIVERY_COMPLETED){
+            try {
+                // 예치금 환불 API 호출
+                BigDecimal roundedAmount = order.getTotalAmount().setScale(0, RoundingMode.HALF_UP);
+                walletClient.requestRefund(memberId, new WalletRefundRequest(order.getId(), roundedAmount.longValue()));
+
+                // OrderItem 상태 변경
+                orderItem.updateStatus(OrderProgress.REFUNDED);
+
+                // 재고 복구 이벤트 발행
+                StockRestoreKafkaRequest request = StockRestoreKafkaRequest.create(orderId, List.of(orderItem), "상품 환불");
+                eventPublisher.publishEvent(request);
+            } catch(Exception e) {
+                throw new OrderException(ORDER_REFUND_FAILED, "orderId=" + orderId + ", message=" + e.getMessage());
+            }
+        }else{
+            String msg = String.format("환불은 주문의 상태가 배송 중이거나 배송 완료일 때 가능합니다.(orderId: %s, orderStatus: %s)",
+                    order.getId(), order.getStatus());
+            throw new OrderException(ORDER_REQUEST_NOT_ALLOWED, msg);
+        }
+
+        return OrderStatusInfo.from(order);
+    }
 
     private String generateNewOrderNum() {
         Long nextSequenceValue = orderRepository.getNextSequenceNum();

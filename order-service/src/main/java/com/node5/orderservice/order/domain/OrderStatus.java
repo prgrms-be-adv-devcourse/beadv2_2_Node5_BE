@@ -10,7 +10,6 @@ public enum OrderStatus {
     PAID("결제완료"),
     PAYMENT_FAILED("결제실패"),
     CANCELED("주문취소"),
-    SETTLEMENT_REQUESTED("정산준비")
     ;
 
     private final String name;

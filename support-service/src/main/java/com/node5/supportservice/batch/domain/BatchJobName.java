@@ -9,7 +9,8 @@ import java.util.Arrays;
 @Getter
 public enum BatchJobName {
     MONTHLY_REVIEW_SUMMARY("monthlyReviewSummaryJob"),
-    SUBSCRIPTION_ORDER("subscriptionOrderJob");
+    SUBSCRIPTION_ORDER("subscriptionOrderJob"),
+    SHOP_SETTLEMENT("shopSettlementJob");
 
     BatchJobName(String jobName) {
         this.jobName = jobName;

@@ -59,6 +59,11 @@ public class OrderItemRepositoryAdapter implements OrderItemRepository {
     }
 
     @Override
+    public List<OrderItem> findByStatusAndSettlementStatus(OrderProgress status, OrderItemSettlementStatus settlementStatus) {
+        return orderItemJpaRepository.findByStatusAndSettlementStatus(status, settlementStatus);
+    }
+
+    @Override
     public void updateSettlementStatus(List<UUID> orderItemIds, OrderItemSettlementStatus settlementStatus) {
         orderItemJpaRepository.updateSettlementStatus(orderItemIds, settlementStatus);
     }
@@ -68,4 +73,8 @@ public class OrderItemRepositoryAdapter implements OrderItemRepository {
         return orderItemJpaRepository.existsByProductIdInAndSettlementStatus(productIds, settlementStatus);
     }
 
+    @Override
+    public Optional<OrderItem> findByOrderIdAndProductId(UUID orderId, UUID productId) {
+        return orderItemJpaRepository.findByOrderIdAndProductId(orderId, productId);
+    }
 }

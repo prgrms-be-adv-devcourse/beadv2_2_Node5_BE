@@ -99,3 +99,5 @@ app:
       product: products
     reindex:
       page-size: 500
+    sponsored:
+      limit: 1

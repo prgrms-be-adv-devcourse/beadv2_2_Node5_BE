@@ -23,9 +23,13 @@ public interface OrderItemRepository {
 
     Boolean existsInProgressByMemberId(UUID memberId, Collection<OrderProgress> doneStatus);
 
-    List<OrderItem> findByStatus(OrderProgress orderProgress);
+    List<OrderItem> findByStatus(OrderProgress status);
+
+    List<OrderItem> findByStatusAndSettlementStatus(OrderProgress status, OrderItemSettlementStatus settlementStatus);
 
     void updateSettlementStatus(List<UUID> orderItemIds, OrderItemSettlementStatus settlementStatus);
 
     Boolean existsByProductIdInAndSettlementStatus(List<UUID> productIds, OrderItemSettlementStatus orderItemSettlementStatus);
+
+    Optional<OrderItem> findByOrderIdAndProductId(UUID orderId, UUID productId);
 }

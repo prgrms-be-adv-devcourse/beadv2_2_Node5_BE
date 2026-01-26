@@ -10,8 +10,9 @@ public enum OrderProgress {
     DELIVERY_ING("배송중"),
     DELIVERY_COMPLETED("배송완료"),
     REFUND_PENDING("환불처리중"),
-    REFUND_COMPLETED("환불완료"),
+    REFUNDED("환불완료"),
     CONFIRMED("구매확정"),
+    CANCELED("주문취소됨")
     ;
 
     private final String name;

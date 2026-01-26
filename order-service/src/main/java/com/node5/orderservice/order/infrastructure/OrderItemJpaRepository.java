@@ -50,6 +50,8 @@ public interface OrderItemJpaRepository extends JpaRepository<OrderItem, UUID> {
 
     List<OrderItem> findByStatus(OrderProgress status);
 
+    List<OrderItem> findByStatusAndSettlementStatus(OrderProgress status, OrderItemSettlementStatus settlementStatus);
+
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE OrderItem oi " +
             "SET oi.settlementStatus = :settlementStatus " +
@@ -57,4 +59,6 @@ public interface OrderItemJpaRepository extends JpaRepository<OrderItem, UUID> {
     void updateSettlementStatus(@Param("orderItemIds") List<UUID> orderItemIds, @Param("settlementStatus") OrderItemSettlementStatus settlementStatus);
 
     Boolean existsByProductIdInAndSettlementStatus(List<UUID> productIds, OrderItemSettlementStatus settlementStatus);
+
+    Optional<OrderItem> findByOrderIdAndProductId(UUID orderId, UUID productId);
 }
