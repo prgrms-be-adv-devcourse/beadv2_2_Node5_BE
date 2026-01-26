@@ -2,10 +2,12 @@ package com.node5.supportservice.review.application;
 
 import com.node5.common.event.ProductDiscontinuedEvent;
 import com.node5.common.event.ReviewCreatedEvent;
+import com.node5.supportservice.global.openfeign.client.CatalogClient;
+import com.node5.supportservice.global.openfeign.client.MemberClient;
+import com.node5.supportservice.global.openfeign.client.OrderClient;
+import com.node5.supportservice.global.openfeign.client.dto.OrderStatusRequest;
 import com.node5.supportservice.review.application.dto.*;
-import com.node5.supportservice.review.client.MemberClient;
-import com.node5.supportservice.review.client.ProductClient;
-import com.node5.supportservice.review.client.dto.ProductStatusResponse;
+import com.node5.supportservice.global.openfeign.client.dto.ProductStatusResponse;
 import com.node5.supportservice.review.domain.*;
 import com.node5.supportservice.review.exception.ReviewErrorCode;
 import com.node5.supportservice.review.exception.ReviewException;
@@ -17,6 +19,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,13 +41,14 @@ public class ReviewService {
     private final ApplicationEventPublisher eventPublisher;
     private final EmbeddingModel embeddingModel;
     private final MemberClient memberClient;
-    private final ProductClient productClient;
+    private final CatalogClient catalogClient;
+    private final OrderClient orderClient;
 
     // 상품에 리뷰 작성
     @Transactional
     public ReviewIdInfo createReviewDetail(UUID memberId, ReviewCreateCommand command) {
 
-        if (reviewDetailRepository.existsReview(command.productId(), memberId)) {
+        if (reviewDetailRepository.existsReview(memberId, command.orderId(), command.productId())) {
             throw new ReviewException(ReviewErrorCode.REVIEW_ALREADY_EXISTS);
         }
 
@@ -60,8 +64,9 @@ public class ReviewService {
             throw new ReviewException(ReviewErrorCode.MEMBER_SERVICE_UNAVAILABLE);
         }
 
+        // 상품 상태 체크
         try {
-            ProductStatusResponse response = productClient.canPostReview(command.productId()); // 상품 상태 체크
+            ProductStatusResponse response = catalogClient.canPostReview(command.productId()); // 상품 상태 체크
             if (!response.isReviewable()) {
                 throw new ReviewException(ReviewErrorCode.PRODUCT_DISCONTINUED);
             }
@@ -79,10 +84,23 @@ public class ReviewService {
             }
         }
 
-        // TODO: 상품 상태 체크 로직을 OpenFeign 등을 활용하여 구현 필요 (boolean)
-        boolean isOrderValid; // 주문 상태 체크
-
-        reviewRepository.incrementStatistics(command.productId(), command.rating());
+        // 주문 상태 체크
+        try {
+            OrderStatusRequest request = new OrderStatusRequest(
+                    command.orderId(),
+                    command.productId()
+            );
+            ResponseEntity<Boolean> response = orderClient.canPostReview(memberId, request);
+            boolean isReviewable = Optional.ofNullable(response)
+                    .map(ResponseEntity::getBody)
+                    .orElse(false);
+            if (!isReviewable) {
+                throw new ReviewException(ReviewErrorCode.ORDER_INVALID);
+            }
+        } catch (FeignException e) {
+            log.error("Can't validate order with id {}", command.orderId(), e);
+            throw new ReviewException(ReviewErrorCode.ORDER_SERVICE_UNAVAILABLE);
+        }
 
         ReviewDetail reviewDetail = ReviewDetail.builder()
                 .memberId(memberId)
@@ -94,6 +112,8 @@ public class ReviewService {
                 .build();
 
         reviewDetailRepository.save(reviewDetail);
+
+        reviewRepository.incrementStatistics(command.productId(), command.rating());
         ReviewCreatedEvent event = new ReviewCreatedEvent(reviewDetail.getId(), reviewDetail.getBody());
         eventPublisher.publishEvent(event);
         return ReviewIdInfo.from(reviewDetail.getId());
@@ -276,5 +296,25 @@ public class ReviewService {
         return allReviews.stream()
                 .map(ReviewDetailInfo::from)
                 .toList();
+    }
+
+    public ReviewStatusInfo reviewableProduct(UUID memberId, UUID orderId, UUID productId) {
+        if (reviewDetailRepository.existsReview(memberId, orderId, productId)) {
+            return ReviewStatusInfo.from(false);
+        }
+
+        Boolean reviewableFromOrder = Optional.ofNullable(
+                orderClient.canPostReview(memberId, new OrderStatusRequest(orderId, productId))
+                        .getBody()
+        ).orElse(false);
+
+        return ReviewStatusInfo.from(reviewableFromOrder);
+    }
+
+    @Transactional
+    public void reindexAllReviewEmbeddings() {
+        reviewDetailRepository.dropEmbeddingIndex();
+        reviewDetailRepository.createEmbeddingIndex();
+        reviewDetailRepository.analyzeTable();
     }
 }

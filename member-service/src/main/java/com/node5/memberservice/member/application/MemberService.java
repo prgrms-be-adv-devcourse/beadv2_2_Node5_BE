@@ -1,15 +1,18 @@
 package com.node5.memberservice.member.application;
 
-import com.node5.memberservice.auth.domain.OAuthRepository;
 import com.node5.common.event.MemberDeletedEvent;
+import com.node5.memberservice.auth.domain.OAuthRepository;
+import com.node5.memberservice.client.OrderClient;
+import com.node5.memberservice.client.WalletClient;
+import com.node5.memberservice.client.dto.WalletInfo;
 import com.node5.memberservice.member.application.dto.*;
-import com.node5.memberservice.member.client.BillingClient;
-import com.node5.memberservice.member.client.ShopClient;
-import com.node5.memberservice.member.client.dto.WalletInfo;
 import com.node5.memberservice.member.domain.*;
 import com.node5.memberservice.member.exception.MemberErrorCode;
 import com.node5.memberservice.member.exception.MemberException;
 import com.node5.memberservice.redis.application.RedisService;
+import com.node5.memberservice.settlement.application.SettlementInternalService;
+import com.node5.memberservice.shop.domain.Shop;
+import com.node5.memberservice.shop.domain.ShopRepository;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -32,8 +35,10 @@ public class MemberService {
     private final RoleRepository roleRepository;
     private final RedisService redisService;
     private final ApplicationEventPublisher eventPublisher;
-    private final ShopClient shopClient;
-    private final BillingClient billingClient;
+    private final ShopRepository shopRepository;
+    private final WalletClient walletClient;
+    private final OrderClient orderClient;
+    private final SettlementInternalService settlementInternalService;
 
     public MemberInfoResponse findById(UUID memberId) {
         Member member = getNotDeletedMemberOrThrow(memberId);
@@ -47,13 +52,14 @@ public class MemberService {
         return MemberInfoResponse.from(member);
     }
 
-    // Todo - 트랜잭션 안에서 외부 서비스 호출이 있어 트랜잭션이 길어질 수 있다.
     @Transactional
     public void deleteMember(UUID memberId) {
         Member member = getNotDeletedMemberOrThrow(memberId);
+        List<UUID> shopIds = getShopIds(memberId);
 
-        validateCanDeleteMember(member.getId());
-        List<UUID> shopIds = getShopIds(member.getId());
+        validateNoWalletBalance(memberId);
+        validateNoOrderInProgress(memberId);
+        if (!shopIds.isEmpty()) validateNoSettlementInProgress(shopIds);
 
         MemberDeletedEvent event = new MemberDeletedEvent(member.getId(), shopIds);
 
@@ -64,11 +70,11 @@ public class MemberService {
         eventPublisher.publishEvent(event);
     }
 
-    private void validateCanDeleteMember(UUID memberId) {
+    private void validateNoWalletBalance(UUID memberId) {
         try {
             // 예치금 잔액 확인
-            WalletInfo wallet = billingClient.getWallet(memberId).getBody();
-            if (wallet != null && wallet.balance() != 0) {
+            WalletInfo wallet = walletClient.getWallet(memberId).getBody();
+            if (wallet != null && wallet.balance() != null && wallet.balance() != 0) {
                 throw new MemberException(MemberErrorCode.MEMBER_HAS_BALANCE);
             }
         } catch (FeignException.NotFound e) {
@@ -77,28 +83,45 @@ public class MemberService {
             // billing 서비스가 응답했지만 오류
             throw new MemberException(MemberErrorCode.BILLING_SERVICE_UNAVAILABLE);
         }
-        // Todo - 진행중인 주문 확인
-        // Todo - 남은 정산 확인
+    }
+
+    private void validateNoOrderInProgress(UUID memberId) {
+        try {
+            Boolean orderInProgress = orderClient.hasInProgressOrder(memberId).getBody();
+            if(orderInProgress == null || orderInProgress) {
+                throw new MemberException(MemberErrorCode.MEMBER_HAS_ORDER);
+            }
+        } catch (FeignException e) {
+            throw new MemberException(MemberErrorCode.ORDER_SERVICE_UNAVAILABLE);
+        }
+    }
+
+    private void validateNoSettlementInProgress(List<UUID> shopIds) {
+        try {
+            Boolean settlementInProgress = settlementInternalService.hasInProgressSettlement(shopIds);
+            if(settlementInProgress == null || settlementInProgress) {
+                throw new MemberException(MemberErrorCode.MEMBER_HAS_SETTLEMENT);
+            }
+        } catch (FeignException e) {
+            throw new MemberException(MemberErrorCode.SETTLEMENT_SERVICE_UNAVAILABLE);
+        }
     }
 
     private List<UUID> getShopIds(UUID memberId) {
-        return shopClient.getShopIds(memberId).getBody();
+        List<Shop> shops = shopRepository.findAllByMemberIdAndDeletedAtIsNull(memberId);
+        return shops.stream().map(Shop::getId).toList();
     }
 
     @Transactional
-    public void addMemberRole(UUID memberId, RoleModifyCommand command) {
+    public void addMemberRole(UUID memberId, MemberRole role) {
         Member member = getNotDeletedMemberOrThrow(memberId);
-        member.addRole(command.role());
+        member.addRole(role);
     }
 
     @Transactional
-    public void deleteMemberRole(UUID memberId, String role) {
+    public void deleteMemberRole(UUID memberId, MemberRole role) {
         Member member = getNotDeletedMemberOrThrow(memberId);
-        MemberRole roleEnum = Arrays.stream(MemberRole.values())
-                .filter(r -> r.name().equalsIgnoreCase(role))
-                .findFirst()
-                .orElseThrow(() -> new MemberException(MemberErrorCode.INVALID_ROLE));
-        member.deleteRole(roleEnum);
+        member.deleteRole(role);
     }
 
     private Member getNotDeletedMemberOrThrow(UUID memberId) {
@@ -138,7 +161,13 @@ public class MemberService {
     }
 
     public String getMemberEmail(String memberId) {
-        Member member = getNotDeletedMemberOrThrow(UUID.fromString(memberId));
+        UUID uuid;
+        try {
+            uuid = UUID.fromString(memberId);
+        } catch (IllegalArgumentException e) {
+            throw new MemberException(MemberErrorCode.INVALID_MEMBER_ID);
+        }
+        Member member = getNotDeletedMemberOrThrow(uuid);
         return member.getEmail();
     }
 

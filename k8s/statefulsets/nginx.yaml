@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: npm
+  labels:
+    app: npm
+spec:
+  serviceName: "nginx-proxy-manager-service"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: npm
+  template:
+    metadata:
+      labels:
+        app: npm
+    spec:
+      nodeSelector:
+        type: node5-master
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: npm
+          image: jc21/nginx-proxy-manager:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+            - containerPort: 81
+            - containerPort: 443
+          volumeMounts:
+            - name: npm-data
+              mountPath: /data
+            - name: npm-letsencrypt
+              mountPath: /etc/letsencrypt
+          livenessProbe:
+            tcpSocket:
+              port: 81
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            tcpSocket:
+              port: 81
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+      volumes:
+        - name: npm-data
+          hostPath:
+            path: /home/ubuntu/data/npm/data
+            type: DirectoryOrCreate
+        - name: npm-letsencrypt
+          hostPath:
+            path: /home/ubuntu/data/npm/letsencrypt
+            type: DirectoryOrCreate
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-proxy-manager-service
+  labels:
+    app: npm
+spec:
+  type: LoadBalancer
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+    - name: admin
+      port: 81
+      targetPort: 81
+    - name: https
+      port: 443
+      targetPort: 443
+  selector:
+    app: npm

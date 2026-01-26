@@ -3,8 +3,7 @@ package com.node5.memberservice.global.exception;
 import com.node5.common.exception.BaseErrorCode;
 import com.node5.common.exception.BaseException;
 import com.node5.common.exception.ExceptionResponseDto;
-import com.node5.memberservice.auth.exception.AuthException;
-import com.node5.memberservice.member.exception.MemberException;
+import com.node5.memberservice.settlement.exception.SettlementException;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -51,4 +50,18 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(responseDto);
     }
 
+    @ExceptionHandler(SettlementException.class)
+    public ResponseEntity<ExceptionResponseDto> handleSettlementException(SettlementException e) {
+        var ex = e.getErrorCode();
+
+        String baseMessage = ex.getMessage();
+        String finalMessage = baseMessage;
+
+        if (e.getCustomMessage() != null && !e.getCustomMessage().trim().isEmpty()) {
+            finalMessage = baseMessage + ": " + e.getCustomMessage();
+        }
+
+        ExceptionResponseDto responseDto = new ExceptionResponseDto(ex.getCode(), finalMessage);
+        return ResponseEntity.status(ex.getStatus()).body(responseDto);
+    }
 }

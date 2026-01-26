@@ -1,7 +1,6 @@
 package com.node5.orderservice.order.infrastructure;
 
 import com.node5.orderservice.order.domain.Order;
-import com.node5.orderservice.order.domain.OrderStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -22,17 +21,11 @@ public interface OrderJpaRepository extends JpaRepository<Order, UUID> {
 
     Optional<Order> findBySubscriptionKey(UUID subscriptionKey);
 
-    @Query("SELECT o FROM Order o WHERE o.status = :status AND o.paidAt < :standard")
-    List<Order> findByStatusAndPaidAtBefore(@Param("status") OrderStatus status, @Param("standard") LocalDateTime standard);
-
-    @Query("SELECT o FROM Order o WHERE o.status = :status AND o.modifiedAt < :standard")
-    List<Order> findByStatusAndModifiedAtBefore(@Param("status") OrderStatus status, @Param("standard") LocalDateTime standard);
-
-    List<Order> findByStatus(OrderStatus orderStatus);
-
     @Query("SELECT o.id FROM Order o " +
             "WHERE o.memberId = :memberId " +
             "AND o.paidAt >= :threeMonthsAgo " +
             "ORDER BY o.paidAt DESC")
-    List<UUID> findRecentOrderIds(UUID memberId, @Param("threeMonthsAgo") LocalDateTime threeMonthsAgo);
+    List<UUID> findRecentOrderIds(@Param("memberId") UUID memberId, @Param("threeMonthsAgo") LocalDateTime threeMonthsAgo);
+
+    boolean existsByIdAndMemberId(UUID orderId, UUID memberId);
 }

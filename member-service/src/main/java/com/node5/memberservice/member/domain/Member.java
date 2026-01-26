@@ -107,4 +107,8 @@ public class Member extends BaseEntity {
         this.status = MemberStatus.DELETED;
         this.deletedAt = LocalDateTime.now();
     }
+
+    public boolean isStatus(MemberStatus status) {
+        return this.status == status;
+    }
 }

@@ -1,29 +1,25 @@
 package com.node5.orderservice.order.application;
 
+
 import com.node5.common.domain.PageInfoDto;
+import com.node5.orderservice.global.openfeign.client.CatalogClient;
+import com.node5.orderservice.global.openfeign.client.WalletClient;
+import com.node5.orderservice.global.openfeign.client.dto.*;
 import com.node5.orderservice.order.application.dto.OrderCommand;
 import com.node5.orderservice.order.application.dto.OrderCreateInfo;
 import com.node5.orderservice.order.application.dto.OrderItemCommand;
-import com.node5.orderservice.order.application.dto.OrderStatusInfo;
-import com.node5.orderservice.order.client.dto.WalletInfo;
-import com.node5.orderservice.order.client.dto.WalletRefundRequest;
-import com.node5.orderservice.order.domain.Order;
-import com.node5.orderservice.order.domain.OrderItem;
-import com.node5.orderservice.order.domain.OrderItemRepository;
-import com.node5.orderservice.order.domain.OrderRepository;
-import com.node5.orderservice.order.exception.OrderAccessDeniedException;
-import com.node5.orderservice.order.exception.OrderNotFoundException;
-import com.node5.orderservice.order.exception.OrderPaymentFailedException;
-import com.node5.orderservice.order.exception.OrderRequestNotAllowedException;
+import com.node5.orderservice.order.application.dto.OrderStatusInfo;;
+import com.node5.orderservice.order.domain.*;
+import com.node5.orderservice.order.exception.*;
+import com.node5.orderservice.order.infrastructure.kafka.StockRestoreKafkaRequest;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import com.node5.orderservice.order.application.dto.*;
-import com.node5.orderservice.order.client.BillingClient;
-import com.node5.orderservice.order.client.dto.WalletWithdrawRequest;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,16 +32,21 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.node5.orderservice.order.domain.OrderStatus.*;
+import static com.node5.orderservice.order.exception.OrderErrorCode.*;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Slf4j
 public class OrderService {
 
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final OrderTransactionService orderTransactionService;
-    private final BillingClient billingClient;
+    private final WalletClient walletClient;
+    private final CatalogClient catalogClient;
+    private final FeignErrorDecoderUtil feignUtil;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public OrderCreateInfo create(UUID memberId, OrderCommand command) {
@@ -56,40 +57,97 @@ public class OrderService {
             }
         }
 
-        // 주문번호 생성, 총 주문 금액 계산하여 Order 생성
+        // 재고 선점 API 호출 (catalog-client 연동)
+        UUID orderId = UUID.randomUUID();
+        StockHoldBatchRequest holdRequest = new StockHoldBatchRequest(
+                orderId,
+                command.items().stream()
+                        .map(i -> new StockHoldBatchRequest.StockHoldItemRequest(i.productId(), i.quantity()))
+                        .toList()
+        );
+
+        try {
+            catalogClient.hold(holdRequest);
+        } catch(FeignException e) {
+            throw new OrderException(ORDER_STOCK_HOLD_FAILED, "message=" + feignUtil.getFeignErrorMessage(e));
+        }
+
+        // Order 생성 (주문번호 생성, 총 주문 금액 계산)
         String orderNum = generateNewOrderNum();
         Optional<BigDecimal> totalAmountOptional = command.items().stream()
                 .map(OrderItemCommand::totalPrice)
                 .reduce(BigDecimal::add);
         BigDecimal totalAmount = totalAmountOptional.orElse(BigDecimal.ZERO);
 
-        Order order = Order.create(memberId, command, orderNum, totalAmount);
+        Order order = Order.create(orderId, memberId, command, orderNum, totalAmount);
         Order saved = orderRepository.save(order);
 
         // OrderItem 생성
-        UUID orderId = saved.getId();
         List<OrderItemCommand> itemCommands = command.items();
         List<OrderItem> orderItems = itemCommands.stream()
                 .map(oi -> OrderItem.create(orderId, oi))
                 .toList();
         orderItemRepository.saveAll(orderItems);
 
-        // 예치금 사용 API 호출
+        // 예치금 사용 API 호출 (billing-client 연동)
+        boolean paid = false;
         try {
             BigDecimal roundedAmount = order.getTotalAmount().setScale(0, RoundingMode.HALF_UP);
-            ResponseEntity<WalletInfo> response = billingClient.withdraw(memberId, new WalletWithdrawRequest(order.getId(), roundedAmount.longValue()));
+            walletClient.withdraw(memberId, new WalletWithdrawRequest(order.getId(), roundedAmount.longValue()));
 
-            if (response.getStatusCode().is2xxSuccessful()) {
-                saved.markAsPaid(LocalDateTime.now());
-            }
+            // 결제 성공 기록
+            saved.markAsPaid(LocalDateTime.now());
+            paid = true;
         } catch(FeignException e) {
             orderTransactionService.updateOrderStatus(orderId, PAYMENT_FAILED);
-            throw new OrderPaymentFailedException(orderId, e.getMessage());
+            throw new OrderException(ORDER_PAYMENT_FAILED, "orderId=" + orderId + ", message=" + feignUtil.getFeignErrorMessage(e));
         } catch(Exception e) {
             orderTransactionService.updateOrderStatus(orderId, PAYMENT_FAILED);
+            throw new OrderException(ORDER_PAYMENT_FAILED, "orderId=" + orderId + ", message=" + e.getMessage());
+        } finally {
+            if (paid) {
+                commitStock(orderId, command);
+            } else {
+                releaseStock(orderId, command);
+            }
         }
 
         return OrderCreateInfo.from(saved);
+    }
+
+    private void commitStock(UUID orderId, OrderCommand command) {
+        try {
+            List<StockCommitBatchRequest.StockCommitItemRequest> items = uniqueProductIds(command).stream()
+                    .map(StockCommitBatchRequest.StockCommitItemRequest::new)
+                    .toList();
+
+            catalogClient.commit(new StockCommitBatchRequest(orderId, items));
+        } catch (FeignException e) {
+            log.error("재고 확정 실패: orderId={}, message={}", orderId, feignUtil.getFeignErrorMessage(e));
+        } catch (Exception e) {
+            log.error("재고 확정 실패: orderId={}, message={}", orderId, e.getMessage(), e);
+        }
+    }
+
+    private void releaseStock(UUID orderId, OrderCommand command) {
+        try {
+            List<StockReleaseBatchRequest.StockReleaseItemRequest> items = uniqueProductIds(command).stream()
+                    .map(StockReleaseBatchRequest.StockReleaseItemRequest::new)
+                    .toList();
+
+            catalogClient.release(new StockReleaseBatchRequest(orderId, items));
+        } catch (FeignException e) {
+            log.error("재고 해제 실패: orderId={}, message={}", orderId, feignUtil.getFeignErrorMessage(e));
+        } catch (Exception e) {
+            log.error("재고 해제 실패: orderId={}, message={}", orderId, e.getMessage(), e);
+        }
+    }
+
+    private List<UUID> uniqueProductIds(OrderCommand command) {
+        return command.items().stream()
+                .map(OrderItemCommand::productId)
+                .distinct()
+                .toList();
     }
 
     public OrderListInfo getOrderList(UUID memberId, int page, int size, String period) {
@@ -127,8 +185,8 @@ public class OrderService {
                     List<OrderItemInfo> orderedItemInfos = orderItemList.stream()
                             .map(OrderItemInfo::from)
                             .toList();
-            return OrderListInfo.OrderListDetailInfo.from(order, orderedItemInfos);
-        }).toList();
+                    return OrderListInfo.OrderListDetailInfo.from(order, orderedItemInfos);
+                }).toList();
 
         // - OrderListInfo DTO 생성 (OrderListDetailInfo + 페이징 정보)
         return OrderListInfo.from(pageInfo, orderListInfos);
@@ -136,10 +194,11 @@ public class OrderService {
 
     public OrderDetailInfo getOrderDetail(UUID orderId, UUID memberId) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new OrderNotFoundException(orderId));
+                .orElseThrow(() -> new OrderException(ORDER_NOT_FOUND, "orderId=" + orderId));
 
         if(!order.getMemberId().equals(memberId)){
-            throw new OrderAccessDeniedException(order.getId(), memberId, "상세 조회");
+            String msg = "[상세 조회] memberId: " + memberId + ", orderId: " + orderId;
+            throw new OrderException(ORDER_ACCESS_DENIED, msg);
         }
 
         List<OrderItem> orderItems = orderItemRepository.findByOrderId(orderId);
@@ -153,68 +212,77 @@ public class OrderService {
     @Transactional
     public OrderStatusInfo cancel(UUID orderId, UUID memberId) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new OrderNotFoundException(orderId));
+                .orElseThrow(() -> new OrderException(ORDER_NOT_FOUND, "orderId=" + orderId));
 
         if(!order.getMemberId().equals(memberId)){
-            throw new OrderAccessDeniedException(order.getId(), memberId, "취소");
+            String msg = "[취소] memberId: " + memberId + ", orderId: " + order.getId();
+            throw new OrderException(ORDER_ACCESS_DENIED, msg);
         }
 
         // 취소가 가능한 주문 상태인지 확인
-        if(order.getStatus() == PAID){
-            // 예치금 환불 API 호출
+        if(order.getStatus() == OrderStatus.PAID){
             try {
+                // 예치금 환불 API 호출
                 BigDecimal roundedAmount = order.getTotalAmount().setScale(0, RoundingMode.HALF_UP);
-                ResponseEntity<WalletInfo> response = billingClient.requestRefund(memberId, new WalletRefundRequest(order.getId(), roundedAmount.longValue()));
+                walletClient.requestRefund(memberId, new WalletRefundRequest(order.getId(), roundedAmount.longValue()));
 
-                if (response.getStatusCode().is2xxSuccessful()) {
-                    orderTransactionService.updateOrderStatus(orderId, CANCELED);
+                List<OrderItem> orderItems = orderItemRepository.findByOrderId(orderId);
+                if (orderItems != null && !orderItems.isEmpty()) {
+                    // OrderItem 상태 변경
+                    orderItems.forEach(item -> item.updateStatus(OrderProgress.CANCELED));
+
+                    // Order 상태 변경
+                    order.updateStatus(OrderStatus.CANCELED);
+
+                    // 재고 복구 이벤트 발행
+                    StockRestoreKafkaRequest request = StockRestoreKafkaRequest.create(orderId, orderItems, "주문 취소");
+                    eventPublisher.publishEvent(request);
                 }
-            } catch(FeignException e) {
-                throw new OrderPaymentFailedException(orderId, e.getMessage());
-            } catch(Exception e) {
-                throw new OrderPaymentFailedException(orderId, e.getMessage());
+            } catch (Exception e) {
+                throw new OrderException(ORDER_CANCEL_FAILED, "orderId=" + orderId + ", message=" + e.getMessage());
             }
         }else{
-            throw new OrderRequestNotAllowedException(
-                    order.getId(),
-                    order.getStatus(),
-                    "취소는 주문의 상태가 결제 완료일 때 가능합니다."
-            );
+            String msg = String.format("취소는 주문의 상태가 결제 완료일 때 가능합니다.(orderId: %s, orderStatus: %s)",
+                    order.getId(), order.getStatus());
+            throw new OrderException(ORDER_REQUEST_NOT_ALLOWED, msg);
         }
 
         return OrderStatusInfo.from(order);
     }
 
     @Transactional
-    public OrderStatusInfo refund(UUID orderId, UUID memberId) {
+    public OrderStatusInfo refund(UUID memberId, UUID orderId, UUID productId) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new OrderNotFoundException(orderId));
+                .orElseThrow(() -> new OrderException(ORDER_NOT_FOUND, "orderId=" + orderId));
 
         if(!order.getMemberId().equals(memberId)){
-            throw new OrderAccessDeniedException(order.getId(), memberId, "환불");
+            String msg = "[환불] memberId: " + memberId + ", orderId: " + order.getId();
+            throw new OrderException(ORDER_ACCESS_DENIED, msg);
         }
 
-        // 환불이 가능한 주문 상태인지 확인
-        if(order.getStatus() == DELIVERY_ING || order.getStatus() == DELIVERY_COMPLETED){
-            // 예치금 환불 API 호출
-            try {
-                BigDecimal roundedAmount = order.getTotalAmount().setScale(0, RoundingMode.HALF_UP);
-                ResponseEntity<WalletInfo> response = billingClient.requestRefund(memberId, new WalletRefundRequest(order.getId(), roundedAmount.longValue()));
+        OrderItem orderItem = orderItemRepository.findByOrderIdAndProductId(orderId, productId)
+                .orElseThrow(() -> new OrderException(ORDER_ITEM_NOT_FOUND, "orderId=" + orderId + ", productId=" + productId));
 
-                if (response.getStatusCode().is2xxSuccessful()) {
-                    orderTransactionService.updateOrderStatus(orderId, REFUND_COMPLETED);
-                }
-            } catch(FeignException e) {
-                throw new OrderPaymentFailedException(orderId, e.getMessage());
+        // 환불이 가능한 주문 상태인지 확인
+        if(orderItem.getStatus() == OrderProgress.DELIVERY_ING || orderItem.getStatus() == OrderProgress.DELIVERY_COMPLETED){
+            try {
+                // 예치금 환불 API 호출
+                BigDecimal roundedAmount = order.getTotalAmount().setScale(0, RoundingMode.HALF_UP);
+                walletClient.requestRefund(memberId, new WalletRefundRequest(order.getId(), roundedAmount.longValue()));
+
+                // OrderItem 상태 변경
+                orderItem.updateStatus(OrderProgress.REFUNDED);
+
+                // 재고 복구 이벤트 발행
+                StockRestoreKafkaRequest request = StockRestoreKafkaRequest.create(orderId, List.of(orderItem), "상품 환불");
+                eventPublisher.publishEvent(request);
             } catch(Exception e) {
-                throw new OrderPaymentFailedException(orderId, e.getMessage());
+                throw new OrderException(ORDER_REFUND_FAILED, "orderId=" + orderId + ", message=" + e.getMessage());
             }
         }else{
-            throw new OrderRequestNotAllowedException(
-                    order.getId(),
-                    order.getStatus(),
-                    "환불은 주문의 상태가 배송 중이거나 배송 완료일 때 가능합니다."
-            );
+            String msg = String.format("환불은 주문의 상태가 배송 중이거나 배송 완료일 때 가능합니다.(orderId: %s, orderStatus: %s)",
+                    order.getId(), order.getStatus());
+            throw new OrderException(ORDER_REQUEST_NOT_ALLOWED, msg);
         }
 
         return OrderStatusInfo.from(order);

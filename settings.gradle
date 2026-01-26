@@ -3,14 +3,13 @@ rootProject.name = 'my-routine'
 include(
         'common',
         'apigateway',
+        'batch-service',
         'config',
         'discovery',
-        'billing-service',
         'catalog-service',
         'member-service',
         'order-service',
-        'settlement-service',
-        'shop-service',
-        'subscription-service',
+        'payment-service',
         'support-service',
+        'wallet-service'
 )

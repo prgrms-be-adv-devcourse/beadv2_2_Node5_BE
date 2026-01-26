@@ -2,7 +2,6 @@ package com.node5.orderservice.order.infrastructure;
 
 import com.node5.orderservice.order.domain.Order;
 import com.node5.orderservice.order.domain.OrderRepository;
-import com.node5.orderservice.order.domain.OrderStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -45,27 +44,12 @@ public class OrderRepositoryAdapter implements OrderRepository {
     }
 
     @Override
-    public List<Order> findByStatusAndPaidAtBefore(OrderStatus orderStatus, LocalDateTime standard) {
-        return orderJpaRepository.findByStatusAndPaidAtBefore(orderStatus, standard);
-    }
-
-    @Override
-    public List<Order> findByStatusAndModifiedAtBefore(OrderStatus orderStatus, LocalDateTime standard) {
-        return orderJpaRepository.findByStatusAndModifiedAtBefore(orderStatus, standard);
-    }
-
-    @Override
-    public List<Order> saveAll(List<Order> orders) {
-        return orderJpaRepository.saveAll(orders);
-    }
-
-    @Override
-    public List<Order> findByStatus(OrderStatus orderStatus) {
-        return orderJpaRepository.findByStatus(orderStatus);
-    }
-
-    @Override
     public List<UUID> findRecentOrderIds(UUID memberId, LocalDateTime threeMonthsAgo) {
         return orderJpaRepository.findRecentOrderIds(memberId, threeMonthsAgo);
+    }
+
+    @Override
+    public boolean existsByIdAndMemberId(UUID orderId, UUID memberId) {
+        return orderJpaRepository.existsByIdAndMemberId(orderId, memberId);
     }
 }

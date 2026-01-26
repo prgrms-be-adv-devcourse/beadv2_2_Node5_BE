@@ -1,6 +1,5 @@
 spring:
   datasource:
-    # Postgres 서버 타임존을 서울(KST)로 맞추기 위해 옵션 추가
     url: ${SPRING_DATASOURCE_URL}
     driver-class-name: org.postgresql.Driver
     username: ${SPRING_DATASOURCE_USERNAME}
@@ -17,18 +16,14 @@ spring:
         format_sql: true
         jdbc:
           time_zone: Asia/Seoul
-  batch:
-    jdbc:
-      initialize-schema: never
   kafka:
     bootstrap-servers: ${KAFKA_HOST}:9092
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
     consumer:
-      group-id: catalog-service-search
-      key-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
         spring.deserializer.key.delegate.class: org.apache.kafka.common.serialization.StringDeserializer
         spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
@@ -41,16 +36,17 @@ app:
   kafka:
     topics:
       member-deleted: member-service.member-deleted.v1
-      product-index: product-index
-      product-embedding: ai-service.product-embedding.v1
+      shop-deleted: member-service.shop-deleted.v1
+      product-index: catalog-service.product-index.v1
+      product-embedding: catalog-service.product-embedding.v1
       product-discontinued: catalog-service.product-discontinued.v1
-
-  search:
-    index:
-      product: products
+      stock-restore: order-service.stock-restore.v1
 
   s3:
     bucket: ${S3_BUCKET_NAME}
     region: ${AWS_REGION:ap-northeast-2}
     presigned-url-expiration-seconds: ${S3_PRESIGNED_EXPIRE:600}
+    temp-prefix: ${TEMP_PREFIX:temp/product/}
+    product-prefix: ${PRODUCT_PREFIX:product/}
+    max-image-bytes: ${MAX_IMAGE_BYTES:5242880}
 

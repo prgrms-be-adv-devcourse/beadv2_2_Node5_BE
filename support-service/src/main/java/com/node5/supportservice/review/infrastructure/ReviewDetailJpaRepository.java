@@ -57,6 +57,7 @@ public interface ReviewDetailJpaRepository extends JpaRepository<ReviewDetail, U
     //특정 상품에서 최근 1달 동안 공감 수가 가장 많은 리뷰 ID 조회 (삭제된 리뷰 제외)
     Optional<ReviewDetail> findTopByProductIdAndCreatedAtBetweenAndDeletedAtIsNullOrderByLikeCountDesc(UUID productId, LocalDateTime startDate, LocalDateTime endDate);
 
+    // 유사한 리뷰 조회 (임베딩 벡터 기반)
     @Query(value = """
     SELECT * FROM support.review_detail 
     WHERE product_id = :productId 
@@ -73,6 +74,26 @@ public interface ReviewDetailJpaRepository extends JpaRepository<ReviewDetail, U
 
     // 임베딩 되지 않은 리뷰 조회 (테스트용)
     List<ReviewDetail> findAllByEmbeddingIsNullOrderByCreatedAtDesc();
+
+    // 리뷰 존재 여부 확인 (회원, 주문, 상품 기준, 삭제된 리뷰 제외)
+    Boolean existsByMemberIdAndOrderIdAndProductIdAndDeletedAtIsNull(UUID memberId, UUID orderId, UUID productId);
+
+    // 기존 인덱싱 제거
+    @Modifying
+    @Query(value = "DROP INDEX IF EXISTS support.idx_review_detail_embedding", nativeQuery = true)
+    void dropEmbeddingIndex();
+
+    // 인덱싱 생성
+    @Modifying
+    @Query(value = "CREATE INDEX IF NOT EXISTS idx_review_detail_embedding " +
+            "ON support.review_detail USING ivfflat (embedding vector_cosine_ops) " +
+            "WITH (lists = 100) WHERE deleted_at IS NULL", nativeQuery = true)
+    void createEmbeddingIndex();
+
+    // 테이블 분석
+    @Modifying
+    @Query(value = "ANALYZE support.review_detail", nativeQuery = true)
+    void analyzeTable();
 
 //    // 리뷰 임베딩 업데이트
 //    @Modifying

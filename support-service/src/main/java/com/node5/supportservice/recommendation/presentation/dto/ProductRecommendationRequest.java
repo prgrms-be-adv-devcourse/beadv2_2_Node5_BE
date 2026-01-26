@@ -4,8 +4,7 @@ import java.util.List;
 import java.util.UUID;
 
 public record ProductRecommendationRequest(
-        float[] preferenceEmbedding,
-        List<UUID> excludedProductIds,
+        List<UUID> cartItemProductIds,
         Integer limit
 ) {
 }

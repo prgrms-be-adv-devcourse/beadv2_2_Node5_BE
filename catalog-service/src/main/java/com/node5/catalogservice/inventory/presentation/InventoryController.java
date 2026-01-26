@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.node5.catalogservice.inventory.application.InventoryService;
+import com.node5.catalogservice.inventory.application.InventoryStockService;
 import com.node5.catalogservice.inventory.presentation.dto.StockResponse;
 import com.node5.catalogservice.inventory.presentation.dto.StockUpdateRequest;
 
@@ -25,10 +25,10 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("${api.v1}/stocks")
 @RequiredArgsConstructor
-@Tag(name = "Inventory", description = "상품 재고를 관리하는 API")
+@Tag(name = "Inventory", description = "상품 재고를 관리하는 관리용 API")
 public class InventoryController {
 
-	private final InventoryService inventoryService;
+	private final InventoryStockService inventoryStockService;
 
 	@PutMapping("/{productId}")
 	@Operation(summary = "상품 재고 변경", description = "상품 재고 수량을 변경합니다.")
@@ -44,7 +44,7 @@ public class InventoryController {
 		@PathVariable UUID productId,
 		@Valid @RequestBody StockUpdateRequest request
 	) {
-		StockResponse response = inventoryService.updateStockQuantity(memberId, productId, request.quantity());
+		StockResponse response = inventoryStockService.updateStockQuantity(memberId, productId, request.quantity());
 		return ResponseEntity.ok(response);
 	}
 
@@ -55,7 +55,7 @@ public class InventoryController {
 		@ApiResponse(responseCode = "404", description = "상품 재고가 존재하지 않습니다.")
 	})
 	public ResponseEntity<StockResponse> getStock(@PathVariable UUID productId) {
-		StockResponse response = inventoryService.getStock(productId);
+		StockResponse response = inventoryStockService.getStock(productId);
 		return ResponseEntity.ok(response);
 	}
 }

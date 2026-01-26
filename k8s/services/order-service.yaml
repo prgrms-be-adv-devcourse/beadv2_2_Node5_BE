@@ -1,0 +1,102 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-service
+  labels:
+    app: order-service
+spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  replicas: 1
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      app: order-service
+  template:
+    metadata:
+      annotations:
+        reloader.stakater.com/auto: "true"
+        configmap.reloader.stakater.com/reload: "common-config,order-service-config"
+        secret.reloader.stakater.com/reload: "common-secret,order-secret"
+      labels:
+        app: order-service
+    spec:
+      nodeSelector:
+        type: node5-worker
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: order-service
+          image: node5dev/order-service:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: prod
+            - name: JAVA_TOOL_OPTIONS
+              value: "-Xms128m -Xmx256m"
+          envFrom:
+            - secretRef:
+                name: common-secret
+            - secretRef:
+                name: order-secret
+          volumeMounts:
+            - name: config
+              mountPath: /config
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+          startupProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 60
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 6
+      volumes:
+        - name: config
+          projected:
+            sources:
+              - configMap:
+                  name: common-config
+              - configMap:
+                  name: order-service-config
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: order-service
+  labels:
+    app: order-service
+spec:
+  type: ClusterIP
+  selector:
+    app: order-service
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080

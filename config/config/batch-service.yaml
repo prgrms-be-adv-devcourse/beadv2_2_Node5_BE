@@ -1,0 +1,64 @@
+spring:
+  datasource:
+    primary:
+      jdbc-url: ${SPRING_DATASOURCE_URL}
+      driver-class-name: org.postgresql.Driver
+      username: ${SPRING_DATASOURCE_USERNAME}
+      password: ${SPRING_DATASOURCE_PASSWORD}
+      hikari:
+        schema: batch
+    member:
+      jdbc-url: ${SPRING_DATASOURCE_URL}
+      username: ${SPRING_DATASOURCE_USERNAME}
+      password: ${SPRING_DATASOURCE_PASSWORD}
+      driver-class-name: org.postgresql.Driver
+      hikari:
+        schema: member
+  jackson:
+    time-zone: Asia/Seoul
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        default_schema: batch
+        format_sql: true
+        jdbc:
+          time_zone: Asia/Seoul
+  batch:
+    job:
+      enabled: false
+    jdbc:
+      initialize-schema: always
+      table-prefix: batch.BATCH_
+  task:
+    scheduling:
+      cron:
+        subscription-order: ${SUBSCRIPTION_ORDER_CRON}
+        settlement: ${SETTLEMENT_CRON}
+  kafka:
+    bootstrap-servers: ${KAFKA_HOST}:9092
+    listener:
+      ack-mode: manual
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+  ai:
+    openai:
+      api-key: ${OPEN_AI_API_KEY}
+      base-url: https://api.openai.com
+
+api:
+  v1: /api/v1
+
+kafka:
+  topics:
+    subscription-order-batch-result: batch-service.subscription-order-batch-result.v1
+
+batch:
+  scheduler:
+    enabled: false
+
+server:
+  port: 8089

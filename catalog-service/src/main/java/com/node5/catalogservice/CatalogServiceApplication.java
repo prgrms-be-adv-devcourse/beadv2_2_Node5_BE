@@ -7,7 +7,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 @EnableJpaAuditing
-@EnableFeignClients(basePackages = "com.node5.catalogservice.shop.client")
+@EnableFeignClients(basePackages = "com.node5.catalogservice")
 @SpringBootApplication
 @ConfigurationPropertiesScan
 public class CatalogServiceApplication {

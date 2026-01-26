@@ -1,0 +1,41 @@
+package com.node5.orderservice.subscription.domain;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+public interface SubscriptionRepository {
+
+    Optional<Subscription> findById(UUID id);
+
+    Subscription save(Subscription subscription);
+
+    List<Subscription> findAllById(List<UUID> ids);
+
+    Page<Subscription> findAllByMemberId(UUID memberId, Pageable pageable);
+
+    List<Subscription> findAllByMemberId(UUID memberId);
+
+    List<Subscription> findAllByShopId(UUID shopId);
+
+    Page<Subscription> findAllByNextRunDateAndSubscriptionStatusIn(LocalDate nextRunDate, List<SubscriptionStatus> subscriptionStatuses, Pageable pageable);
+
+    Page<Subscription> findAllByProductId(UUID productId, Pageable pageable);
+
+    void bulkUpdateNextRunDateByIds(List<UUID> ids, LocalDate nextRunDate);
+
+    void bulkUpdateNextRunDates(java.util.Map<UUID, LocalDate> nextRunDates, LocalDate processedRunDate);
+
+    void bulkMarkFailedByIds(List<UUID> ids);
+
+    void bulkMarkUnavailableByIds(List<UUID> ids);
+
+    void bulkMarkActiveByIds(List<UUID> ids);
+
+    void bulkTerminateAllByShop(UUID shopId, LocalDateTime dateTime);
+}

@@ -2,10 +2,7 @@ package com.node5.orderservice.order.domain;
 
 import com.node5.common.domain.BaseEntity;
 import com.node5.orderservice.order.application.dto.OrderItemCommand;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -26,6 +23,10 @@ public class OrderItem extends BaseEntity {
     @Column(nullable = false)
     private UUID productId;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 30)
+    private OrderProgress status;
+
     @Column(nullable = false)
     private String name;
 
@@ -41,6 +42,10 @@ public class OrderItem extends BaseEntity {
     @Column(nullable = false)
     private BigDecimal totalPrice; // 상품별 주문 금액
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 30)
+    private OrderItemSettlementStatus settlementStatus;
+
     protected OrderItem() { }
 
     @Builder
@@ -48,20 +53,24 @@ public class OrderItem extends BaseEntity {
             UUID id,
             UUID orderId,
             UUID productId,
+            OrderProgress status,
             String name,
             String imgUrl,
             BigDecimal unitPrice,
             int quantity,
-            BigDecimal totalPrice
+            BigDecimal totalPrice,
+            OrderItemSettlementStatus settlementStatus
     ) {
         this.id = id;
         this.orderId = orderId;
         this.productId = productId;
+        this.status = status;
         this.name = name;
         this.imgUrl = imgUrl;
         this.unitPrice = unitPrice;
         this.quantity = quantity;
         this.totalPrice = totalPrice;
+        this.settlementStatus = settlementStatus;
     }
 
     public static OrderItem create(
@@ -71,12 +80,18 @@ public class OrderItem extends BaseEntity {
         return OrderItem.builder()
                 .id(UUID.randomUUID())
                 .orderId(orderId)
+                .status(OrderProgress.PAID)
                 .productId(command.productId())
                 .name(command.name())
                 .imgUrl(command.imgUrl())
                 .unitPrice(command.unitPrice())
                 .quantity(command.quantity())
                 .totalPrice(command.totalPrice())
+                .settlementStatus(OrderItemSettlementStatus.PENDING)
                 .build();
+    }
+
+    public void updateStatus(OrderProgress status){
+        this.status = status;
     }
 }

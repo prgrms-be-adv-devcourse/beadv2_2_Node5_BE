@@ -12,12 +12,28 @@ spring:
     show-sql: true
     properties:
       hibernate:
+        default_schema: order
         format_sql: true
         jdbc:
           time_zone: Asia/Seoul
   sql:
     init:
       mode: always #SQL 초기화 파일(schema.sql) 항상 실행
+  kafka:
+    bootstrap-servers: ${KAFKA_HOST}:9092
+    listener:
+      ack-mode: manual
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      group-id: order-service
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: latest
+      enable-auto-commit: false
+      properties:
+        spring.json.trusted.packages: "com.node5.common.event"
 
 api:
   v1: /api/v1
@@ -27,3 +43,10 @@ management:
     web:
       exposure:
         include: health
+
+kafka:
+  topics:
+    member-deleted: member-service.member-deleted.v1
+    shop-deleted: member-service.shop-deleted.v1
+    subscription-status-changed: order-service.subscription-status-changed.v1
+    stock-restore: order-service.stock-restore.v1

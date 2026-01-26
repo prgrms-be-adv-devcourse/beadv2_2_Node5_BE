@@ -37,8 +37,7 @@ public class S3PresignedUrlAdapter implements S3PresignedUrlPort {
 			.putObjectRequest(objectRequest)
 			.build();
 
-		PresignedPutObjectRequest presignedRequest =
-			s3Presigner.presignPutObject(presignRequest);
+		PresignedPutObjectRequest presignedRequest = s3Presigner.presignPutObject(presignRequest);
 
 		return new PresignedUrlInfo(presignedRequest.url().toString(), key);
 	}
