@@ -47,8 +47,4 @@ public class StockReservation extends BaseEntity {
 	public static StockReservation held(UUID orderId, UUID productId, int quantity) {
 		return new StockReservation(UUID.randomUUID(), orderId, productId, quantity, ReservationStatus.HELD);
 	}
-
-	public boolean isHeld() {
-		return this.status == ReservationStatus.HELD;
-	}
 }
