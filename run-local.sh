@@ -16,17 +16,17 @@ sleep 10
 start bash ./docs/scripts/run-local-apigateway.sh
 sleep 10
 start bash ./docs/scripts/run-local-batch.sh
-sleep 10
+sleep 15
 start bash ./docs/scripts/run-local-catalog.sh
-sleep 10
+sleep 15
 start bash ./docs/scripts/run-local-member.sh
-sleep 10
+sleep 15
 start bash ./docs/scripts/run-local-order.sh
-sleep 10
+sleep 15
 start bash ./docs/scripts/run-local-payment.sh
-sleep 10
+sleep 15
 start bash ./docs/scripts/run-local-support.sh
-sleep 10
+sleep 15
 start bash ./docs/scripts/run-local-wallet.sh
 
 echo "✅ 모든 서비스가 개별 창에서 실행 중입니다."
