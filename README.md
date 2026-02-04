@@ -140,7 +140,6 @@ API 문서는 Swagger UI를 통해 확인할 수 있습니다.
 
 ## 브랜치 네이밍 규칙
 ___
-Git Flow 전략을 따릅니다.
 - `main`: 배포 가능한 안정 버전
 - `develop`: 다음 배포를 위한 개발 버전
 - `feature/XXX`: 새로운 기능 개발 (예: `feature/123`)
@@ -149,7 +148,6 @@ Git Flow 전략을 따릅니다.
 - `chore/XXX`: 문서 작성
 
 ## 커밋 메시지
-Conventional Commits 규칙을 따릅니다.
 - `[Feat]`: 새로운 기능 추가
 - `[Bugfix]`: 버그 수정
 - `[Refactor]`: 코드 리팩토링
