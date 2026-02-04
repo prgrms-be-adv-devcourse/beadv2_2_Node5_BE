@@ -42,3 +42,7 @@ kafka:
   topics:
     member-deleted: member-service.member-deleted.v1
     deposit-event: payment-service.deposit-event.v1
+
+
+server:
+  port: 8084

@@ -50,3 +50,5 @@ app:
     product-prefix: ${PRODUCT_PREFIX:product/}
     max-image-bytes: ${MAX_IMAGE_BYTES:5242880}
 
+server:
+  port: 8082
