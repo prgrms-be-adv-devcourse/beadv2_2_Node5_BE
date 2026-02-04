@@ -123,16 +123,16 @@ chmod +x run-local.sh
 # ... 각 서비스 별 .env 파일 필요
 ```
 
-**Environment**
+**IDE 실행 (IntelliJ 등)**
+- **VM Options**: `-Dspring.profiles.active=local` 추가
+- 또는 **Environment Variables**: `SPRING_PROFILES_ACTIVE=local` 설정
+
+## 환경 변수 설정
 
 각 서비스는 실행 시 환경 변수를 통해 민감 정보(DB, OAuth, PG 키 등)를 주입받습니다.  
 실제 값은 Git에 포함되지 않으며, `.env` 파일 또는 OS 환경 변수로 설정해야 합니다.
 
 예시는 `docs/env_template`를 참고하세요.
-
-**IDE 실행 (IntelliJ 등)**
-- **VM Options**: `-Dspring.profiles.active=local` 추가
-- 또는 **Environment Variables**: `SPRING_PROFILES_ACTIVE=local` 설정
 
 ## API 명세 - Swagger
 API 문서는 Swagger UI를 통해 확인할 수 있습니다.
