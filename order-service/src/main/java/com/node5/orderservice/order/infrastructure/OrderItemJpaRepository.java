@@ -50,6 +50,8 @@ public interface OrderItemJpaRepository extends JpaRepository<OrderItem, UUID> {
 
     List<OrderItem> findByStatus(OrderProgress status);
 
+    List<OrderItem> findByStatusAndSettlementStatus(OrderProgress status, OrderItemSettlementStatus settlementStatus);
+
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE OrderItem oi " +
             "SET oi.settlementStatus = :settlementStatus " +

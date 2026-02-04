@@ -59,6 +59,11 @@ public class OrderItemRepositoryAdapter implements OrderItemRepository {
     }
 
     @Override
+    public List<OrderItem> findByStatusAndSettlementStatus(OrderProgress status, OrderItemSettlementStatus settlementStatus) {
+        return orderItemJpaRepository.findByStatusAndSettlementStatus(status, settlementStatus);
+    }
+
+    @Override
     public void updateSettlementStatus(List<UUID> orderItemIds, OrderItemSettlementStatus settlementStatus) {
         orderItemJpaRepository.updateSettlementStatus(orderItemIds, settlementStatus);
     }

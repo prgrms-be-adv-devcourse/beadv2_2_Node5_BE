@@ -1,31 +1,43 @@
 spring:
-  cloud:
-    config:
-      enabled: false
-      fail-fast: false
-  config:
-    import: ""
-
   datasource:
-    url: jdbc:h2:mem:catalog-test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_ON_EXIT=FALSE
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
+    url: jdbc:postgresql://localhost:5432/catalog_test?currentSchema=catalog
+    username: postgres
+    password: postgres
 
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: create-drop
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: catalog
+
+  sql:
+    init:
+      mode: always
+
+  kafka:
+    listener:
+      auto-startup: false
+
 
 api:
   v1: /api/v1
 
 apigateway:
-  host: http://localhost:8000
+  host: http://test
+
 
 app:
-  search:
-    index:
-      product: test_products
+  kafka:
+    topics:
+      member-deleted: member-service.member-deleted.v1
+      shop-deleted: member-service.shop-deleted.v1
+      product-index: catalog-service.product-index.v1
+      product-embedding: catalog-service.product-embedding.v1
+      product-discontinued: catalog-service.product-discontinued.v1
+      stock-restore: order-service.stock-restore.v1
+
+  s3:
+    region: ap-northeast-2
+    bucket: test-bucket
