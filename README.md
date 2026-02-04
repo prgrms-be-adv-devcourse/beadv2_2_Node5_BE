@@ -101,7 +101,7 @@ docker compose -f docker-compose-infra.yaml up -d
 ```
 
 ### 2. 애플리케이션 실행
-각 서비스 디렉토리에서 Gradle을 사용하여 실행하거나, IDE에서 실행합니다.
+로컬 배포 스크립트를 사용하여 실행하거나, IDE에서 실행합니다.
 로컬 환경에서 실행 시 'local' 프로파일을 활성화해야 합니다.
 
 **빌드**
